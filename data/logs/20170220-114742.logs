@@ -1,0 +1,16 @@
+2017-02-20 11:47:42,035 [INFO :root] Counting words in data/train_corpus/train.dec
+2017-02-20 11:47:42,035 [INFO :root] Counting words in data/train_corpus/train.dec
+2017-02-20 11:47:43,001 [INFO :root] 85021 unique words in data/train_corpus/train.dec with a total of 1081104 words.
+2017-02-20 11:47:43,001 [INFO :root] 85021 unique words in data/train_corpus/train.dec with a total of 1081104 words.
+2017-02-20 11:47:43,012 [INFO :root] Finish counting. 85021 unique words, a total of 1081104 words in all files.
+2017-02-20 11:47:43,012 [INFO :root] Finish counting. 85021 unique words, a total of 1081104 words in all files.
+2017-02-20 11:47:43,012 [INFO :root] Counting words in data/train_corpus/train.enc
+2017-02-20 11:47:43,012 [INFO :root] Counting words in data/train_corpus/train.enc
+2017-02-20 11:47:44,021 [INFO :root] 89136 unique words in data/train_corpus/train.enc with a total of 1151381 words.
+2017-02-20 11:47:44,021 [INFO :root] 89136 unique words in data/train_corpus/train.enc with a total of 1151381 words.
+2017-02-20 11:47:44,072 [INFO :root] Finish counting. 132835 unique words, a total of 1151381 words in all files.
+2017-02-20 11:47:44,072 [INFO :root] Finish counting. 132835 unique words, a total of 1151381 words in all files.
+2017-02-20 11:47:44,072 [INFO :root] store vocalbulary file
+2017-02-20 11:47:44,072 [INFO :root] store vocalbulary file
+2017-02-20 11:47:44,072 [INFO :root] Overwriting data/vocabulary/vocal.pkl.
+2017-02-20 11:47:44,072 [INFO :root] Overwriting data/vocabulary/vocal.pkl.

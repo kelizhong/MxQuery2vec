@@ -1,0 +1,3 @@
+2017-02-19 18:19:14,236 [INFO :root] In train mode.
+2017-02-19 18:19:14,588 [INFO :root] source_vocab size: 39999
+2017-02-19 18:19:14,589 [INFO :root] target_vocab size: 39999
