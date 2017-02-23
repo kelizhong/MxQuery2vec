@@ -26,7 +26,6 @@ def s2s_unroll(s_layer_num, s_seq_len, s_vocab_size, s_hidden_unit, s_embed_size
     target_representation = decoder.decode(encoded_for_init_state)
     return target_representation
 
-
 def sym_gen(s_vocab_size=None, s_layer_num=None, s_hidden_unit=None, s_embed_size=None, s_dropout=None,
             t_vocab_size=None, t_layer_num=None, t_hidden_unit=None, t_embed_size=None, t_dropout=None,
             t_label_num=None,
