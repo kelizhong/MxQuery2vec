@@ -152,6 +152,8 @@ class trainer(object):
                           data_names=data_loader.get_data_names(), label_names=data_loader.get_label_names(),
                           batch_size=self.batch_size)
         # Train a LSTM network as simple as feedforward network
+        print(network((vocab_size, vocab_size))[0].list_arguments())
+        print(network((vocab_size, vocab_size))[0].list_outputs())
         self._fit(network, data_loader)
 
     def _fit(self, network, data_loader):

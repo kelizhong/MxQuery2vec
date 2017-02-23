@@ -2,7 +2,7 @@ import mxnet as mx
 
 from ..rnn.LSTM import lstm, LSTMModel, LSTMParam, LSTMState
 from ..rnn.GRU import gru, GRUModel, GRUParam, GRUState
-
+from mxnet import test_utils
 
 class LstmEncoder(object):
     def __init__(self, seq_len, use_masking,
@@ -85,7 +85,7 @@ class BiDirectionalLstmEncoder(object):
                  state_dim,
                  input_dim, output_dim,
                  vocab_size, embed_dim,
-                 dropout=0.0, num_of_layer=1):
+                 dropout=0.0, num_of_layer=1, embed_weight=None):
         self.seq_len = seq_len
         self.use_masking = use_masking
         self.state_dim = state_dim
@@ -95,12 +95,13 @@ class BiDirectionalLstmEncoder(object):
         self.embed_dim = embed_dim
         self.dropout = dropout
         self.num_of_layer = num_of_layer
+        self.embed_weight = embed_weight
 
     def encode(self):
         data = mx.sym.Variable('source')  # input data, source
-
         # declare variables
-        embed_weight = mx.sym.Variable("source_embed_weight")
+        if not self.embed_weight:
+            self.embed_weight = mx.sym.Variable("source_embed_weight")
         forward_param_cells = []
         forward_last_states = []
         for i in range(self.num_of_layer):
@@ -126,7 +127,7 @@ class BiDirectionalLstmEncoder(object):
 
         # embedding layer
         embed = mx.sym.Embedding(data=data, input_dim=self.vocab_size + 1,
-                                 weight=embed_weight, output_dim=self.embed_dim, name='source_embed')
+                                 weight=self.embed_weight, output_dim=self.embed_dim, name='embed')
         wordvec = mx.sym.SliceChannel(data=embed, num_outputs=self.seq_len, squeeze_axis=1)
 
         # split mask

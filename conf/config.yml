@@ -49,12 +49,12 @@ subparsers:
             - title: Data set
               options:
                 train_source_path:
-                    default: __FILE__/data/train_corpus/en.txt
+                    default: __FILE__/data/train_corpus/train.enc
                     help: |
                         path for train source(encoder) data
                         'train_source_path(default: __DEFAULT__).'
                 train_target_path:
-                    default: __FILE__/data/train_corpus/zh.txt
+                    default: __FILE__/data/train_corpus/train.dec
                     help: |
                         path for train target(decoder) data
                         'train_target_path(default: __DEFAULT__).'

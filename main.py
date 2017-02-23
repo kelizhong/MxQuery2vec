@@ -47,7 +47,7 @@ if __name__ == "__main__":
                                  lr=args.lr, train_max_samples=args.train_max_samples, momentum=args.momentum,
                                  show_every_x_batch=args.show_every_x_batch, num_epoch=args.num_epoch,
                                  optimizer=args.optimizer, batch_size=args.batch_size)\
-            .set_mxnet_parameter(loglevel=args.loglevel)\
+            .set_mxnet_parameter(loglevel=args.loglevel, kv_store=args.kv_store, monitor_interval=args.monitor_interval)\
             .train()
     elif args.command0 =='vocab':
         from vocabulary.vocab_gen import vocab
