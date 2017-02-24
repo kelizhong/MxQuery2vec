@@ -23,7 +23,8 @@ class trainer(object):
             "kv_store": "local",
             "monitor_interval": 2,
             "log_level": logging.ERROR,
-            "log_path": './logs'
+            "log_path": './logs',
+            "save_checkpoint_freq": 100
         }
         for (parameter, default) in mxnet_parameter_defaults.iteritems():
             setattr(self, parameter, kwargs.get(parameter, default))
@@ -96,14 +97,14 @@ class trainer(object):
         logging.info('Loaded model %s_%04d.params', model_prefix, self.load_epoch)
         return (sym, arg_params, aux_params)
 
-    def _save_model(self, rank=0):
+    def _save_model(self, rank=0, period=10):
         if self.model_prefix is None:
             return None
         dst_dir = os.path.dirname(self.model_prefix)
         if not os.path.isdir(dst_dir):
             os.mkdir(dst_dir)
         return mx.callback.do_checkpoint(self.model_prefix if rank == 0 else "%s-%d" % (
-            self.model_prefix, rank))
+            self.model_prefix, rank), period)
 
     def _initial_log(self, kv, log_level):
         # logging
@@ -135,13 +136,14 @@ class trainer(object):
 
     def print_all_variable(self):
         for arg, value in self.__dict__.iteritems():
-            print("%s: %s" % (arg, value))
+            logging.info("%s: %s" % (arg, value))
 
     def train(self):
-        self.print_all_variable()
         # kvstore
         self.kv = mx.kvstore.create(self.kv_store)
         self._initial_log(self.kv, self.log_level)
+
+        self.print_all_variable()
 
         # load vocabulary
         vocab = load_vocab(self.vocabulary_path)
@@ -184,7 +186,7 @@ class trainer(object):
             assert sym.tojson() == network.tojson()
 
         # save model
-        checkpoint = self._save_model(self.kv.rank)
+        checkpoint = self._save_model(self.kv.rank, self.save_checkpoint_freq)
 
         # devices for training
         if self.device_mode is None or self.device_mode == 'cpu':

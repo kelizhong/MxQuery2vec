@@ -84,6 +84,9 @@ def parse_args():
     train_parser.add_argument('-lf', '--log-freq', default=1000, type=int,
                               help='the frequency to printout the training verbose information')
 
+    train_parser.add_argument('-scf', '--save-checkpoint-freq', default=100, type=int,
+                              help='the frequency to save checkpoint')
+
     train_parser.add_argument('-kv', '--kv-store', dest='kv_store', help='the kv-store type',
                               default='device', type=str)
     train_parser.add_argument('-mi', '--monitor-interval', default=0, type=int,
@@ -153,7 +156,7 @@ if __name__ == "__main__":
                                  show_every_x_batch=args.show_every_x_batch, num_epoch=args.num_epoch,
                                  optimizer=args.optimizer, batch_size=args.batch_size) \
             .set_mxnet_parameter(log_path=args.log_path, log_level=args.log_level, kv_store=args.kv_store,
-                                 monitor_interval=args.monitor_interval) \
+                                 monitor_interval=args.monitor_interval, save_checkpoint_freq=args.save_checkpoint_freq) \
             .train()
     elif args.action == 'vocab':
         from vocabulary.vocab_gen import vocab
