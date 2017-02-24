@@ -91,6 +91,7 @@ def parse_args():
                               default='device', type=str)
     train_parser.add_argument('-mi', '--monitor-interval', default=0, type=int,
                               help='log network parameters every N iters if larger than 0')
+    train_parser.add_argument('-eval', '--enable-evaluation', action='store_true', help='enable evaluation')
 
     train_parser.add_argument('--iterations', default=1, type=int,
                               help='number of iterations (epoch)')
@@ -155,7 +156,7 @@ if __name__ == "__main__":
                                  lr=args.lr, train_max_samples=args.train_max_samples, momentum=args.momentum,
                                  show_every_x_batch=args.show_every_x_batch, num_epoch=args.num_epoch,
                                  optimizer=args.optimizer, batch_size=args.batch_size) \
-            .set_mxnet_parameter(log_path=args.log_path, log_level=args.log_level, kv_store=args.kv_store,
+            .set_mxnet_parameter(log_path=args.log_path, log_level=args.log_level, kv_store=args.kv_store, enable_evaluation=args.enable_evaluation,
                                  monitor_interval=args.monitor_interval, save_checkpoint_freq=args.save_checkpoint_freq) \
             .train()
     elif args.action == 'vocab':

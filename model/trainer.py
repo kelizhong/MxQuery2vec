@@ -24,7 +24,8 @@ class trainer(object):
             "monitor_interval": 2,
             "log_level": logging.ERROR,
             "log_path": './logs',
-            "save_checkpoint_freq": 100
+            "save_checkpoint_freq": 100,
+            "enable_evaluation": False
         }
         for (parameter, default) in mxnet_parameter_defaults.iteritems():
             setattr(self, parameter, kwargs.get(parameter, default))
@@ -226,7 +227,7 @@ class trainer(object):
         model.fit(data_loader,
                   begin_epoch=self.load_epoch if self.load_epoch else 0,
                   num_epoch=self.num_epoch,
-                  eval_data=data_loader,
+                  eval_data=data_loader if self.enable_evaluation else None,
                   eval_metric=mx.metric.np(Perplexity),
                   kvstore=self.kv,
                   optimizer=self.optimizer,
