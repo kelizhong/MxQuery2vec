@@ -12,7 +12,7 @@ import yamlordereddictloader
 import os
 import clg
 import time
-from conf.customYamlType import IntegerType, LoggerLevelType
+from conf.customArgType import IntegerType, LoggerLevelType
 random_sample = False
 
 def get_inference_models(buckets, arg_params, source_vocab_size, target_vocab_size, ctx, batch_size):

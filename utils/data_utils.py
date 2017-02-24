@@ -1,9 +1,10 @@
-import sys
-import pickle
-
-import re
 import os
-from conf import global_conf as config
+import pickle
+import re
+import sys
+
+from common import constant as config
+
 
 # Read from doc
 def read_data(path, max_read_line=sys.maxsize):

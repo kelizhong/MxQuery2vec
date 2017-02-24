@@ -7,22 +7,23 @@ import pickle
 import os
 from collections import Counter
 import time
+from utils.file_utils import make_sure_path_exists
 
 
 class vocab(object):
-    def __init__(self, corpus_files, vocab_file, most_commond_words_file, special_words=dict(), most_commond_words_num=40000, loglevel=logging.INFO, logdir='./', overwrite=True):
+    def __init__(self, corpus_files, vocab_file, special_words=dict(), top_words=40000, log_level=logging.INFO,
+                 log_path='./', overwrite=True):
         self.corpus_files = corpus_files
         self.vocab_file = vocab_file
-        self.most_commond_words_file = most_commond_words_file
+        self.top_words = top_words
         self.special_words = special_words
-        self.most_commond_words_num = most_commond_words_num
         self.overwrite = overwrite
-        self.logdir = logdir
-        self._init_log(loglevel)
+        self.log_path = log_path
+        self._init_log(log_level)
 
     def _init_log(self, loglevel):
         logging.basicConfig(format='%(asctime)s %(levelname)s:%(name)s:%(message)s', level=loglevel, datefmt='%H:%M:%S')
-        file_handler = logging.FileHandler(os.path.join(self.logdir, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
+        file_handler = logging.FileHandler(os.path.join(self.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
         file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
         logging.root.addHandler(file_handler)
 
@@ -33,7 +34,8 @@ class vocab(object):
             for word in words:
                 yield word
 
-    def _safe_pickle(self, obj, filename):
+    def _save_vocab_pickle(self, obj, filename):
+        make_sure_path_exists(filename)
         if os.path.isfile(filename) and not self.overwrite:
             logging.warning("Not saving %s, already exists." % (filename))
         else:
@@ -52,24 +54,21 @@ class vocab(object):
             with open(file) as f:
                 counter = Counter(self._words_gen(f))
                 logging.info("%d unique words in %s with a total of %d words."
-                        % (len(counter), file, sum(counter.values())))
+                             % (len(counter), file, sum(counter.values())))
             global_counter.update(counter)
             logging.info("Finish counting. %d unique words, a total of %d words in all files."
-                    % (len(global_counter), sum(counter.values())))
+                         % (len(global_counter), sum(counter.values())))
 
         words_num = len(global_counter)
         special_words_num = len(self.special_words)
 
-        assert words_num > len(self.special_words), "the size of total words must be larger than the size of special_words"
+        assert words_num > len(
+            self.special_words), "the size of total words must be larger than the size of special_words"
 
-        logging.info("store vocalbulary file")
-        self._safe_pickle(global_counter, self.vocab_file)
-
-        assert self.most_commond_words_num > len(
+        assert self.top_words > len(
             self.special_words), "the value of most_commond_words_num must be larger than the size of special_words"
 
-        vocab_count = global_counter.most_common(self.most_commond_words_num - special_words_num)
-        print(len(vocab_count))
+        vocab_count = global_counter.most_common(self.top_words - special_words_num)
         vocab = {}
         idx = special_words_num + 1
         for word, _ in vocab_count:
@@ -77,6 +76,5 @@ class vocab(object):
                 vocab[word] = idx
                 idx += 1
         vocab.update(self.special_words)
-        logging.info("store vocalbulary with most_commond_words file")
-        self._safe_pickle(vocab, self.most_commond_words_file)
-
+        logging.info("store vocalbulary with most_commond_words file, vocabulary size: " + str(len(vocab)))
+        self._save_vocab_pickle(vocab, self.vocab_file)

@@ -3,7 +3,6 @@ from network.seq2seq.decoder import LstmAttentionDecoder, LstmDecoder
 
 import mxnet as mx
 
-
 def s2s_unroll(s_layer_num, s_seq_len, s_vocab_size, s_hidden_unit, s_embed_size, s_dropout,
                t_layer_num, t_seq_len, t_vocab_size, t_hidden_unit, t_embed_size, t_label_num, t_dropout,
                **kwargs):

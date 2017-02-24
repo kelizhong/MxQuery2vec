@@ -9,6 +9,7 @@ import os
 from metric.metric import Perplexity
 import sys
 from masked_bucket_io import MaskedBucketSentenceIter
+import time
 
 
 class trainer(object):
@@ -21,7 +22,8 @@ class trainer(object):
         mxnet_parameter_defaults = {
             "kv_store": "local",
             "monitor_interval": 2,
-            "loglevel": logging.ERROR
+            "log_level": logging.ERROR,
+            "log_path": './logs'
         }
         for (parameter, default) in mxnet_parameter_defaults.iteritems():
             setattr(self, parameter, kwargs.get(parameter, default))
@@ -47,10 +49,11 @@ class trainer(object):
             "t_dropout": 0.5,
             "load_epoch": 0,
             "model_prefix": "query2vec",
-            "device_model": "cpu",
+            "device_mode": "cpu",
             "devices": 0,
             "lr_factor": None,
             "lr": 0.05,
+            "wd": 0.0005,
             "train_max_samples": sys.maxsize,
             "momentum": 0.1,
             "show_every_x_batch": 10,
@@ -102,10 +105,14 @@ class trainer(object):
         return mx.callback.do_checkpoint(self.model_prefix if rank == 0 else "%s-%d" % (
             self.model_prefix, rank))
 
-    def _initial_log(self, kv, loglevel):
+    def _initial_log(self, kv, log_level):
         # logging
-        head = '%(asctime)-15s Node[' + str(kv.rank) + '] %(message)s'
-        logging.basicConfig(level=loglevel, format=head)
+        logging.basicConfig(format='Node[' + str(kv.rank) + '] %(asctime)s %(levelname)s:%(name)s:%(message)s',
+                            level=log_level,
+                            datefmt='%H:%M:%S')
+        file_handler = logging.FileHandler(os.path.join(self.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
+        file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
+        logging.root.addHandler(file_handler)
 
     def get_LSTM_shape(self):
         # initalize states for LSTM
@@ -126,11 +133,21 @@ class trainer(object):
         target_init_states = target_init_c
         return source_init_states, target_init_states
 
+    def print_all_variable(self):
+        for arg, value in self.__dict__.iteritems():
+            print("%s: %s" % (arg, value))
+
     def train(self):
+        self.print_all_variable()
+        # kvstore
+        self.kv = mx.kvstore.create(self.kv_store)
+        self._initial_log(self.kv, self.log_level)
+
         # load vocabulary
         vocab = load_vocab(self.vocabulary_path)
 
-        vocab_size = len(vocab);
+        vocab_size = len(vocab)
+        self.vocab_size = vocab_size
         logging.info('vocab size: {0}'.format(vocab_size))
 
         # get states shapes
@@ -151,9 +168,7 @@ class trainer(object):
                           t_label_num=vocab_size,
                           data_names=data_loader.get_data_names(), label_names=data_loader.get_label_names(),
                           batch_size=self.batch_size)
-        # Train a LSTM network as simple as feedforward network
-        print(network((vocab_size, vocab_size))[0].list_arguments())
-        print(network((vocab_size, vocab_size))[0].list_outputs())
+
         self._fit(network, data_loader)
 
     def _fit(self, network, data_loader):
@@ -162,20 +177,17 @@ class trainer(object):
         network : the symbol definition of the nerual network
         data_loader : function that returns the train and val data iterators
         """
-        # kvstore
-        kv = mx.kvstore.create(self.kv_store)
-        self._initial_log(kv, self.loglevel)
 
         # load model
-        sym, arg_params, aux_params = self._load_model(kv.rank)
+        sym, arg_params, aux_params = self._load_model(self.kv.rank)
         if sym is not None:
             assert sym.tojson() == network.tojson()
 
         # save model
-        checkpoint = self._save_model(kv.rank)
+        checkpoint = self._save_model(self.kv.rank)
 
         # devices for training
-        if self.device_model is None or self.device_model == 'cpu':
+        if self.device_mode is None or self.device_mode == 'cpu':
             devs = mx.cpu() if self.devices is None or self.devices is '' else [
                 mx.cpu(int(i)) for i in self.devices.split(',')]
         else:
@@ -184,14 +196,14 @@ class trainer(object):
 
         # devs = [mx.cpu(0), mx.cpu(1), mx.cpu(2)]
         # learning rate
-        lr, lr_scheduler = self._get_lr_scheduler(kv)
+        lr, lr_scheduler = self._get_lr_scheduler(self.kv)
 
         # create model
         model = mx.mod.BucketingModule(network, default_bucket_key=data_loader.default_bucket_key, context=devs)
         optimizer_params = {
             'learning_rate': lr,
             'momentum': self.momentum,
-            'wd': 0.0001,
+            'wd': self.wd,
             'lr_scheduler': lr_scheduler}
 
         monitor = mx.mon.Monitor(self.monitor_interval, pattern=".*") if self.monitor_interval > 0 else None
@@ -208,14 +220,13 @@ class trainer(object):
 
         # callbacks that run after each batch
         batch_end_callbacks = [mx.callback.Speedometer(self.batch_size, self.show_every_x_batch)]
-
         # run
         model.fit(data_loader,
                   begin_epoch=self.load_epoch if self.load_epoch else 0,
                   num_epoch=self.num_epoch,
                   eval_data=data_loader,
                   eval_metric=mx.metric.np(Perplexity),
-                  kvstore=kv,
+                  kvstore=self.kv,
                   optimizer=self.optimizer,
                   optimizer_params=optimizer_params,
                   initializer=initializer,
