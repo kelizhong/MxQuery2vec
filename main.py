@@ -17,10 +17,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train Seq2seq model for query2vec')
 
     parser.add_argument('-lp', '--log-path', default=os.path.join(os.getcwd(), 'data', 'logs'),
-                              type=DirectoryType, help='Log directory (default: __DEFAULT__).')
+                        type=DirectoryType, help='Log directory (default: __DEFAULT__).')
     parser.add_argument('-ll', '--log-level', choices=['debug', 'info', 'warn', 'error'], default='info',
-                              type=LoggerLevelType,
-                              help='Log level on console (default: __DEFAULT__).')
+                        type=LoggerLevelType,
+                        help='Log level on console (default: __DEFAULT__).')
     subparsers = parser.add_subparsers(help='train vocabulary')
 
     train_parser = subparsers.add_parser("train", help='train model', add_help=False)
@@ -29,17 +29,17 @@ def parse_args():
     vocab_parser.set_defaults(action='vocab')
 
     # model parameter
-    train_parser.add_argument('-sny', '--source-num-layers', default=3, type=int,
+    train_parser.add_argument('-sln', '--source-layer-num', default=3, type=int,
                               help='number of layers for the source LSTM recurrent neural network')
-    train_parser.add_argument('-snh', '--source-num-hidden', default=512, type=int,
-                              help='number of hidden units in the source neural network')
+    train_parser.add_argument('-shun', '--source-hidden-unit-num', default=512, type=int,
+                              help='number of hidden units in the neural network for encoder')
     train_parser.add_argument('-es', '--embed-size', default=150, type=int,
                               help='embedding size ')
 
-    train_parser.add_argument('-tny', '--target-num-layers', default=3, type=int,
+    train_parser.add_argument('-tln', '--target-layer-num', default=3, type=int,
                               help='number of layers for the target LSTM recurrent neural network')
-    train_parser.add_argument('-tnh', '--target-num-hidden', default=512, type=int,
-                              help='number of hidden units in the target neural network')
+    train_parser.add_argument('-thun', '--target-hidden-unit-num', default=512, type=int,
+                              help='number of hidden units in the neural network for decoder')
 
     train_parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWIthoutDefault, type=int,
                               default=[(3, 10), (3, 20), (5, 20), (7, 30)])
@@ -49,11 +49,12 @@ def parse_args():
     train_parser.add_argument('-do', '--dropout', default=0.0, type=float,
                               help='dropout is the probability to ignore the neuron outputs')
     train_parser.add_argument('-le', '--load-epoch', dest='load_epoch', help='epoch of pretrained model',
-                               type=int)
+                              type=int)
     train_parser.add_argument('-mp', '--model-prefix', default='query2vec',
                               type=str,
                               help='the experiment name, this is also the prefix for the parameters file')
-    train_parser.add_argument('-pd', '--model-path', default=os.path.join(os.getcwd(), 'data', 'model'), type=DirectoryType,
+    train_parser.add_argument('-pd', '--model-path', default=os.path.join(os.getcwd(), 'data', 'model'),
+                              type=DirectoryType,
                               help='the directory to store the parameters of the training')
     train_parser.add_argument('-lr', '--learning-rate', dest='lr', default=0.01, type=float,
                               help='learning rate of the stochastic gradient descent')
@@ -88,34 +89,20 @@ def parse_args():
                               help='the frequency to save checkpoint')
 
     train_parser.add_argument('-kv', '--kv-store', dest='kv_store', help='the kv-store type',
-                              default='device', type=str)
+                              default='local', type=str)
     train_parser.add_argument('-mi', '--monitor-interval', default=0, type=int,
                               help='log network parameters every N iters if larger than 0')
     train_parser.add_argument('-eval', '--enable-evaluation', action='store_true', help='enable evaluation')
-
-    train_parser.add_argument('--iterations', default=1, type=int,
-                              help='number of iterations (epoch)')
-
-
-    train_parser.add_argument('--gpus', type=str,
-                              help='the gpus will be used, e.g "0,1,2,3"')
 
     train_parser.add_argument('-eti', '--enc-test-input', type=str,
                               help='the file name of the encoder input for testing')
     train_parser.add_argument('-dti', '--dec-test-input', type=str,
                               help='the file name of the decoder input for testing')
 
-
-
-    train_parser.add_argument('-wll', '--work-load_-ist', dest='work_load_list', help='work load for different devices',
+    train_parser.add_argument('-wll', '--work-load-ist', dest='work_load_list', help='work load for different devices',
                               default=None, type=list)
 
-
-    train_parser.add_argument('--factor-step', type=int, default=50000, help='the step used for lr factor')
-    train_parser.add_argument('--monitor', action='store_true', default=False,
-                              help='if true, then will use monitor debug')
-
-    #data parameter
+    # data parameter
     train_parser.add_argument('train_source_path', type=str,
                               help='the file name of the encoder input for training')
     train_parser.add_argument('train_target_path', type=str,
@@ -124,7 +111,7 @@ def parse_args():
                               type=str,
                               help='vocabulary with he most common words')
 
-    #vocabulary parameter
+    # vocabulary parameter
     vocab_parser.add_argument('-tw', '--top-words', default=40000, type=int,
                               help='the words with the top frequency to retain in the vocabulary')
 
@@ -137,6 +124,7 @@ def parse_args():
                               help='the file with the words which are the most command words in the corpus')
     return parser.parse_args()
 
+
 if __name__ == "__main__":
     args = parse_args()
 
@@ -146,17 +134,20 @@ if __name__ == "__main__":
 
         trainer(train_source_path=args.train_source_path, train_target_path=args.train_target_path,
                 vocabulary_path=args.vocabulary_path) \
-            .set_model_parameter(s_layer_num=args.source_num_layers, s_hidden_unit=args.source_num_hidden,
-                                 s_embed_size=args.embed_size, t_layer_num=args.target_num_layers,
-                                 t_hidden_unit=args.target_num_hidden, t_embed_size=args.embed_size,
+            .set_model_parameter(source_layer_num=args.source_layer_num,
+                                 source_hidden_unit_num=args.source_hidden_unit_num,
+                                 source_embed_size=args.embed_size, target_layer_num=args.target_layer_num,
+                                 target_hidden_unit_num=args.target_hidden_unit_num, target_embed_size=args.embed_size,
                                  buckets=args.buckets) \
-            .set_train_parameter(s_dropout=args.dropout, t_dropout=args.dropout, load_epoch=args.load_epoch,
-                                 model_prefix=os.path.join(args.model_path, args.model_prefix), device_mode=args.device_mode, devices=args.devices,
-                                 lr_factor=args.lr_factor, wd=args.weight_decay,\
+            .set_train_parameter(source_dropout=args.dropout, target_dropout=args.dropout, load_epoch=args.load_epoch,
+                                 model_prefix=os.path.join(args.model_path, args.model_prefix),
+                                 device_mode=args.device_mode, devices=args.devices,
+                                 lr_factor=args.lr_factor, wd=args.weight_decay,
                                  lr=args.lr, train_max_samples=args.train_max_samples, momentum=args.momentum,
                                  show_every_x_batch=args.show_every_x_batch, num_epoch=args.num_epoch,
                                  optimizer=args.optimizer, batch_size=args.batch_size) \
-            .set_mxnet_parameter(log_path=args.log_path, log_level=args.log_level, kv_store=args.kv_store, enable_evaluation=args.enable_evaluation,
+            .set_mxnet_parameter(log_path=args.log_path, log_level=args.log_level, kv_store=args.kv_store,
+                                 enable_evaluation=args.enable_evaluation,
                                  monitor_interval=args.monitor_interval, save_checkpoint_freq=args.save_checkpoint_freq) \
             .train()
     elif args.action == 'vocab':

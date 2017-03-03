@@ -33,12 +33,12 @@ class trainer(object):
 
     def set_model_parameter(self, **kwargs):
         model_parameter_defaults = {
-            "s_layer_num": 1,
-            "s_hidden_unit": 512,
-            "s_embed_size": 512,
-            "t_layer_num": 1,
-            "t_hidden_unit": 512,
-            "t_embed_size": 512,
+            "source_layer_num": 1,
+            "source_hidden_unit_num": 512,
+            "source_embed_size": 512,
+            "target_layer_num": 1,
+            "target_hidden_unit_num": 512,
+            "target_embed_size": 512,
             "buckets": [(3, 10), (3, 20), (5, 20), (7, 30)]
         }
         for (parameter, default) in model_parameter_defaults.iteritems():
@@ -47,8 +47,8 @@ class trainer(object):
 
     def set_train_parameter(self, **kwargs):
         train_parameter_defaults = {
-            "s_dropout": 0.5,
-            "t_dropout": 0.5,
+            "source_dropout": 0.5,
+            "target_dropout": 0.5,
             "load_epoch": 0,
             "model_prefix": "query2vec",
             "device_mode": "cpu",
@@ -119,19 +119,22 @@ class trainer(object):
     def get_LSTM_shape(self):
         # initalize states for LSTM
 
-        forward_source_init_c = [('forward_source_l%d_init_c' % l, (self.batch_size, self.s_hidden_unit)) for l in
-                                 range(self.s_layer_num)]
-        forward_source_init_h = [('forward_source_l%d_init_h' % l, (self.batch_size, self.s_hidden_unit)) for l in
-                                 range(self.s_layer_num)]
-        backward_source_init_c = [('backward_source_l%d_init_c' % l, (self.batch_size, self.s_hidden_unit)) for l in
-                                  range(self.s_layer_num)]
-        backward_source_init_h = [('backward_source_l%d_init_h' % l, (self.batch_size, self.s_hidden_unit)) for l in
-                                  range(self.s_layer_num)]
+        forward_source_init_c = [('forward_source_l%d_init_c' % l, (self.batch_size, self.source_hidden_unit_num)) for l
+                                 in
+                                 range(self.source_layer_num)]
+        forward_source_init_h = [('forward_source_l%d_init_h' % l, (self.batch_size, self.source_hidden_unit_num)) for l
+                                 in
+                                 range(self.source_layer_num)]
+        backward_source_init_c = [('backward_source_l%d_init_c' % l, (self.batch_size, self.source_hidden_unit_num)) for
+                                  l in
+                                  range(self.source_layer_num)]
+        backward_source_init_h = [('backward_source_l%d_init_h' % l, (self.batch_size, self.source_hidden_unit_num)) for
+                                  l in
+                                  range(self.source_layer_num)]
         source_init_states = forward_source_init_c + forward_source_init_h + backward_source_init_c + backward_source_init_h
 
-        target_init_c = [('target_l%d_init_c' % l, (self.batch_size, self.t_hidden_unit)) for l in
-                         range(self.t_layer_num)]
-        # target_init_h = [('target_l%d_init_h' % l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
+        target_init_c = [('target_l%d_init_c' % l, (self.batch_size, self.target_hidden_unit_num)) for l in
+                         range(self.target_layer_num)]
         target_init_states = target_init_c
         return source_init_states, target_init_states
 
@@ -143,8 +146,8 @@ class trainer(object):
         # kvstore
         self.kv = mx.kvstore.create(self.kv_store)
         self._initial_log(self.kv, self.log_level)
-
-        self.print_all_variable()
+        if self.kv.rank == 0:
+            self.print_all_variable()
 
         # load vocabulary
         vocab = load_vocab(self.vocabulary_path)
@@ -160,17 +163,17 @@ class trainer(object):
         data_loader = MaskedBucketSentenceIter(self.train_source_path, self.train_target_path, vocab,
                                                vocab,
                                                self.buckets, self.batch_size,
-                                               source_init_states, target_init_states, seperate_char='\n',
+                                               source_init_states, target_init_states,
                                                text2id=sentence2id, read_data=read_data,
                                                max_read_sample=self.train_max_samples)
 
-        network = sym_gen(s_vocab_size=vocab_size, s_layer_num=self.s_layer_num,
-                          s_hidden_unit=self.s_hidden_unit, s_embed_size=self.s_embed_size, s_dropout=self.s_dropout,
-                          t_vocab_size=vocab_size, t_layer_num=self.t_layer_num,
-                          t_hidden_unit=self.t_hidden_unit, t_embed_size=self.t_embed_size, t_dropout=self.t_dropout,
-                          t_label_num=vocab_size,
-                          data_names=data_loader.get_data_names(), label_names=data_loader.get_label_names(),
-                          batch_size=self.batch_size)
+        network = sym_gen(source_vocab_size=vocab_size, source_layer_num=self.source_layer_num,
+                          source_hidden_unit_num=self.source_hidden_unit_num, source_embed_size=self.source_embed_size,
+                          source_dropout=self.source_dropout,
+                          target_vocab_size=vocab_size, target_layer_num=self.target_layer_num,
+                          target_hidden_unit_num=self.target_hidden_unit_num, target_embed_size=self.target_embed_size,
+                          target_dropout=self.target_dropout,
+                          data_names=data_loader.get_data_names(), label_names=data_loader.get_label_names())
 
         self._fit(network, data_loader)
 
@@ -213,13 +216,6 @@ class trainer(object):
 
         initializer = mx.init.Xavier(
             rnd_type='gaussian', factor_type="in", magnitude=2)
-        # initializer   = mx.init.Xavier(factor_type="in", magnitude=2.34),
-
-        # evaluation metrices
-        # eval_metrics = ['accuracy']
-        eval_metrics = []
-        # if args.top_k > 0:
-        #   eval_metrics.append(metric.TopKAccuracy('top_k_accuracy', top_k=args.top_k))
 
         # callbacks that run after each batch
         batch_end_callbacks = [mx.callback.Speedometer(self.batch_size, self.show_every_x_batch)]
@@ -238,5 +234,4 @@ class trainer(object):
                   batch_end_callback=batch_end_callbacks,
                   epoch_end_callback=checkpoint,
                   allow_missing=True,
-                  monitor=monitor
-                  )
+                  monitor=monitor)

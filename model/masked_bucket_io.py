@@ -1,6 +1,8 @@
 import sys
 import numpy as np
 import mxnet as mx
+from common.constant import bos_word, eos_word
+
 
 class SimpleBatch(object):
     def __init__(self, data_names, data, label_names, label, bucket_key):
@@ -21,22 +23,21 @@ class SimpleBatch(object):
     def provide_label(self):
         return [(n, x.shape) for n, x in zip(self.label_names, self.label)]
 
+
 class MaskedBucketSentenceIter(mx.io.DataIter):
     def __init__(self, source_path, target_path, source_vocab, target_vocab,
                  buckets, batch_size,
                  source_init_states, target_init_states,
                  source_data_name='source', source_mask_name='source_mask',
                  target_data_name='target', target_mask_name='target_mask',
-                 label_name='target_softmax_label',
-                 seperate_char=' <eos> ', text2id=None, read_data=None, max_read_sample=sys.maxsize):
+                 label_name='target_label',
+                 text2id=None, read_data=None, max_read_sample=sys.maxsize):
         super(MaskedBucketSentenceIter, self).__init__()
 
         self.text2id = text2id
         source_sentences = read_data(source_path, max_read_sample)
-        # source_sentences = source_content.split(seperate_char)
 
         target_sentences = read_data(target_path, max_read_sample)
-        # target_sentences = target_content.split(seperate_char)
 
         assert len(source_sentences) == len(target_sentences)
 
@@ -63,8 +64,8 @@ class MaskedBucketSentenceIter(mx.io.DataIter):
         num_of_data = len(source_sentences)
         for i in range(num_of_data):
             source = source_sentences[i]
-            target = ['<s>'] + target_sentences[i]
-            label = target_sentences[i] + ['</s>']
+            target = [bos_word] + target_sentences[i]
+            label = target_sentences[i] + [eos_word]
             source_sentence = self.text2id(source, source_vocab)
             target_sentence = self.text2id(target, target_vocab)
             label_id = self.text2id(label, target_vocab)
@@ -129,10 +130,12 @@ class MaskedBucketSentenceIter(mx.io.DataIter):
         self.provide_label = [(label_name, (self.batch_size, self.default_bucket_key[1]))]
 
     def get_data_names(self):
-        return [self.source_data_name] + [self.source_mask_name] + [self.target_data_name] + [self.target_mask_name ] + self.source_init_state_names + self.target_init_state_names
+        return [self.source_data_name] + [self.source_mask_name] + [self.target_data_name] + [self.target_mask_name] \
+               + self.source_init_state_names + self.target_init_state_names
 
     def get_label_names(self):
         return [self.label_name]
+
     def make_data_iter_plan(self):
         "make a random data iteration plan"
         # truncate each bucket into multiple of batch-size
@@ -144,6 +147,20 @@ class MaskedBucketSentenceIter(mx.io.DataIter):
             self.target_data[i] = self.target_data[i][:int(bucket_n_batches[i] * self.batch_size)]
             self.target_mask_data[i] = self.target_mask_data[i][:int(bucket_n_batches[i] * self.batch_size)]
 
+        ################################################################################
+        # >> > a = np.zeros(3, int)
+        # >> > a
+        # array([0, 0, 0])
+        # >> > b = np.zeros(4, int) + 2
+        # >> > b
+        # array([2, 2, 2, 2])
+        # >> > np.hstack([a, b])
+        # array([0, 0, 0, 2, 2, 2, 2])
+        # >> > c = np.hstack([a, b])
+        # >> > np.random.shuffle(c)
+        # >> > c
+        # array([2, 2, 0, 0, 2, 2, 0])
+        ################################################################################
         bucket_plan = np.hstack([np.zeros(n, int) + i for i, n in enumerate(bucket_n_batches)])
         np.random.shuffle(bucket_plan)
 
@@ -151,8 +168,9 @@ class MaskedBucketSentenceIter(mx.io.DataIter):
 
         self.bucket_plan = bucket_plan
         self.bucket_idx_all = bucket_idx_all
-        self.bucket_curr_idx = [0 for x in self.source_data]
+        self.bucket_curr_idx = [0 for _ in self.source_data]
 
+        # buffer for each batch data
         self.source_data_buffer = []
         self.source_mask_data_buffer = []
         self.target_data_buffer = []
@@ -195,7 +213,6 @@ class MaskedBucketSentenceIter(mx.io.DataIter):
                        [mx.nd.array(target_data), mx.nd.array(target_mask_data)] + \
                        self.source_init_state_arrays + self.target_init_state_arrays
             label_all = [mx.nd.array(label)]
-            #label_all = [label.flatten()]
             data_names = [self.source_data_name, self.source_mask_name] + [
                 self.target_data_name, self.target_mask_name] + source_init_state_names + target_init_state_names
             label_names = [self.label_name]
