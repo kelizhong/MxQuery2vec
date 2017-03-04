@@ -152,12 +152,12 @@ def lstm_decode_symbol(t_num_lstm_layer, t_seq_len, t_vocab_size, t_num_hidden, 
     encoded_mask = mx.sym.SliceChannel(data=encoded_mask, num_outputs=source_seq_len, name='sliced_source_mask')
     seqidx = 0
 
-    embed_weight = mx.sym.Variable("target_embed_weight")
+    embed_weight = mx.sym.Variable("embed_weight")
     cls_weight = mx.sym.Variable("target_cls_weight")
     cls_bias = mx.sym.Variable("target_cls_bias")
 
     input_weight = mx.sym.Variable("target_input_weight")
-    # input_bias = mx.sym.Variable("target_input_bias")
+    input_bias = mx.sym.Variable("target_input_bias")
 
     param_cells = []
     last_states = []
@@ -178,7 +178,7 @@ def lstm_decode_symbol(t_num_lstm_layer, t_seq_len, t_vocab_size, t_num_hidden, 
                               input_dim=t_vocab_size,
                               output_dim=t_num_embed,
                               weight=embed_weight,
-                              name="target_embed")
+                              name="embed_weight")
 
     # stack LSTM
     for i in range(t_num_lstm_layer):
@@ -195,7 +195,7 @@ def lstm_decode_symbol(t_num_lstm_layer, t_seq_len, t_vocab_size, t_num_hidden, 
 
     fc = mx.sym.FullyConnected(data=hidden, num_hidden=t_num_label,
                                weight=cls_weight, bias=cls_bias, name='target_pred')
-    sm = mx.sym.SoftmaxOutput(data=fc, name='target_softmax')
+    sm = mx.sym.SoftmaxOutput(data=fc, name='target')
     output = [sm]
     for state in last_states:
         output.append(state.c)

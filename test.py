@@ -13,7 +13,7 @@ import os
 import clg
 import time
 from conf.customArgType import IntegerType, LoggerLevelType, DirectoryType, FileType
-from conf.customArgAction import AppendTupleWIthoutDefault
+from conf.customArgAction import AppendTupleWithoutDefault
 random_sample = False
 
 def parse_args():
@@ -49,7 +49,7 @@ def parse_args():
     parser.add_argument('-thun', '--target-hidden-unit-num', default=512, type=int,
                               help='number of hidden units in the neural network for decoder')
 
-    parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWIthoutDefault, type=int,
+    parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,
                               default=[(3, 10), (3, 20), (5, 20), (7, 30)])
     return parser.parse_args()
 
@@ -181,5 +181,5 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 20
-    print(test_use_model_param("You have my word.".split(" ")))
+    args.load_epoch = 30
+    print(test_use_model_param("Sure have".split(" ")))

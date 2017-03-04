@@ -9,7 +9,7 @@ class LstmDecoder(object):
                  hidden_unit_num,
                  vocab_size, embed_size,
                  dropout=0.0, layer_num=1,
-                 embed_weight=None, embed_name='embed'):
+                 embed_weight=None, embed_name='embed_weight'):
         self.seq_len = seq_len
         self.use_masking = use_masking
         self.hidden_unit_num = hidden_unit_num
@@ -25,7 +25,7 @@ class LstmDecoder(object):
         label = mx.sym.Variable('target_label')  # target label data
         # declare variables
         if self.embed_weight is None:
-            self.embed_weight = mx.sym.Variable("target_embed_weight")
+            self.embed_weight = mx.sym.Variable(self.embedding_name)
         cls_weight = mx.sym.Variable("target_cls_weight")
         cls_bias = mx.sym.Variable("target_cls_bias")
         init_weight = mx.sym.Variable("target_init_weight")
@@ -49,7 +49,7 @@ class LstmDecoder(object):
         assert (len(last_states) == self.layer_num)
 
         # embedding layer
-        embed = mx.sym.Embedding(data=data, input_dim=self.vocab_size,
+        embed = mx.sym.Embedding(data=data, input_dim=self.vocab_size + 1,
                                  weight=self.embed_weight, output_dim=self.embed_size, name=self.embed_name)
         wordvec = mx.sym.SliceChannel(data=embed, num_outputs=self.seq_len, squeeze_axis=1)
         # split mask

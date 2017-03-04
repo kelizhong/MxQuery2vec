@@ -83,7 +83,7 @@ class vocab(object):
 
         vocab_count = global_counter.most_common(self.top_words - special_words_num)
         vocab = {}
-        idx = special_words_num
+        idx = special_words_num + 1
         for word, _ in vocab_count:
             if word not in self.special_words:
                 vocab[word] = idx
