@@ -1,16 +1,20 @@
+# coding=utf-8
 import os
 import pickle
 import re
 import sys
 
 from common import constant as config
-
+from nltk.stem.porter import PorterStemmer
+porter = PorterStemmer()
+from nltk.tokenize import wordpunct_tokenize
+import codecs
 
 # Read from doc
 def read_data(path, max_read_line=sys.maxsize):
     data  = []
     count = 0
-    with open(path) as f:
+    with codecs.open(path, encoding='utf-8', errors='ignore') as f:
         while True:
             line = f.readline()
             if not line:
@@ -19,7 +23,7 @@ def read_data(path, max_read_line=sys.maxsize):
             if count > max_read_line:
                 break
             line = line.strip()
-            data.append(line.split(' '))
+            data.append(wordpunct_tokenize(line))
     return data
 
 
@@ -37,8 +41,9 @@ def load_vocab(path):
 
 
 def sentence2id(sentence, the_vocab):
-    words = list(sentence)
-    words = [the_vocab[w] if w in the_vocab else the_vocab[config.unk_word] for w in words if len(w) > 0]
+    words = [the_vocab[porter.stem(w.lower())] if porter.stem(w.lower()) in the_vocab else the_vocab[config.unk_word] for w in sentence]
+    #words = list(sentence)
+    #words = [the_vocab[porter.stem(w.lower())] if w in the_vocab else the_vocab[config.unk_word] for w in words if len(w) > 0 and w.lower() not in stop_words]
     return words
 
 

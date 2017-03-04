@@ -11,7 +11,7 @@ from utils.file_utils import make_sure_path_exists
 from nltk.corpus import stopwords
 from nltk.tokenize import wordpunct_tokenize
 from nltk.stem.porter import PorterStemmer
-
+import codecs
 class vocab(object):
     def __init__(self, corpus_files, vocab_file, stop_words_dir, special_words=dict(), top_words=40000, log_level=logging.INFO,
                  log_path='./', overwrite=True, language='english'):
@@ -35,6 +35,7 @@ class vocab(object):
     def _words_gen(self, file):
         """Return each word in a line."""
         for line in file:
+            #line = line.decode('utf-8').strip()
             words = [self.porter.stem(i.lower()) for i in wordpunct_tokenize(line) if i.lower() not in self.stop_words]
             for word in words:
                 yield word
@@ -63,7 +64,7 @@ class vocab(object):
         global_counter = Counter()
         for file in self.corpus_files:
             logging.info("Counting words in %s" % file)
-            with open(file) as f:
+            with codecs.open(file, encoding='utf-8', errors='ignore') as f:
                 counter = Counter(self._words_gen(f))
                 logging.info("%d unique words in %s with a total of %d words."
                              % (len(counter), file, sum(counter.values())))

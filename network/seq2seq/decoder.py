@@ -37,7 +37,7 @@ class LstmDecoder(object):
         last_states = []
         init_h = mx.sym.FullyConnected(data=encoded, num_hidden=self.hidden_unit_num * self.layer_num,
                                        weight=init_weight, bias=init_bias, name='init_fc')
-        init_hs = mx.sym.SliceChannel(data=init_h, num_outputs=self.layer_num, squeeze_axis=1)
+        init_hs = mx.sym.SliceChannel(data=init_h, num_outputs=self.layer_num)
         for i in range(self.layer_num):
             param_cells.append(LSTMParam(i2h_weight=mx.sym.Variable("target_l%d_i2h_weight" % i),
                                          i2h_bias=mx.sym.Variable("target_l%d_i2h_bias" % i),
