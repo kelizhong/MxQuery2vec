@@ -40,12 +40,18 @@ def load_vocab(path):
     return vocab
 
 
-def sentence2id(sentence, the_vocab):
-    words = [the_vocab[porter.stem(w.lower())] if porter.stem(w.lower()) in the_vocab else the_vocab[config.unk_word] for w in sentence]
+def sentence2id(sentence, the_vocab, stop_words):
+    words = [the_vocab[porter.stem(w.lower())] if porter.stem(w.lower()) in the_vocab else the_vocab[config.unk_word] for w in sentence if w not in stop_words]
     #words = list(sentence)
     #words = [the_vocab[porter.stem(w.lower())] if w in the_vocab else the_vocab[config.unk_word] for w in words if len(w) > 0 and w.lower() not in stop_words]
     return words
 
+def get_stop_words(stop_words_dir, language):
+    stop_words = set()
+    with open(os.path.join(stop_words_dir, language)) as f:
+        for stop_word in f:
+            stop_words.add(stop_word.strip())
+    return stop_words
 
 def word2id(word, the_vocab):
     return the_vocab[word] if word in the_vocab else the_vocab[config.unk_word]

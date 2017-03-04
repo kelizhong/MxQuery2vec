@@ -175,7 +175,7 @@ def lstm_decode_symbol(t_num_lstm_layer, t_seq_len, t_vocab_size, t_num_hidden, 
     assert (len(last_states) == t_num_lstm_layer)
 
     hidden = mx.sym.Embedding(data=data,
-                              input_dim=t_vocab_size,
+                              input_dim=t_vocab_size + 1,
                               output_dim=t_num_embed,
                               weight=embed_weight,
                               name="embed_weight")

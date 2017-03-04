@@ -13,10 +13,11 @@ import time
 
 
 class trainer(object):
-    def __init__(self, train_source_path, train_target_path, vocabulary_path):
+    def __init__(self, train_source_path, train_target_path, vocabulary_path, stop_words_dir):
         self.train_source_path = train_source_path
         self.train_target_path = train_target_path
         self.vocabulary_path = vocabulary_path
+        self.stop_words_dir = stop_words_dir
 
     def set_mxnet_parameter(self, **kwargs):
         mxnet_parameter_defaults = {
@@ -160,7 +161,7 @@ class trainer(object):
         source_init_states, target_init_states = self.get_LSTM_shape()
 
         # build data iterator
-        data_loader = MaskedBucketSentenceIter(self.train_source_path, self.train_target_path, vocab,
+        data_loader = MaskedBucketSentenceIter(self.train_source_path, self.train_target_path, self.stop_words_dir, vocab,
                                                vocab,
                                                self.buckets, self.batch_size,
                                                source_init_states, target_init_states,

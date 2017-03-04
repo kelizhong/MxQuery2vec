@@ -14,6 +14,7 @@ import clg
 import time
 from conf.customArgType import IntegerType, LoggerLevelType, DirectoryType, FileType
 from conf.customArgAction import AppendTupleWithoutDefault
+from utils.data_utils import get_stop_words
 random_sample = False
 
 def parse_args():
@@ -50,7 +51,8 @@ def parse_args():
                               help='number of hidden units in the neural network for decoder')
 
     parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,
-                              default=[(3, 10), (3, 20), (5, 20), (7, 30)])
+                              default=[(5, 10), (10, 20), (20, 30), (30, 40), (40, 50)])
+    parser.add_argument('-swd', '--stop-words-dir', default=os.path.join(os.path.dirname(__file__), 'data', 'stop_words'), help='stop words file directory')
     return parser.parse_args()
 
 def get_inference_models(buckets, arg_params, source_vocab_size, target_vocab_size, ctx, batch_size):
@@ -79,7 +81,7 @@ def get_bucket_model(model_buckets, input_len):
 
 # make input from char
 def MakeInput(sentence, vocab, unroll_len, data_arr, mask_arr):
-    idx = sentence2id(sentence, vocab)
+    idx = sentence2id(sentence, vocab, stop_words)
     tmp = np.zeros((1, unroll_len))
     mask = np.zeros((1, unroll_len))
     for i in range(min(len(idx), unroll_len)):
@@ -181,5 +183,6 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 30
-    print(test_use_model_param("Sure have".split(" ")))
+    args.load_epoch = 5
+    stop_words = get_stop_words(args.stop_words_dir, 'english')
+    print(test_use_model_param("Gosh if only we could find Kat a boyfriend".split(" ")))

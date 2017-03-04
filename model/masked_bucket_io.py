@@ -2,7 +2,8 @@ import sys
 import numpy as np
 import mxnet as mx
 from common.constant import bos_word, eos_word
-
+import os
+from utils.data_utils import get_stop_words
 
 class SimpleBatch(object):
     def __init__(self, data_names, data, label_names, label, bucket_key):
@@ -25,7 +26,7 @@ class SimpleBatch(object):
 
 
 class MaskedBucketSentenceIter(mx.io.DataIter):
-    def __init__(self, source_path, target_path, source_vocab, target_vocab,
+    def __init__(self, source_path, target_path, stop_words_dir, source_vocab, target_vocab,
                  buckets, batch_size,
                  source_init_states, target_init_states,
                  source_data_name='source', source_mask_name='source_mask',
@@ -50,6 +51,8 @@ class MaskedBucketSentenceIter(mx.io.DataIter):
         self.source_mask_name = source_mask_name
         self.target_mask_name = target_mask_name
 
+        self.stop_words = get_stop_words(stop_words_dir, 'english')
+
         buckets.sort()
         self.buckets = buckets
         self.source_data = [[] for _ in buckets]
@@ -66,9 +69,9 @@ class MaskedBucketSentenceIter(mx.io.DataIter):
             source = source_sentences[i]
             target = [bos_word] + target_sentences[i]
             label = target_sentences[i] + [eos_word]
-            source_sentence = self.text2id(source, source_vocab)
-            target_sentence = self.text2id(target, target_vocab)
-            label_id = self.text2id(label, target_vocab)
+            source_sentence = self.text2id(source, source_vocab, self.stop_words)
+            target_sentence = self.text2id(target, target_vocab, self.stop_words)
+            label_id = self.text2id(label, target_vocab, self.stop_words)
             if len(source_sentence) == 0 or len(target_sentence) == 0:
                 continue
             for j, bkt in enumerate(buckets):

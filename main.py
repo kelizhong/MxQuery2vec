@@ -110,6 +110,9 @@ def parse_args():
     train_parser.add_argument('vocabulary_path', default=os.path.join(os.getcwd(), 'data', 'vocabulary', 'vocab.pkl'),
                               type=str,
                               help='vocabulary with he most common words')
+    train_parser.add_argument('stop_words_dir',
+                              default=os.path.join(os.path.dirname(__file__), 'data', 'stop_words'),
+                              help='stop words file directory')
 
     # vocabulary parameter
     vocab_parser.add_argument('-tw', '--top-words', default=40000, type=int,
@@ -134,7 +137,7 @@ if __name__ == "__main__":
         from model.trainer import trainer
 
         trainer(train_source_path=args.train_source_path, train_target_path=args.train_target_path,
-                vocabulary_path=args.vocabulary_path) \
+                vocabulary_path=args.vocabulary_path, stop_words_dir=args.stop_words_dir) \
             .set_model_parameter(source_layer_num=args.source_layer_num,
                                  source_hidden_unit_num=args.source_hidden_unit_num,
                                  source_embed_size=args.embed_size, target_layer_num=args.target_layer_num,
