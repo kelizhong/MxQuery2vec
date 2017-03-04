@@ -8,17 +8,22 @@ import os
 from collections import Counter
 import time
 from utils.file_utils import make_sure_path_exists
-
+from nltk.corpus import stopwords
+from nltk.tokenize import wordpunct_tokenize
+from nltk.stem.porter import PorterStemmer
 
 class vocab(object):
-    def __init__(self, corpus_files, vocab_file, special_words=dict(), top_words=40000, log_level=logging.INFO,
-                 log_path='./', overwrite=True):
+    def __init__(self, corpus_files, vocab_file, stop_words_dir, special_words=dict(), top_words=40000, log_level=logging.INFO,
+                 log_path='./', overwrite=True, language='english'):
         self.corpus_files = corpus_files
         self.vocab_file = vocab_file
         self.top_words = top_words
         self.special_words = special_words
         self.overwrite = overwrite
         self.log_path = log_path
+        self.stop_words_dir = stop_words_dir
+        self.stop_words = self._set_stop_words(language)
+        self.porter = PorterStemmer()
         self._init_log(log_level)
 
     def _init_log(self, loglevel):
@@ -30,9 +35,16 @@ class vocab(object):
     def _words_gen(self, file):
         """Return each word in a line."""
         for line in file:
-            words = re.split('\s+', line.strip())
+            words = [self.porter.stem(i.lower()) for i in wordpunct_tokenize(line) if i.lower() not in self.stop_words]
             for word in words:
                 yield word
+
+    def _set_stop_words(self, language):
+        stop_words = set()
+        with open(os.path.join(self.stop_words_dir, language)) as f:
+            for stop_word in f:
+                stop_words.add(stop_word.strip())
+        return stop_words
 
     def _save_vocab_pickle(self, obj, filename):
         make_sure_path_exists(filename)

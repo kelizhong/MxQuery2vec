@@ -1,6 +1,6 @@
 import mxnet as mx
 import numpy as np
-import logging
+import argparse
 import random
 import bisect
 from collections import OrderedDict, namedtuple
@@ -12,21 +12,59 @@ import yamlordereddictloader
 import os
 import clg
 import time
-from conf.customArgType import IntegerType, LoggerLevelType
+from conf.customArgType import IntegerType, LoggerLevelType, DirectoryType, FileType
+from conf.customArgAction import AppendTupleWIthoutDefault
 random_sample = False
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Train Seq2seq model for query2vec')
+
+    parser.add_argument('-lp', '--log-path', default=os.path.join(os.getcwd(), 'data', 'logs'),
+                        type=DirectoryType, help='Log directory (default: __DEFAULT__).')
+    parser.add_argument('-ll', '--log-level', choices=['debug', 'info', 'warn', 'error'], default='info',
+                        type=LoggerLevelType,
+                        help='Log level on console (default: __DEFAULT__).')
+    parser.add_argument('vocabulary_path', default=os.path.join(os.getcwd(), 'data', 'vocabulary', 'vocab.pkl'),
+                              type=str,
+                              help='vocabulary with he most common words')
+    parser.add_argument('-le', '--load-epoch', dest='load_epoch', help='epoch of pretrained model',
+                              type=int)
+    parser.add_argument('-mp', '--model-prefix', default='query2vec',
+                              type=str,
+                              help='the experiment name, this is also the prefix for the parameters file')
+    parser.add_argument('-pd', '--model-path', default=os.path.join(os.getcwd(), 'data', 'model'),
+                              type=DirectoryType,
+                              help='the directory to store the parameters of the training')
+
+    # model parameter
+    parser.add_argument('-sln', '--source-layer-num', default=3, type=int,
+                              help='number of layers for the source LSTM recurrent neural network')
+    parser.add_argument('-shun', '--source-hidden-unit-num', default=512, type=int,
+                              help='number of hidden units in the neural network for encoder')
+    parser.add_argument('-es', '--embed-size', default=150, type=int,
+                              help='embedding size ')
+
+    parser.add_argument('-tln', '--target-layer-num', default=3, type=int,
+                              help='number of layers for the target LSTM recurrent neural network')
+    parser.add_argument('-thun', '--target-hidden-unit-num', default=512, type=int,
+                              help='number of hidden units in the neural network for decoder')
+
+    parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWIthoutDefault, type=int,
+                              default=[(3, 10), (3, 20), (5, 20), (7, 30)])
+    return parser.parse_args()
 
 def get_inference_models(buckets, arg_params, source_vocab_size, target_vocab_size, ctx, batch_size):
     # build an inference model
     model_buckets = OrderedDict()
     for bucket in buckets:
-        model_buckets[bucket] = BiS2SInferenceModel_mask(s_num_lstm_layer=args.s_layer_num, s_seq_len=bucket[0],
-                                                         s_vocab_size=source_vocab_size + 1,
-                                                         s_num_hidden=args.s_hidden_unit, s_num_embed=args.s_embed_size,
+        model_buckets[bucket] = BiS2SInferenceModel_mask(s_num_lstm_layer=args.source_layer_num, s_seq_len=bucket[0],
+                                                         s_vocab_size=source_vocab_size,
+                                                         s_num_hidden=args.source_hidden_unit_num, s_num_embed=args.embed_size,
                                                          s_dropout=0,
-                                                         t_num_lstm_layer=args.t_layer_num, t_seq_len=bucket[1],
-                                                         t_vocab_size=target_vocab_size + 1,
-                                                         t_num_hidden=args.t_hidden_unit, t_num_embed=args.t_embed_size,
-                                                         t_num_label=target_vocab_size + 1, t_dropout=0,
+                                                         t_num_lstm_layer=args.target_layer_num, t_seq_len=bucket[1],
+                                                         t_vocab_size=target_vocab_size,
+                                                         t_num_hidden=args.target_hidden_unit_num, t_num_embed=args.embed_size,
+                                                         t_num_label=target_vocab_size, t_dropout=0,
                                                          arg_params=arg_params,
                                                          use_masking=True,
                                                          ctx=ctx, batch_size=batch_size)
@@ -119,8 +157,8 @@ def test_use_model_param(str):
     # load vocabulary
     vocab = load_vocab(args.vocabulary_path)
     # load model from check-point
-    _, arg_params, __ = mx.model.load_checkpoint(args.model_prefix, args.load_epoch)
-    vocab_size = len(vocab);
+    _, arg_params, __ = mx.model.load_checkpoint(os.path.join(args.model_path, args.model_prefix), args.load_epoch)
+    vocab_size = len(vocab)
     logging.info('vocab size: {0}'.format(vocab_size))
     target_ndarray = mx.nd.zeros((1,), ctx=mx.cpu())
     revert_vocab = MakeRevertVocab(vocab)
@@ -136,23 +174,12 @@ def test_use_model_param(str):
     en = ' '.join(en)
     return en
 
-def parseArgs(config_path):
-    clg.TYPES.update({'Integer': IntegerType, 'LoggerLevel': LoggerLevelType})
-    cmd = clg.CommandLine(yaml.load(open(config_path),
-                                    Loader=yamlordereddictloader.Loader))
-    args = cmd.parse()
-
-    logging.basicConfig(format='%(asctime)s %(levelname)s:%(name)s:%(message)s', level=args.loglevel, datefmt='%H:%M:%S')
-    file_handler = logging.FileHandler(os.path.join(args.logdir, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
-    file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
-    logging.root.addHandler(file_handler)
-
-    for arg, value in args:
-        print("  %s: %s" % (arg, value))
-    return args
-
 
 if __name__ == "__main__":
-    args = parseArgs('./conf/config.yml')
-    args.load_epoch = 253
-    print(test_use_model_param("hello".split(" ")))
+    args = parse_args()
+    logging.basicConfig(format='%(asctime)s %(levelname)s:%(name)s:%(message)s', level=args.log_level, datefmt='%H:%M:%S')
+    file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
+    file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
+    logging.root.addHandler(file_handler)
+    args.load_epoch = 20
+    print(test_use_model_param("You have my word.".split(" ")))

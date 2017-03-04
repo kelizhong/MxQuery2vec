@@ -8,7 +8,7 @@ import logging
 import os
 import time
 from conf.customArgType import IntegerType, LoggerLevelType, DirectoryType, FileType
-from conf.customArgAction import AppendTupleWIthoutDefault
+from conf.customArgAction import AppendTupleWithoutDefault
 import argparse
 from common.constant import special_words
 
@@ -41,7 +41,7 @@ def parse_args():
     train_parser.add_argument('-thun', '--target-hidden-unit-num', default=512, type=int,
                               help='number of hidden units in the neural network for decoder')
 
-    train_parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWIthoutDefault, type=int,
+    train_parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,
                               default=[(3, 10), (3, 20), (5, 20), (7, 30)])
 
     # train parameter
@@ -85,7 +85,7 @@ def parse_args():
     train_parser.add_argument('-lf', '--log-freq', default=1000, type=int,
                               help='the frequency to printout the training verbose information')
 
-    train_parser.add_argument('-scf', '--save-checkpoint-freq', default=100, type=int,
+    train_parser.add_argument('-scf', '--save-checkpoint-freq', default=1, type=int,
                               help='the frequency to save checkpoint')
 
     train_parser.add_argument('-kv', '--kv-store', dest='kv_store', help='the kv-store type',
@@ -119,9 +119,10 @@ def parse_args():
                         program not to reuse count files')
     vocab_parser.add_argument('files', nargs='+',
                               help='the corpus input files')
-    vocab_parser.add_argument('vocab_file',
-                              type=FileType,
+    vocab_parser.add_argument('-vf', '--vocab-file',
+                              type=FileType, default=os.path.join(os.path.dirname(__file__), 'data', 'vocabulary', 'vocab.pkl'),
                               help='the file with the words which are the most command words in the corpus')
+    vocab_parser.add_argument('-swd', '--stop-words-dir', default=os.path.join(os.path.dirname(__file__), 'data', 'stop_words'), help='stop words file directory')
     return parser.parse_args()
 
 
@@ -153,6 +154,6 @@ if __name__ == "__main__":
     elif args.action == 'vocab':
         from vocabulary.vocab_gen import vocab
 
-        vocab(args.files, args.vocab_file, top_words=args.top_words, special_words=special_words,
+        vocab(args.files, args.vocab_file, top_words=args.top_words, stop_words_dir=args.stop_words_dir, special_words=special_words,
               log_path=args.log_path, log_level=args.log_level, overwrite=args.overwrite) \
             .create_dictionary()

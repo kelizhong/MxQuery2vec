@@ -10,7 +10,7 @@ def initial_state_symbol(t_num_lstm_layer, t_num_hidden):
     init_h = mx.sym.FullyConnected(data=encoded, num_hidden=t_num_hidden*t_num_lstm_layer,
                                    weight=init_weight, bias=init_bias, name='init_fc')
     init_h = mx.sym.Activation(data=init_h, act_type='tanh', name='init_act')
-    init_hs = mx.sym.SliceChannel(data=init_h, num_outputs=t_num_lstm_layer, squeeze_axis=1)
+    init_hs = mx.sym.SliceChannel(data=init_h, num_outputs=t_num_lstm_layer)
     return init_hs
 
 
@@ -134,11 +134,9 @@ class BiS2SInferenceModel_mask(object):
 
 def bidirectional_encode_symbol(s_num_lstm_layer, s_seq_len, use_masking, s_vocab_size, s_num_hidden, s_num_embed,
                                 s_dropout):
-    encoder = BiDirectionalLstmEncoder(seq_len=s_seq_len, use_masking=use_masking, state_dim=s_num_hidden,
-                                       input_dim=s_vocab_size,
-                                       output_dim=0,
-                                       vocab_size=s_vocab_size, embed_dim=s_num_embed,
-                                       dropout=s_dropout, num_of_layer=s_num_lstm_layer)
+    encoder = BiDirectionalLstmEncoder(seq_len=s_seq_len, use_masking=use_masking, hidden_unit_num=s_num_hidden,
+                                       vocab_size=s_vocab_size, embed_size=s_num_embed,
+                                       dropout=s_dropout, layer_num=s_num_lstm_layer)
     forward_hidden_all, backward_hidden_all, bi_hidden_all, masks_sliced = encoder.encode()
     concat_encoded = mx.sym.Concat(*bi_hidden_all, dim=1)
     encoded_for_init_state = mx.sym.Concat(forward_hidden_all[-1], backward_hidden_all[0], dim=1,
@@ -177,7 +175,7 @@ def lstm_decode_symbol(t_num_lstm_layer, t_seq_len, t_vocab_size, t_num_hidden, 
     assert (len(last_states) == t_num_lstm_layer)
 
     hidden = mx.sym.Embedding(data=data,
-                              input_dim=t_vocab_size + 1,
+                              input_dim=t_vocab_size,
                               output_dim=t_num_embed,
                               weight=embed_weight,
                               name="target_embed")
