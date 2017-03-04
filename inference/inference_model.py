@@ -195,7 +195,7 @@ def lstm_decode_symbol(t_num_lstm_layer, t_seq_len, t_vocab_size, t_num_hidden, 
 
     fc = mx.sym.FullyConnected(data=hidden, num_hidden=t_num_label,
                                weight=cls_weight, bias=cls_bias, name='target_pred')
-    sm = mx.sym.SoftmaxOutput(data=fc, name='target')
+    sm = mx.sym.SoftmaxOutput(data=fc, name='target_softmax')
     output = [sm]
     for state in last_states:
         output.append(state.c)

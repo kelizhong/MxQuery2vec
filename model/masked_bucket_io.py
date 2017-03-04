@@ -30,7 +30,7 @@ class MaskedBucketSentenceIter(mx.io.DataIter):
                  source_init_states, target_init_states,
                  source_data_name='source', source_mask_name='source_mask',
                  target_data_name='target', target_mask_name='target_mask',
-                 label_name='target_label',
+                 label_name='target_softmax_label',
                  text2id=None, read_data=None, max_read_sample=sys.maxsize):
         super(MaskedBucketSentenceIter, self).__init__()
 

@@ -22,7 +22,7 @@ class LstmDecoder(object):
 
     def decode(self, encoded):
         data = mx.sym.Variable('target')  # target input data
-        label = mx.sym.Variable('target_label')  # target label data
+        label = mx.sym.Variable('target_softmax_label')  # target label data
         # declare variables
         if self.embed_weight is None:
             self.embed_weight = mx.sym.Variable(self.embedding_name)
