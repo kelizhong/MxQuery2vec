@@ -15,6 +15,7 @@ import time
 from conf.customArgType import IntegerType, LoggerLevelType, DirectoryType, FileType
 from conf.customArgAction import AppendTupleWithoutDefault
 from utils.data_utils import get_stop_words
+from nltk.tokenize import wordpunct_tokenize
 random_sample = False
 
 def parse_args():
@@ -183,6 +184,8 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 5
+    args.load_epoch = 70
     stop_words = get_stop_words(args.stop_words_dir, 'english')
-    print(test_use_model_param("Gosh if only we could find Kat a boyfriend".split(" ")))
+    a = wordpunct_tokenize("Oh, God.  It's starting.")
+    print(a)
+    print(test_use_model_param(a))

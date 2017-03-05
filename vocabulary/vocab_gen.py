@@ -13,7 +13,7 @@ from nltk.tokenize import wordpunct_tokenize
 from nltk.stem.porter import PorterStemmer
 import codecs
 class vocab(object):
-    def __init__(self, corpus_files, vocab_file, stop_words_dir, special_words=dict(), top_words=40000, log_level=logging.INFO,
+    def __init__(self, corpus_files, vocab_file, stop_words_dir=None, special_words=dict(), top_words=40000, log_level=logging.INFO,
                  log_path='./', overwrite=True, language='english'):
         self.corpus_files = corpus_files
         self.vocab_file = vocab_file
@@ -22,7 +22,7 @@ class vocab(object):
         self.overwrite = overwrite
         self.log_path = log_path
         self.stop_words_dir = stop_words_dir
-        self.stop_words = self._set_stop_words(language)
+        self.stop_words = set() if stop_words_dir is None else self._set_stop_words(language)
         self.porter = PorterStemmer()
         self._init_log(log_level)
 
@@ -35,10 +35,17 @@ class vocab(object):
     def _words_gen(self, file):
         """Return each word in a line."""
         for line in file:
-            #line = line.decode('utf-8').strip()
-            words = [self.porter.stem(i.lower()) for i in wordpunct_tokenize(line) if i.lower() not in self.stop_words]
-            for word in words:
-                yield word
+            for w in wordpunct_tokenize(line):
+                w = w.strip().lower()
+                if w not in self.stop_words:
+                    try:
+                        yield self.porter.stem(w)
+                    except:
+                        print (w)
+                        pass
+            #words = [self.porter.stem(i.lower()) for i in wordpunct_tokenize(line) if i.lower() not in self.stop_words]
+            #for word in words:
+            #    yield word
 
     def _set_stop_words(self, language):
         stop_words = set()

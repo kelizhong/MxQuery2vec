@@ -101,8 +101,8 @@ class BiS2SInferenceModel_mask(object):
 
         prob = self.decode_executor.outputs[0].asnumpy()
 
-        self.decode_executor.outputs[1].copyto(self.decode_executor.arg_dict["target_l0_init_c"])
-        self.decode_executor.outputs[2].copyto(self.decode_executor.arg_dict["target_l0_init_h"])
+        self.decode_executor.outputs[-2].copyto(self.decode_executor.arg_dict["target_l0_init_c"])
+        self.decode_executor.outputs[-1].copyto(self.decode_executor.arg_dict["target_l0_init_h"])
 
         attention_weights = self.decode_executor.outputs[3].asnumpy()
 
@@ -123,6 +123,7 @@ class BiS2SInferenceModel_mask(object):
         self.decode_executor.forward()
 
         prob = self.decode_executor.outputs[0]
+
 
         c = self.decode_executor.outputs[1]
         h = self.decode_executor.outputs[2]
