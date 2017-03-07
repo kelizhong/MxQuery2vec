@@ -99,8 +99,8 @@ class BiS2SInferenceModel_mask(object):
 
         prob = self.decode_executor.outputs[0].asnumpy()
 
-        self.decode_executor.outputs[-3].copyto(self.decode_executor.arg_dict["target_l0_init_c"])
-        self.decode_executor.outputs[-2].copyto(self.decode_executor.arg_dict["target_l0_init_h"])
+        self.decode_executor.outputs[-2].copyto(self.decode_executor.arg_dict["target_l0_init_c"])
+        self.decode_executor.outputs[-1].copyto(self.decode_executor.arg_dict["target_l0_init_h"])
         return prob
 
 
