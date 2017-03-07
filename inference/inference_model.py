@@ -9,7 +9,6 @@ def initial_state_symbol(t_num_lstm_layer, t_num_hidden):
     init_bias = mx.sym.Variable("target_init_bias")
     init_h = mx.sym.FullyConnected(data=encoded, num_hidden=t_num_hidden * t_num_lstm_layer,
                                    weight=init_weight, bias=init_bias, name='init_fc')
-    #init_h = mx.sym.Activation(data=init_h, act_type='tanh', name='init_act')
     init_hs = mx.sym.SliceChannel(data=init_h, num_outputs=t_num_lstm_layer)
     return init_hs
 
@@ -17,7 +16,7 @@ def initial_state_symbol(t_num_lstm_layer, t_num_hidden):
 class BiS2SInferenceModel_mask(object):
     def __init__(self,
                  s_num_lstm_layer, s_seq_len, s_vocab_size, s_num_hidden, s_num_embed, s_dropout,
-                 t_num_lstm_layer, t_seq_len, t_vocab_size, t_num_hidden, t_num_embed, t_num_label, t_dropout,
+                 t_num_lstm_layer, t_vocab_size, t_num_hidden, t_num_embed, t_num_label, t_dropout,
                  arg_params,
                  use_masking, ctx=mx.cpu(),
                  batch_size=1):
@@ -67,20 +66,16 @@ class BiS2SInferenceModel_mask(object):
                 arg_params[key].copyto(self.init_state_executor.arg_dict[key])
 
         encode_state_name = []
-        decode_state_name = []
         for i in range(s_num_lstm_layer):
             encode_state_name.append("forward_source_l%d_init_c" % i)
             encode_state_name.append("forward_source_l%d_init_h" % i)
             encode_state_name.append("backward_source_l%d_init_c" % i)
             encode_state_name.append("backward_source_l%d_init_h" % i)
-        for i in range(t_num_lstm_layer):
-            decode_state_name.append("target_l%d_init_c" % i)
-            decode_state_name.append("target_l%d_init_h" % i)
 
-        self.encode_states_dict = dict(zip(encode_state_name, self.encode_executor.outputs))
+        self.encode_state_name = encode_state_name
 
     def encode(self, input_data, input_mask):
-        for key in self.encode_states_dict.keys():
+        for key in self.encode_state_name:
             self.encode_executor.arg_dict[key][:] = 0.
         input_data.copyto(self.encode_executor.arg_dict["source"])
         input_mask.copyto(self.encode_executor.arg_dict["source_mask"])
@@ -94,27 +89,27 @@ class BiS2SInferenceModel_mask(object):
             last_encoded.copyto(self.init_state_executor.arg_dict["encoded"])
 
             self.init_state_executor.forward()
-            #TO-DO multi layer
+            # TO-DO multi layer
             init_hs = self.init_state_executor.outputs[0]
             init_hs.copyto(self.decode_executor.arg_dict["target_l0_init_h"])
             self.decode_executor.arg_dict["target_l0_init_c"][:] = 0.0
-            last_encoded.copyto(self.decode_executor.arg_dict["last_encoded"])
+        last_encoded.copyto(self.decode_executor.arg_dict["last_encoded"])
         input_data.copyto(self.decode_executor.arg_dict["target"])
         self.decode_executor.forward()
 
         prob = self.decode_executor.outputs[0].asnumpy()
 
-        self.decode_executor.outputs[-2].copyto(self.decode_executor.arg_dict["target_l0_init_c"])
-        self.decode_executor.outputs[-1].copyto(self.decode_executor.arg_dict["target_l0_init_h"])
-
+        self.decode_executor.outputs[-3].copyto(self.decode_executor.arg_dict["target_l0_init_c"])
+        self.decode_executor.outputs[-2].copyto(self.decode_executor.arg_dict["target_l0_init_h"])
         return prob
 
 
 def bidirectional_encode_symbol(s_num_lstm_layer, s_seq_len, use_masking, s_vocab_size, s_num_hidden, s_num_embed,
                                 s_dropout):
+    embed_weight = mx.sym.Variable("embed_weight")
     encoder = BiDirectionalLstmEncoder(seq_len=s_seq_len, use_masking=use_masking, hidden_unit_num=s_num_hidden,
                                        vocab_size=s_vocab_size, embed_size=s_num_embed,
-                                       dropout=s_dropout, layer_num=s_num_lstm_layer)
+                                       dropout=s_dropout, layer_num=s_num_lstm_layer, embed_weight=embed_weight)
     forward_hidden_all, backward_hidden_all, bi_hidden_all, masks_sliced = encoder.encode()
     concat_encoded = mx.sym.Concat(*bi_hidden_all, dim=1)
     encoded_for_init_state = mx.sym.Concat(forward_hidden_all[-1], backward_hidden_all[0], dim=1,
@@ -145,8 +140,6 @@ def lstm_decode_symbol(t_num_lstm_layer, t_vocab_size, t_num_hidden, t_num_embed
                                      h2h_bias=mx.sym.Variable("target_l%d_h2h_bias" % i)))
         state = LSTMState(c=mx.sym.Variable("target_l%d_init_c" % i),
                           h=mx.sym.Variable("target_l%d_init_h" % i))
-        # state = LSTMState(c=mx.sym.Variable("target_l%d_init_c" % i),
-        #                   h=init_hs[i])
         last_states.append(state)
     assert (len(last_states) == t_num_lstm_layer)
 

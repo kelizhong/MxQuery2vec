@@ -14,4 +14,4 @@ if __name__ == "__main__":
     vocab = load_vocab('./data/vocabulary/vocab.pkl')
     for (k, v) in vocab.items():
         print (k,v)
-    print(vocab.get('hi', -1))
+    print(vocab.get(' ', -1))
