@@ -92,12 +92,13 @@ class BiS2SInferenceModel_mask(object):
     def decode_forward(self, last_encoded, input_data, new_seq):
         if new_seq:
             last_encoded.copyto(self.init_state_executor.arg_dict["encoded"])
+
             self.init_state_executor.forward()
             #TO-DO multi layer
             init_hs = self.init_state_executor.outputs[0]
             init_hs.copyto(self.decode_executor.arg_dict["target_l0_init_h"])
             self.decode_executor.arg_dict["target_l0_init_c"][:] = 0.0
-        last_encoded.copyto(self.decode_executor.arg_dict["last_encoded"])
+            last_encoded.copyto(self.decode_executor.arg_dict["last_encoded"])
         input_data.copyto(self.decode_executor.arg_dict["target"])
         self.decode_executor.forward()
 

@@ -52,7 +52,7 @@ def parse_args():
                               help='number of hidden units in the neural network for decoder')
 
     parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,
-                              default=[(3, 10), (3, 20), (5, 20), (7, 30)])
+                              default=[(5, 10), (10, 20), (20, 30), (30, 40), (40, 50), (60, 60)])
     parser.add_argument('-swd', '--stop-words-dir', default=os.path.join(os.path.dirname(__file__), 'data', 'stop_words'), help='stop words file directory')
     return parser.parse_args()
 
@@ -77,8 +77,8 @@ def get_inference_models(buckets, arg_params, source_vocab_size, target_vocab_si
 def get_bucket_model(model_buckets, input_len):
     for bucket, m in model_buckets.items():
         if bucket[0] >= input_len:
-            return m
-    return None
+            return bucket[0], m
+    return None, None
 
 # make input from char
 def MakeInput(sentence, vocab, unroll_len, data_arr, mask_arr):
@@ -132,12 +132,12 @@ def _choice(population, weights):
 def translate_one(max_decode_len, sentence, model_buckets, unroll_len, source_vocab, target_vocab, revert_vocab,
                   target_ndarray):
     input_length = len(sentence)
-    cur_model = get_bucket_model(model_buckets, input_length)
+    unroll_len, cur_model = get_bucket_model(model_buckets, input_length)
     input_ndarray = mx.nd.zeros((1, unroll_len))
     mask_ndarray = mx.nd.zeros((1, unroll_len))
     output = ['<s>']
     MakeInput(sentence, source_vocab, unroll_len, input_ndarray, mask_ndarray)
-    last_encoded, all_encoded = cur_model.encode(input_ndarray,
+    last_encoded, _ = cur_model.encode(input_ndarray,
                                                  mask_ndarray)  # last_encoded means the last time step hidden
     for i in range(max_decode_len):
         MakeTargetInput(output[-1], target_vocab, target_ndarray)
@@ -167,7 +167,7 @@ def test_use_model_param(str):
     revert_vocab = MakeRevertVocab(vocab)
 
     buckets = args.buckets
-    buckets = [max(buckets)]
+    #buckets = [max(buckets)]
     model_buckets = get_inference_models(buckets, arg_params, len(vocab), len(vocab),
                                          mx.cpu(), batch_size=1)
     en = translate_one(15, str, model_buckets, max(buckets)[0], vocab, vocab,
@@ -184,12 +184,12 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 140
+    args.load_epoch = 20
     stop_words = get_stop_words(args.stop_words_dir, 'english')
-    a = wordpunct_tokenize("I figured you'd get to the good stuff eventually.")
+    a = wordpunct_tokenize("At least, the cat comes back.")
     print(a)
     print(test_use_model_param(a))
-    a = wordpunct_tokenize("what is your name")
+    a = wordpunct_tokenize("You're asking me out.  That's so cute. What's your name again?")
     print(a)
     print(test_use_model_param(a))
     a = wordpunct_tokenize("hi")
