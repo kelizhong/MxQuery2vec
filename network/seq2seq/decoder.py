@@ -100,7 +100,7 @@ class LstmDecoder(object):
             loss_mask = mx.sym.Reshape(data=loss_mask, shape=(-1, 1))
             pred = mx.sym.broadcast_mul(pred, loss_mask)
 
-        sm = mx.sym.SoftmaxOutput(data=pred, label=label, name='target_softmax')
+        sm = mx.sym.SoftmaxOutput(data=pred, label=label, name='target_softmax', ignore_label=0, use_ignore=True)
 
         return sm
 

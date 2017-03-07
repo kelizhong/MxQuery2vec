@@ -39,20 +39,20 @@ def parse_args():
                               help='the directory to store the parameters of the training')
 
     # model parameter
-    parser.add_argument('-sln', '--source-layer-num', default=3, type=int,
+    parser.add_argument('-sln', '--source-layer-num', default=1, type=int,
                               help='number of layers for the source LSTM recurrent neural network')
     parser.add_argument('-shun', '--source-hidden-unit-num', default=512, type=int,
                               help='number of hidden units in the neural network for encoder')
-    parser.add_argument('-es', '--embed-size', default=150, type=int,
+    parser.add_argument('-es', '--embed-size', default=128, type=int,
                               help='embedding size ')
 
-    parser.add_argument('-tln', '--target-layer-num', default=3, type=int,
+    parser.add_argument('-tln', '--target-layer-num', default=1, type=int,
                               help='number of layers for the target LSTM recurrent neural network')
     parser.add_argument('-thun', '--target-hidden-unit-num', default=512, type=int,
                               help='number of hidden units in the neural network for decoder')
 
     parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,
-                              default=[(5, 10), (10, 20), (20, 30), (30, 40), (40, 50)])
+                              default=[(3, 10), (3, 20), (5, 20), (7, 30)])
     parser.add_argument('-swd', '--stop-words-dir', default=os.path.join(os.path.dirname(__file__), 'data', 'stop_words'), help='stop words file directory')
     return parser.parse_args()
 
@@ -141,7 +141,7 @@ def translate_one(max_decode_len, sentence, model_buckets, unroll_len, source_vo
                                                  mask_ndarray)  # last_encoded means the last time step hidden
     for i in range(max_decode_len):
         MakeTargetInput(output[-1], target_vocab, target_ndarray)
-        prob, attention_weights = cur_model.decode_forward(last_encoded, all_encoded, mask_ndarray, target_ndarray,
+        prob = cur_model.decode_forward(last_encoded, target_ndarray,
                                                            i == 0)
         next_char = MakeOutput(prob, revert_vocab, random_sample)
         if next_char == '</s>':
@@ -173,7 +173,7 @@ def test_use_model_param(str):
     en = translate_one(15, str, model_buckets, max(buckets)[0], vocab, vocab,
                        revert_vocab,
                        target_ndarray)
-    #del model_buckets
+    del model_buckets
     en = ' '.join(en)
     return en
 
@@ -184,8 +184,23 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 70
+    args.load_epoch = 140
     stop_words = get_stop_words(args.stop_words_dir, 'english')
-    a = wordpunct_tokenize("Oh, God.  It's starting.")
+    a = wordpunct_tokenize("I figured you'd get to the good stuff eventually.")
+    print(a)
+    print(test_use_model_param(a))
+    a = wordpunct_tokenize("what is your name")
+    print(a)
+    print(test_use_model_param(a))
+    a = wordpunct_tokenize("hi")
+    print(a)
+    print(test_use_model_param(a))
+    a = wordpunct_tokenize("hello")
+    print(a)
+    print(test_use_model_param(a))
+    a = wordpunct_tokenize("good bye")
+    print(a)
+    print(test_use_model_param(a))
+    a = wordpunct_tokenize("good morning")
     print(a)
     print(test_use_model_param(a))

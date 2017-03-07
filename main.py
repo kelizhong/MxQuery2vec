@@ -29,14 +29,14 @@ def parse_args():
     vocab_parser.set_defaults(action='vocab')
 
     # model parameter
-    train_parser.add_argument('-sln', '--source-layer-num', default=3, type=int,
+    train_parser.add_argument('-sln', '--source-layer-num', default=1, type=int,
                               help='number of layers for the source LSTM recurrent neural network')
     train_parser.add_argument('-shun', '--source-hidden-unit-num', default=512, type=int,
                               help='number of hidden units in the neural network for encoder')
-    train_parser.add_argument('-es', '--embed-size', default=150, type=int,
+    train_parser.add_argument('-es', '--embed-size', default=128, type=int,
                               help='embedding size ')
 
-    train_parser.add_argument('-tln', '--target-layer-num', default=3, type=int,
+    train_parser.add_argument('-tln', '--target-layer-num', default=1, type=int,
                               help='number of layers for the target LSTM recurrent neural network')
     train_parser.add_argument('-thun', '--target-hidden-unit-num', default=512, type=int,
                               help='number of hidden units in the neural network for decoder')
@@ -72,7 +72,7 @@ def parse_args():
     train_parser.add_argument('-ne', '--num-epoch', dest='num_epoch', help='end epoch of query2vec training',
                               default=100000, type=int)
 
-    train_parser.add_argument('-bs', '--batch-size', default=128, type=int,
+    train_parser.add_argument('-bs', '--batch-size', default=2, type=int,
                               help='batch size for each databatch')
 
     # mxnet parameter
@@ -85,7 +85,7 @@ def parse_args():
     train_parser.add_argument('-lf', '--log-freq', default=1000, type=int,
                               help='the frequency to printout the training verbose information')
 
-    train_parser.add_argument('-scf', '--save-checkpoint-freq', default=1, type=int,
+    train_parser.add_argument('-scf', '--save-checkpoint-freq', default=100, type=int,
                               help='the frequency to save checkpoint')
 
     train_parser.add_argument('-kv', '--kv-store', dest='kv_store', help='the kv-store type',

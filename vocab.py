@@ -12,4 +12,6 @@ def load_vocab(path):
     return vocab
 if __name__ == "__main__":
     vocab = load_vocab('./data/vocabulary/vocab.pkl')
-    print(vocab.get('know', -1))
+    for (k, v) in vocab.items():
+        print (k,v)
+    print(vocab.get('hi', -1))

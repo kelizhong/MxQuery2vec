@@ -167,7 +167,12 @@ class trainer(object):
                                                source_init_states, target_init_states,
                                                text2id=sentence2id, read_data=read_data,
                                                max_read_sample=self.train_max_samples)
-
+        eval_data_loader = MaskedBucketSentenceIter(self.train_source_path, self.train_target_path, self.stop_words_dir, vocab,
+                                               vocab,
+                                               self.buckets, self.batch_size,
+                                               source_init_states, target_init_states,
+                                               text2id=sentence2id, read_data=read_data,
+                                               max_read_sample=self.train_max_samples)
         network = sym_gen(source_vocab_size=vocab_size, source_layer_num=self.source_layer_num,
                           source_hidden_unit_num=self.source_hidden_unit_num, source_embed_size=self.source_embed_size,
                           source_dropout=self.source_dropout,
@@ -176,9 +181,9 @@ class trainer(object):
                           target_dropout=self.target_dropout,
                           data_names=data_loader.get_data_names(), label_names=data_loader.get_label_names())
 
-        self._fit(network, data_loader)
+        self._fit(network, data_loader, eval_data_loader)
 
-    def _fit(self, network, data_loader):
+    def _fit(self, network, data_loader, eval_data_loader):
         """
         train a model
         network : the symbol definition of the nerual network
@@ -224,7 +229,7 @@ class trainer(object):
         model.fit(data_loader,
                   begin_epoch=self.load_epoch if self.load_epoch else 0,
                   num_epoch=self.num_epoch,
-                  eval_data=data_loader if self.enable_evaluation else None,
+                  eval_data=eval_data_loader if self.enable_evaluation else None,
                   eval_metric=mx.metric.np(Perplexity),
                   kvstore=self.kv,
                   optimizer=self.optimizer,
