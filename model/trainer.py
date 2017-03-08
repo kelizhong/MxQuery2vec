@@ -153,7 +153,7 @@ class trainer(object):
         # load vocabulary
         vocab = load_vocab(self.vocabulary_path)
 
-        vocab_size = len(vocab)
+        vocab_size = len(vocab) + 1
         self.vocab_size = vocab_size
         logging.info('vocab size: {0}'.format(vocab_size))
 
