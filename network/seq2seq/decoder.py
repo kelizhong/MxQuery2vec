@@ -1,7 +1,6 @@
 import mxnet as mx
 
-from network.rnn.LSTM import lstm, LSTMModel, LSTMParam, LSTMState
-from network.rnn.GRU import gru, GRUModel, GRUParam, GRUState
+from network.rnn.LSTM import lstm, LSTMParam, LSTMState
 
 
 class LstmDecoder(object):
@@ -37,6 +36,7 @@ class LstmDecoder(object):
         last_states = []
         init_h = mx.sym.FullyConnected(data=encoded, num_hidden=self.hidden_unit_num * self.layer_num,
                                        weight=init_weight, bias=init_bias, name='init_fc')
+        init_h = mx.sym.Activation(data=init_h, act_type='tanh', name='init_act')
         init_hs = mx.sym.SliceChannel(data=init_h, num_outputs=self.layer_num)
         for i in range(self.layer_num):
             param_cells.append(LSTMParam(i2h_weight=mx.sym.Variable("target_l%d_i2h_weight" % i),

@@ -167,12 +167,7 @@ class trainer(object):
                                                source_init_states, target_init_states,
                                                text2id=sentence2id, read_data=read_data,
                                                max_read_sample=self.train_max_samples)
-        eval_data_loader = MaskedBucketSentenceIter(self.train_source_path, self.train_target_path, self.stop_words_dir, vocab,
-                                               vocab,
-                                               self.buckets, self.batch_size,
-                                               source_init_states, target_init_states,
-                                               text2id=sentence2id, read_data=read_data,
-                                               max_read_sample=self.train_max_samples)
+        eval_data_loader = None
         network = sym_gen(source_vocab_size=vocab_size, source_layer_num=self.source_layer_num,
                           source_hidden_unit_num=self.source_hidden_unit_num, source_embed_size=self.source_embed_size,
                           source_dropout=self.source_dropout,

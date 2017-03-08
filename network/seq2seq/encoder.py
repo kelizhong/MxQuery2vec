@@ -1,7 +1,6 @@
 import mxnet as mx
 
 from ..rnn.LSTM import lstm, LSTMModel, LSTMParam, LSTMState
-from ..rnn.GRU import gru, GRUModel, GRUParam, GRUState
 
 
 class BiDirectionalLstmEncoder(object):

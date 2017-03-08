@@ -225,4 +225,4 @@ class MaskedBucketSentenceIter(mx.io.DataIter):
             yield data_batch
 
     def reset(self):
-        self.bucket_curr_idx = [0 for x in self.source_data]
+        self.bucket_curr_idx = [0 for _ in self.source_data]
