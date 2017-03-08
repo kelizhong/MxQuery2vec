@@ -243,7 +243,7 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 27
+    args.load_epoch = 10
     stop_words = get_stop_words(args.stop_words_dir, 'english')
 
     # load vocabulary
@@ -284,7 +284,7 @@ if __name__ == "__main__":
     print(a)
     print(test_use_model_param(a))
 
-    a = encode(word_tokenize("i 'm not going to be a good ."), model_buckets, vocab).asnumpy()
+    a = encode(word_tokenize("good"), model_buckets, vocab).asnumpy()
     b = encode(word_tokenize("thanks"), model_buckets, vocab).asnumpy()
     print(euclidSimilar(a, b))
     c = encode(word_tokenize("thank you"), model_buckets, vocab).asnumpy()

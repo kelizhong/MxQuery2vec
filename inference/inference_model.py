@@ -9,6 +9,7 @@ def initial_state_symbol(t_num_lstm_layer, t_num_hidden):
     init_bias = mx.sym.Variable("target_init_bias")
     init_h = mx.sym.FullyConnected(data=encoded, num_hidden=t_num_hidden * t_num_lstm_layer,
                                    weight=init_weight, bias=init_bias, name='init_fc')
+    init_h = mx.sym.Activation(data=init_h, act_type='tanh', name='init_act')
     init_hs = mx.sym.SliceChannel(data=init_h, num_outputs=t_num_lstm_layer)
     return init_hs
 
@@ -128,7 +129,6 @@ def lstm_decode_symbol(t_num_lstm_layer, t_vocab_size, t_num_hidden, t_num_embed
     cls_bias = mx.sym.Variable("target_cls_bias")
 
     input_weight = mx.sym.Variable("target_input_weight")
-    input_bias = mx.sym.Variable("target_input_bias")
     last_encoded = mx.sym.Variable("last_encoded")
 
     param_cells = []
@@ -151,7 +151,7 @@ def lstm_decode_symbol(t_num_lstm_layer, t_vocab_size, t_num_hidden, t_num_embed
                               name="embed_weight")
     con = mx.sym.Concat(hidden, last_encoded)
     hidden = mx.sym.FullyConnected(data=con, num_hidden=t_num_embed,
-                                   weight=input_weight, bias=input_bias, name='input_fc')
+                                   weight=input_weight, no_bias=True, name='input_fc')
     # stack LSTM
     for i in range(t_num_lstm_layer):
         if i == 0:

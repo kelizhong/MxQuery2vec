@@ -75,11 +75,12 @@ class LstmDecoder(object):
                                   prev_state=last_states[i],
                                   param=param_cells[i],
                                   seqidx=seq_idx, layeridx=i, dropout=dp_ratio)
-
                 if self.use_masking:
                     prev_state_h = last_states[i].h
+                    prev_state_c = last_states[i].c
                     new_h = mx.sym.broadcast_mul(1.0 - mask, prev_state_h) + mx.sym.broadcast_mul(mask, next_state.h)
-                    next_state = LSTMState(c=next_state.c, h=new_h)
+                    new_c = mx.sym.broadcast_mul(1.0 - mask, prev_state_c) + mx.sym.broadcast_mul(mask, next_state.c)
+                    next_state = LSTMState(c=new_c, h=new_h)
 
                 hidden = next_state.h
                 last_states[i] = next_state
