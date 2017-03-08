@@ -9,7 +9,7 @@ from collections import Counter
 import time
 from utils.file_utils import make_sure_path_exists
 from nltk.corpus import stopwords
-from nltk.tokenize import wordpunct_tokenize
+from nltk.tokenize import wordpunct_tokenize, word_tokenize
 from nltk.stem.porter import PorterStemmer
 import codecs
 class vocab(object):
@@ -35,7 +35,7 @@ class vocab(object):
     def _words_gen(self, file):
         """Return each word in a line."""
         for line in file:
-            for w in wordpunct_tokenize(line):
+            for w in word_tokenize(line):
                 w = w.strip().lower()
                 if w not in self.stop_words:
                     try:

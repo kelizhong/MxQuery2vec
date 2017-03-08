@@ -7,7 +7,7 @@ import sys
 from common import constant as config
 from nltk.stem.porter import PorterStemmer
 porter = PorterStemmer()
-from nltk.tokenize import wordpunct_tokenize
+from nltk.tokenize import wordpunct_tokenize, word_tokenize
 import codecs
 
 # Read from doc
@@ -23,7 +23,7 @@ def read_data(path, max_read_line=sys.maxsize):
             if count > max_read_line:
                 break
             line = line.strip()
-            data.append(wordpunct_tokenize(line))
+            data.append(word_tokenize(line))
     return data
 
 
