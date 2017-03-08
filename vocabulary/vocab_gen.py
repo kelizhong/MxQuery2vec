@@ -39,7 +39,7 @@ class vocab(object):
                 w = w.strip().lower()
                 if w not in self.stop_words:
                     try:
-                        yield self.porter.stem(w)
+                        yield w
                     except:
                         print (w)
                         pass

@@ -173,7 +173,7 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 5
+    args.load_epoch = 6
     stop_words = get_stop_words(args.stop_words_dir, 'english')
 
     # load vocabulary

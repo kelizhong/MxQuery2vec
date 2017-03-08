@@ -46,7 +46,6 @@ def sentence2id(sentence, the_vocab, stop_words):
     for w in sentence:
         w = w.strip().lower()
         if w not in stop_words:
-            w = porter.stem(w.lower())
             if w in the_vocab:
                 words.append(the_vocab[w])
             else:
