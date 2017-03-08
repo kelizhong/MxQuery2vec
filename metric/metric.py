@@ -7,7 +7,7 @@ def MakeRevertVocab(vocab):
         dic[v] = k
     return dic
 vocab = MakeRevertVocab(vocab)
-
+i = 0
 # Evaluation
 def Perplexity(label, pred):
     label = label.T.reshape((-1,))
@@ -21,6 +21,8 @@ def Perplexity(label, pred):
 
         str = str + " " + vocab.get(int(label[i]), 'unk')
         loss += -np.log(max(1e-10, pred[i][int(label[i])]))
-    print(str)
+    ++i
+    if i % 200 == 0:
+        print(str+'\n')
     return np.exp(loss / (label.size - mask_count))
 

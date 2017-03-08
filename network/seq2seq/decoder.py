@@ -30,7 +30,6 @@ class LstmDecoder(object):
         init_weight = mx.sym.Variable("target_init_weight")
         init_bias = mx.sym.Variable("target_init_bias")
         input_weight = mx.sym.Variable("target_input_weight")
-        input_bias = mx.sym.Variable("target_input_bias")
 
         param_cells = []
         last_states = []
@@ -61,7 +60,7 @@ class LstmDecoder(object):
         for seq_idx in range(self.seq_len):
             con = mx.sym.Concat(wordvec[seq_idx], encoded)
             hidden = mx.sym.FullyConnected(data=con, num_hidden=self.embed_size,
-                                           weight=input_weight, bias=input_bias, name='input_fc')
+                                           weight=input_weight, no_bias=True, name='input_fc')
 
             if self.use_masking:
                 mask = masks[seq_idx]

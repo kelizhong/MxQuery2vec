@@ -119,8 +119,6 @@ class BiDirectionalLstmEncoder(object):
                 forward_hidden = mx.sym.Dropout(data=forward_hidden, p=self.dropout)
                 backward_hidden = mx.sym.Dropout(data=backward_hidden, p=self.dropout)
 
-            # bi_hidden = mx.sym.Concat(forward_hidden, backward_hidden)
-            # hidden_all.append(bi_hidden)
             forward_hidden_all.append(forward_hidden)
             backward_hidden_all.insert(0, backward_hidden)
 
