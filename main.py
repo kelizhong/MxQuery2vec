@@ -56,18 +56,11 @@ def parse_args():
     train_parser.add_argument('-pd', '--model-path', default=os.path.join(os.getcwd(), 'data', 'model'),
                               type=DirectoryType,
                               help='the directory to store the parameters of the training')
-    train_parser.add_argument('-lr', '--learning-rate', dest='lr', default=0.01, type=float,
-                              help='learning rate of the stochastic gradient descent')
-    train_parser.add_argument('-lrf', '--lr-factor', default=1, type=float,
-                              help='the ratio to reduce lr on each step')
-    train_parser.add_argument('-wd', '--weight-decay', type=float, default=0.0005, help='weight decay for sgd')
-    train_parser.add_argument('-opt', '--optimizer', type=str, default='sgd',
-                              help='the optimizer type')
+
     train_parser.add_argument('-tms', '--train-max-samples', default=20000, type=int,
                               help='the max sample num for training')
-    train_parser.add_argument('-mom', '--momentum', type=float, default=0.9, help='momentum for sgd')
-    train_parser.add_argument('-sexb', '--show-every-x-batch', dest='show_every_x_batch',
-                              help='show progress for every x batches',
+    train_parser.add_argument('-db', '--disp-batches', dest='disp_batches',
+                              help='show progress for every n batches',
                               default=1, type=int)
     train_parser.add_argument('-ne', '--num-epoch', dest='num_epoch', help='end epoch of query2vec training',
                               default=100000, type=int)
@@ -75,6 +68,11 @@ def parse_args():
     train_parser.add_argument('-bs', '--batch-size', default=2, type=int,
                               help='batch size for each databatch')
 
+    # optimizer parameter
+    train_parser.add_argument('-opt', '--optimizer', type=str, default='Adadelta',
+                              help='the optimizer type')
+    train_parser.add_argument('-cg', '--clip-gradient', type=float, default=5.0,
+                              help='clip gradient in range [-clip_gradient, clip_gradient]')
     # mxnet parameter
     train_parser.add_argument('-dm', '--device-mode', choices=['cpu', 'gpu'],
                               help='define define mode, (default: %(default)s)',
@@ -134,9 +132,9 @@ if __name__ == "__main__":
 
     print(args)
     if args.action == 'train':
-        from model.trainer import trainer
+        from model.trainer import Trainer
 
-        trainer(train_source_path=args.train_source_path, train_target_path=args.train_target_path,
+        Trainer(train_source_path=args.train_source_path, train_target_path=args.train_target_path,
                 vocabulary_path=args.vocabulary_path, stop_words_dir=args.stop_words_dir) \
             .set_model_parameter(source_layer_num=args.source_layer_num,
                                  source_hidden_unit_num=args.source_hidden_unit_num,
@@ -146,13 +144,13 @@ if __name__ == "__main__":
             .set_train_parameter(source_dropout=args.dropout, target_dropout=args.dropout, load_epoch=args.load_epoch,
                                  model_prefix=os.path.join(args.model_path, args.model_prefix),
                                  device_mode=args.device_mode, devices=args.devices,
-                                 lr_factor=args.lr_factor, wd=args.weight_decay,
-                                 lr=args.lr, train_max_samples=args.train_max_samples, momentum=args.momentum,
-                                 show_every_x_batch=args.show_every_x_batch, num_epoch=args.num_epoch,
+                                 train_max_samples=args.train_max_samples,
+                                 disp_batches=args.disp_batches, num_epoch=args.num_epoch,
                                  optimizer=args.optimizer, batch_size=args.batch_size) \
             .set_mxnet_parameter(log_path=args.log_path, log_level=args.log_level, kv_store=args.kv_store,
                                  enable_evaluation=args.enable_evaluation,
                                  monitor_interval=args.monitor_interval, save_checkpoint_freq=args.save_checkpoint_freq) \
+            .set_optimizer_parameter(optimizer=args.optimizer, clip_gradient=args.clip_gradient) \
             .train()
     elif args.action == 'vocab':
         from vocabulary.vocab_gen import vocab

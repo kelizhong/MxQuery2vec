@@ -5,14 +5,10 @@ from collections import namedtuple
 LSTMState = namedtuple("LSTMState", ["c", "h"])
 LSTMParam = namedtuple("LSTMParam", ["i2h_weight", "i2h_bias",
                                      "h2h_weight", "h2h_bias"])
-LSTMModel = namedtuple("LSTMModel", ["rnn_exec", "symbol",
-                                     "init_states", "last_states",
-                                     "seq_data", "seq_labels", "seq_outputs",
-                                     "param_blocks"])
-
 
 def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0.):
-    """LSTM Cell symbol"""
+    """LSTM Cell"""
+    # TODO remove this cell, will use the mx build-in cell in next version
     if dropout > 0.:
         indata = mx.sym.Dropout(data=indata, p=dropout)
     i2h = mx.sym.FullyConnected(data=indata,
