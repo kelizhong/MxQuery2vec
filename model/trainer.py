@@ -217,7 +217,8 @@ class trainer(object):
 
         initializer = mx.init.Xavier(
             rnd_type='gaussian', factor_type="in", magnitude=2)
-
+        # TODO create a class to manage optimizer
+        optimizer = mx.optimizer.Adam(clip_gradient=10.0, rescale_grad=1.0 / (self.batch_size * self.kv.num_workers))
         # callbacks that run after each batch
         batch_end_callbacks = [mx.callback.Speedometer(self.batch_size, self.show_every_x_batch)]
         # run
@@ -227,7 +228,7 @@ class trainer(object):
                   eval_data=eval_data_loader if self.enable_evaluation else None,
                   eval_metric=mx.metric.np(Perplexity),
                   kvstore=self.kv,
-                  optimizer=self.optimizer,
+                  optimizer=optimizer,
                   optimizer_params=optimizer_params,
                   initializer=initializer,
                   arg_params=arg_params,

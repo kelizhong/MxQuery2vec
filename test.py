@@ -10,12 +10,12 @@ import time
 from conf.customArgType import LoggerLevelType, DirectoryType
 from conf.customArgAction import AppendTupleWithoutDefault
 from utils.data_utils import get_stop_words
-from nltk.tokenize import wordpunct_tokenize, word_tokenize
+from nltk.tokenize import  word_tokenize
 from common import constant
 import random
 import bisect
 from numpy import linalg as la
-
+import pickle
 
 def euclidSimilar(inA,inB):
     return 1.0/(1.0+la.norm(inA-inB))
@@ -47,7 +47,7 @@ def parse_args():
                         help='vocabulary with he most common words')
     parser.add_argument('-le', '--load-epoch', dest='load_epoch', help='epoch of pretrained model',
                         type=int)
-    parser.add_argument('-mp', '--model-prefix', default='query2vec',
+    parser.add_argument('-mp', '--model-prefix', default='query2vec-2',
                         type=str,
                         help='the experiment name, this is also the prefix for the parameters file')
     parser.add_argument('-pd', '--model-path', default=os.path.join(os.getcwd(), 'data', 'model'),
@@ -119,47 +119,9 @@ def MakeTargetInput(char, vocab, arr):
     tmp = np.zeros((1,))
     tmp[0] = idx
     arr[:] = tmp
-# helper function for random sample
-def _cdf(weights):
-    total = sum(weights)
-    result = []
-    cumsum = 0
-    for w in weights:
-        cumsum += w
-        result.append(cumsum / total)
-    return result
 
 
-def _choice(population, weights):
-    assert len(population) == len(weights)
-    cdf_vals = _cdf(weights)
-    x = random.random()
-    idx = bisect.bisect(cdf_vals, x)
-    return population[idx]
-
-
-# we can use random output or fixed output by choosing largest probability
-def MakeOutput(prob, vocab, sample=True, temperature=1.):
-    if sample == False:
-        #print(prob.argsort()[-3:][::-1])
-        #print(prob[0][7])
-        #print(prob[0][6])
-        #print(prob[0][21])
-        #print(prob[0][369])
-        idx = np.argmax(prob, axis=1)[0]
-    else:
-        fix_dict = [""] + [vocab[i] for i in range(1, len(vocab) + 1)]
-        scale_prob = np.clip(prob, 1e-6, 1 - 1e-6)
-        rescale = np.exp(np.log(scale_prob) / temperature)
-        rescale[:] /= rescale.sum()
-        return _choice(fix_dict, rescale[0, :])
-    try:
-        char = vocab[idx]
-    except:
-        char = ''
-    return char
-
-def MakeOutput1(prob, vocab):
+def MakeOutput(prob, vocab):
     idx = np.argmax(prob, axis=1)[0]
     try:
         char = vocab[idx]
@@ -188,12 +150,12 @@ def reponse(max_decode_len, sentence, model_buckets, source_vocab, target_vocab,
         output.append(next_char)
     return output[1:]
 
+
 def encode(sentence, model_buckets, source_vocab):
     input_length = len(sentence)
     unroll_len, cur_model = get_bucket_model(model_buckets, input_length)
     input_ndarray = mx.nd.zeros((1, unroll_len))
     mask_ndarray = mx.nd.zeros((1, unroll_len))
-    output = [constant.bos_word]
     MakeInput(sentence, source_vocab, unroll_len, input_ndarray, mask_ndarray)
     last_encoded, _ = cur_model.encode(input_ndarray,
                                        mask_ndarray)  # last_encoded means the last time step hidden
@@ -235,6 +197,25 @@ def load_model_buckets(vocab_size):
                                          mx.cpu(), batch_size=1)
     return model_buckets
 
+def generate_embeddings(model_buckets, vocab):
+    with open('./data/train_corpus/conversation.post') as f, open('./data/meta.txt', 'w+') as meta, open('./data/embedding.pkl', 'wb') as embed:
+        i = 0
+        embedding_dict = dict()
+        for line in f:
+            try:
+                line = line.strip()
+                words = word_tokenize(line)
+                embedding = encode(words, model_buckets, vocab).asnumpy()
+                embedding_dict.setdefault(i, embedding)
+                meta.write(str(i) + '\t' + line + "\n")
+                i = i + 1
+                if i > 100:
+                    break
+                if i%100 == 0:
+                    print("Count: " + str(i/100))
+            except:
+                pass
+        pickle.dump(embedding_dict, embed, protocol=pickle.HIGHEST_PROTOCOL)
 
 if __name__ == "__main__":
     args = parse_args()
@@ -243,7 +224,7 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 10
+    args.load_epoch = 1
     stop_words = get_stop_words(args.stop_words_dir, 'english')
 
     # load vocabulary
@@ -255,6 +236,7 @@ if __name__ == "__main__":
     revert_vocab = MakeRevertVocab(vocab)
     buckets = args.buckets
     model_buckets = load_model_buckets(vocab_size)
+    generate_embeddings(model_buckets, vocab)
     #with open('./data/train_corpus/conversation.post') as f:
     #    for line in f:
     #        line = line.strip()
@@ -265,27 +247,34 @@ if __name__ == "__main__":
     #                           target_ndarray)
     #        en = ' '.join(en)
     #        print(en)
-    a = word_tokenize("hi")
-    print(a)
-    print(test_use_model_param(a))
-    a = word_tokenize("hello")
-    print(a)
-    print(test_use_model_param(a))
-    a = word_tokenize("how are you?")
-    print(a)
-    print(test_use_model_param(a))
-    a = word_tokenize("what's up?")
-    print(a)
-    print(test_use_model_param(a))
-    a = word_tokenize("what is the meaning of life?")
-    print(a)
-    print(test_use_model_param(a))
-    a = word_tokenize("should i kill someone?")
-    print(a)
-    print(test_use_model_param(a))
-
-    a = encode(word_tokenize("good"), model_buckets, vocab).asnumpy()
-    b = encode(word_tokenize("thanks"), model_buckets, vocab).asnumpy()
-    print(euclidSimilar(a, b))
-    c = encode(word_tokenize("thank you"), model_buckets, vocab).asnumpy()
-    print(euclidSimilar(b, c))
+    #a = word_tokenize("colonel durnford... william vereker. i hear you 've been seeking officers?")
+    #print(a)
+    #print(test_use_model_param(a))
+    #a = word_tokenize("hello")
+    #print(a)
+    #print(test_use_model_param(a))
+    #a = word_tokenize("how are you?")
+    #print(a)
+    #print(test_use_model_param(a))
+    #a = word_tokenize("what's up?")
+    #print(a)
+    #print(test_use_model_param(a))
+    #a = word_tokenize("what is the meaning of life?")
+    #print(a)
+    #print(test_use_model_param(a))
+    #a = word_tokenize("should i kill someone?")
+    #print(a)
+    #print(test_use_model_param(a))
+    #a = word_tokenize("i'm to take the sikali with the main column to the river")
+    #print(a)
+    #print(test_use_model_param(a))
+    #a = encode(word_tokenize("bad"), model_buckets, vocab).asnumpy()
+    #b = encode(word_tokenize("thanks"), model_buckets, vocab).asnumpy()
+    #print(cosSimilar(a, b))
+    #c = encode(word_tokenize("thank you"), model_buckets, vocab).asnumpy()
+    #print(cosSimilar(b, c))
+    a = encode(word_tokenize("men wallet"), model_buckets, vocab).asnumpy()
+    b = encode(word_tokenize("men addidas shoe"), model_buckets, vocab).asnumpy()
+    print(cosSimilar(a, b))
+    c = encode(word_tokenize("women nike shoe"), model_buckets, vocab).asnumpy()
+    print(cosSimilar(b, c))
