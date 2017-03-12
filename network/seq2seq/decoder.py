@@ -20,16 +20,16 @@ class LstmDecoder(object):
         self.embed_name = embed_name
 
     def decode(self, encoded):
-        data = mx.sym.Variable('target')  # target input data
-        label = mx.sym.Variable('target_softmax_label')  # target label data
+        data = mx.sym.Variable('decoder_data')  # decoder input data
+        label = mx.sym.Variable('decoder_softmax_label')  # decoder label data
         # declare variables
         if self.embed_weight is None:
             self.embed_weight = mx.sym.Variable(self.embedding_name)
-        cls_weight = mx.sym.Variable("target_cls_weight")
-        cls_bias = mx.sym.Variable("target_cls_bias")
-        init_weight = mx.sym.Variable("target_init_weight")
-        init_bias = mx.sym.Variable("target_init_bias")
-        input_weight = mx.sym.Variable("target_input_weight")
+        cls_weight = mx.sym.Variable("decoder_cls_weight")
+        cls_bias = mx.sym.Variable("decoder_cls_bias")
+        init_weight = mx.sym.Variable("decoder_init_weight")
+        init_bias = mx.sym.Variable("decoder_init_bias")
+        input_weight = mx.sym.Variable("decoder_input_weight")
 
         param_cells = []
         last_states = []
@@ -38,11 +38,11 @@ class LstmDecoder(object):
         init_h = mx.sym.Activation(data=init_h, act_type='tanh', name='init_act')
         init_hs = mx.sym.SliceChannel(data=init_h, num_outputs=self.layer_num)
         for i in range(self.layer_num):
-            param_cells.append(LSTMParam(i2h_weight=mx.sym.Variable("target_l%d_i2h_weight" % i),
-                                         i2h_bias=mx.sym.Variable("target_l%d_i2h_bias" % i),
-                                         h2h_weight=mx.sym.Variable("target_l%d_h2h_weight" % i),
-                                         h2h_bias=mx.sym.Variable("target_l%d_h2h_bias" % i)))
-            state = LSTMState(c=mx.sym.Variable("target_l%d_init_c" % i),
+            param_cells.append(LSTMParam(i2h_weight=mx.sym.Variable("decoder_l%d_i2h_weight" % i),
+                                         i2h_bias=mx.sym.Variable("decoder_l%d_i2h_bias" % i),
+                                         h2h_weight=mx.sym.Variable("decoder_l%d_h2h_weight" % i),
+                                         h2h_bias=mx.sym.Variable("decoder_l%d_h2h_bias" % i)))
+            state = LSTMState(c=mx.sym.Variable("decoder_l%d_init_c" % i),
                               h=init_hs[i])
             last_states.append(state)
         assert (len(last_states) == self.layer_num)
@@ -53,8 +53,8 @@ class LstmDecoder(object):
         wordvec = mx.sym.SliceChannel(data=embed, num_outputs=self.seq_len, squeeze_axis=1)
         # split mask
         if self.use_masking:
-            input_mask = mx.sym.Variable('target_mask')
-            masks = mx.sym.SliceChannel(data=input_mask, num_outputs=self.seq_len, name='sliced_target_mask')
+            input_mask = mx.sym.Variable('decoder_mask')
+            masks = mx.sym.SliceChannel(data=input_mask, num_outputs=self.seq_len, name='sliced_decoder_mask')
 
         hidden_all = []
         for seq_idx in range(self.seq_len):
@@ -91,7 +91,7 @@ class LstmDecoder(object):
 
         hidden_concat = mx.sym.Concat(*hidden_all, dim=0)
         pred = mx.sym.FullyConnected(data=hidden_concat, num_hidden=self.vocab_size,
-                                     weight=cls_weight, bias=cls_bias, name='target_pred')
+                                     weight=cls_weight, bias=cls_bias, name='decoder_pred')
 
         label = mx.sym.transpose(data=label)
         label = mx.sym.Reshape(data=label, shape=(-1,))
@@ -100,7 +100,7 @@ class LstmDecoder(object):
             loss_mask = mx.sym.Reshape(data=loss_mask, shape=(-1, 1))
             pred = mx.sym.broadcast_mul(pred, loss_mask)
         # softmaxwithloss http://caffe.berkeleyvision.org/tutorial/layers/softmaxwithloss.html
-        sm = mx.sym.SoftmaxOutput(data=pred, label=label, name='target_softmax', ignore_label=0, use_ignore=True, normalization='valid')
+        sm = mx.sym.SoftmaxOutput(data=pred, label=label, name='decoder_softmax', ignore_label=0, use_ignore=True, normalization='valid')
 
         return sm
 

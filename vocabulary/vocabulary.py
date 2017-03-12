@@ -1,61 +1,35 @@
 # coding=utf-8
 """Count the frequency of unique words in a file.
 """
-import re
 import logging
 import pickle
 import os
 from collections import Counter
 import time
-from utils.file_utils import make_sure_path_exists
-from nltk.corpus import stopwords
-from nltk.tokenize import wordpunct_tokenize, word_tokenize
-from nltk.stem.porter import PorterStemmer
-import codecs
-class vocab(object):
-    def __init__(self, corpus_files, vocab_file, stop_words_dir=None, special_words=dict(), top_words=40000, log_level=logging.INFO,
-                 log_path='./', overwrite=True, language='english'):
+from utils.file_util import ensure_dir_exists
+from utils.data_util import words_gen
+
+
+class Vocab(object):
+    def __init__(self, corpus_files, vocab_file, special_words=dict(), top_words=40000,
+                 log_level=logging.INFO,
+                 log_path='./', overwrite=True):
         self.corpus_files = corpus_files
         self.vocab_file = vocab_file
         self.top_words = top_words
         self.special_words = special_words
         self.overwrite = overwrite
         self.log_path = log_path
-        self.stop_words_dir = stop_words_dir
-        self.stop_words = set() if stop_words_dir is None else self._set_stop_words(language)
-        self.porter = PorterStemmer()
         self._init_log(log_level)
 
-    def _init_log(self, loglevel):
-        logging.basicConfig(format='%(asctime)s %(levelname)s:%(name)s:%(message)s', level=loglevel, datefmt='%H:%M:%S')
+    def _init_log(self, log_level):
+        logging.basicConfig(format='%(asctime)s %(levelname)s:%(name)s:%(message)s', level=log_level, datefmt='%H:%M:%S')
         file_handler = logging.FileHandler(os.path.join(self.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
         file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
         logging.root.addHandler(file_handler)
 
-    def _words_gen(self, file):
-        """Return each word in a line."""
-        for line in file:
-            for w in word_tokenize(line):
-                w = w.strip().lower()
-                if w not in self.stop_words:
-                    try:
-                        yield w
-                    except:
-                        print (w)
-                        pass
-            #words = [self.porter.stem(i.lower()) for i in wordpunct_tokenize(line) if i.lower() not in self.stop_words]
-            #for word in words:
-            #    yield word
-
-    def _set_stop_words(self, language):
-        stop_words = set()
-        with open(os.path.join(self.stop_words_dir, language)) as f:
-            for stop_word in f:
-                stop_words.add(stop_word.strip())
-        return stop_words
-
     def _save_vocab_pickle(self, obj, filename):
-        make_sure_path_exists(filename)
+        ensure_dir_exists(filename, is_dir=False)
         if os.path.isfile(filename) and not self.overwrite:
             logging.warning("Not saving %s, already exists." % (filename))
         else:
@@ -69,12 +43,11 @@ class vocab(object):
     def create_dictionary(self):
         """Start execution of word-frequency."""
         global_counter = Counter()
-        for file in self.corpus_files:
+        for filename in self.corpus_files:
             logging.info("Counting words in %s" % file)
-            with codecs.open(file, encoding='utf-8', errors='ignore') as f:
-                counter = Counter(self._words_gen(f))
-                logging.info("%d unique words in %s with a total of %d words."
-                             % (len(counter), file, sum(counter.values())))
+            counter = Counter(words_gen(filename))
+            logging.info("%d unique words in %s with a total of %d words."
+                         % (len(counter), file, sum(counter.values())))
             global_counter.update(counter)
             logging.info("Finish counting. %d unique words, a total of %d words in all files."
                          % (len(global_counter), sum(counter.values())))
@@ -96,5 +69,5 @@ class vocab(object):
                 vocab[word] = idx
                 idx += 1
         vocab.update(self.special_words)
-        logging.info("store vocalbulary with most_commond_words file, vocabulary size: " + str(len(vocab)))
+        logging.info("store vocabulary with most_common_words file, vocabulary size: " + str(len(vocab)))
         self._save_vocab_pickle(vocab, self.vocab_file)

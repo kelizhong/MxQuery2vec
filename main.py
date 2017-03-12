@@ -29,16 +29,16 @@ def parse_args():
     vocab_parser.set_defaults(action='vocab')
 
     # model parameter
-    train_parser.add_argument('-sln', '--source-layer-num', default=1, type=int,
-                              help='number of layers for the source LSTM recurrent neural network')
-    train_parser.add_argument('-shun', '--source-hidden-unit-num', default=512, type=int,
+    train_parser.add_argument('-sln', '--encoder-layer-num', default=1, type=int,
+                              help='number of layers for the encoder LSTM recurrent neural network')
+    train_parser.add_argument('-shun', '--encoder-hidden-unit-num', default=512, type=int,
                               help='number of hidden units in the neural network for encoder')
     train_parser.add_argument('-es', '--embed-size', default=128, type=int,
                               help='embedding size ')
 
-    train_parser.add_argument('-tln', '--target-layer-num', default=1, type=int,
-                              help='number of layers for the target LSTM recurrent neural network')
-    train_parser.add_argument('-thun', '--target-hidden-unit-num', default=512, type=int,
+    train_parser.add_argument('-tln', '--decoder-layer-num', default=1, type=int,
+                              help='number of layers for the decoder LSTM recurrent neural network')
+    train_parser.add_argument('-thun', '--decoder-hidden-unit-num', default=512, type=int,
                               help='number of hidden units in the neural network for decoder')
 
     train_parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,
@@ -99,11 +99,17 @@ def parse_args():
 
     train_parser.add_argument('-wll', '--work-load-ist', dest='work_load_list', help='work load for different devices',
                               default=None, type=list)
+    train_parser.add_argument('--invalid-label', dest='invalid_label', help='invalid label',
+                              default=0, type=int)
+    train_parser.add_argument('--hosts-num', dest='hosts_num', help='the number of the hosts',
+                              default=1, type=int)
+    train_parser.add_argument('--workers-num', dest='workers_num', help='the number of the workers',
+                              default=1, type=int)
 
     # data parameter
-    train_parser.add_argument('train_source_path', type=str,
+    train_parser.add_argument('encoder_train_data_path', type=str,
                               help='the file name of the encoder input for training')
-    train_parser.add_argument('train_target_path', type=str,
+    train_parser.add_argument('decoder_train_data_path', type=str,
                               help='the file name of the decoder input for training')
     train_parser.add_argument('vocabulary_path', default=os.path.join(os.getcwd(), 'data', 'vocabulary', 'vocab.pkl'),
                               type=str,
@@ -121,9 +127,12 @@ def parse_args():
     vocab_parser.add_argument('files', nargs='+',
                               help='the corpus input files')
     vocab_parser.add_argument('-vf', '--vocab-file',
-                              type=FileType, default=os.path.join(os.path.dirname(__file__), 'data', 'vocabulary', 'vocab.pkl'),
+                              type=FileType,
+                              default=os.path.join(os.path.dirname(__file__), 'data', 'vocabulary', 'vocab.pkl'),
                               help='the file with the words which are the most command words in the corpus')
-    vocab_parser.add_argument('-swd', '--stop-words-dir', default=os.path.join(os.path.dirname(__file__), 'data', 'stop_words'), help='stop words file directory')
+    vocab_parser.add_argument('-swd', '--stop-words-dir',
+                              default=os.path.join(os.path.dirname(__file__), 'data', 'stop_words'),
+                              help='stop words file directory')
     return parser.parse_args()
 
 
@@ -132,29 +141,36 @@ if __name__ == "__main__":
 
     print(args)
     if args.action == 'train':
-        from model.trainer import Trainer
+        from model.query2vec_trainer import Query2vecTrainer, mxnet_parameter, optimizer_parameter, model_parameter
 
-        Trainer(train_source_path=args.train_source_path, train_target_path=args.train_target_path,
-                vocabulary_path=args.vocabulary_path, stop_words_dir=args.stop_words_dir) \
-            .set_model_parameter(source_layer_num=args.source_layer_num,
-                                 source_hidden_unit_num=args.source_hidden_unit_num,
-                                 source_embed_size=args.embed_size, target_layer_num=args.target_layer_num,
-                                 target_hidden_unit_num=args.target_hidden_unit_num, target_embed_size=args.embed_size,
-                                 buckets=args.buckets) \
-            .set_train_parameter(source_dropout=args.dropout, target_dropout=args.dropout, load_epoch=args.load_epoch,
-                                 model_prefix=os.path.join(args.model_path, args.model_prefix),
-                                 device_mode=args.device_mode, devices=args.devices,
-                                 train_max_samples=args.train_max_samples,
-                                 disp_batches=args.disp_batches, num_epoch=args.num_epoch,
-                                 optimizer=args.optimizer, batch_size=args.batch_size) \
-            .set_mxnet_parameter(log_path=args.log_path, log_level=args.log_level, kv_store=args.kv_store,
-                                 enable_evaluation=args.enable_evaluation,
-                                 monitor_interval=args.monitor_interval, save_checkpoint_freq=args.save_checkpoint_freq) \
-            .set_optimizer_parameter(optimizer=args.optimizer, clip_gradient=args.clip_gradient) \
-            .train()
+        mxnet_para = mxnet_parameter(kv_store=args.kv_store, hosts_num=args.hosts_num, workers_num=args.workers_num,
+                                     device_mode=args.device_mode, devices=args.devices,
+                                     disp_batches=args.disp_batches, monitor_interval=args.monitor_interval,
+                                     log_level=args.log_level, log_path=args.log_path,
+                                     save_checkpoint_freq=args.save_checkpoint_freq,
+                                     model_path_prefix=os.path.join(args.model_path, args.model_prefix),
+                                     enable_evaluation=args.enable_evaluation, invalid_label=args.invalid_label,
+                                     load_epoch=args.load_epoch, train_max_samples=args.train_max_samples)
+
+        optimizer_para = optimizer_parameter(clip_gradient=args.clip_gradient)
+
+        model_para = model_parameter(encoder_layer_num=args.encoder_layer_num,
+                                     encoder_hidden_unit_num=args.encoder_hidden_unit_num,
+                                     encoder_embed_size=args.embed_size, encoder_dropout=args.dropout,
+                                     decoder_layer_num=args.decoder_layer_num,
+                                     decoder_hidden_unit_num=args.decoder_hidden_unit_num,
+                                     decoder_embed_size=args.embed_size, decoder_dropout=args.dropout,
+                                     batch_size=args.batch_size, buckets=args.buckets)
+
+        trainer = Query2vecTrainer(encoder_train_data_path=args.encoder_train_data_path,
+                                   decoder_train_data_path=args.decoder_train_data_path,
+                                   vocabulary_path=args.vocabulary_path, stop_words_dir=args.stop_words_dir,
+                                   mxnet_para=mxnet_para, optimizer_para=optimizer_para, model_para=model_para)
+        trainer.train()
     elif args.action == 'vocab':
-        from vocabulary.vocab_gen import vocab
+        from vocabulary.vocabulary import Vocab
 
-        vocab(args.files, args.vocab_file, top_words=args.top_words, stop_words_dir=args.stop_words_dir, special_words=special_words,
-              log_path=args.log_path, log_level=args.log_level, overwrite=args.overwrite) \
-            .create_dictionary()
+        vocab = Vocab(args.files, args.vocab_file, top_words=args.top_words,
+                      special_words=special_words,
+                      log_path=args.log_path, log_level=args.log_level, overwrite=args.overwrite)
+        vocab.create_dictionary()

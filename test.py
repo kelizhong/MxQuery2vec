@@ -2,14 +2,14 @@ import mxnet as mx
 import numpy as np
 import argparse
 from collections import OrderedDict
-from utils.data_utils import load_vocab, sentence2id, word2id
+from utils.data_util import load_vocab, sentence2id, word2id
 from inference.inference_model import BiS2SInferenceModel_mask
 import logging
 import os
 import time
 from conf.customArgType import LoggerLevelType, DirectoryType
 from conf.customArgAction import AppendTupleWithoutDefault
-from utils.data_utils import get_stop_words
+from utils.data_util import get_stop_words
 from nltk.tokenize import  word_tokenize
 from common import constant
 import random

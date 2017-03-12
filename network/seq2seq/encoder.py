@@ -1,5 +1,5 @@
+# -*- coding: utf-8 -*-
 import mxnet as mx
-
 from ..rnn.LSTM import lstm,  LSTMParam, LSTMState
 
 
@@ -20,7 +20,7 @@ class BiDirectionalLstmEncoder(object):
 
     def encode(self):
         # declare variables
-        data = mx.sym.Variable('source')  # input data, source for encoder
+        data = mx.sym.Variable('encoder_data')  # input data, encoder for encoder
 
         # word embedding weight
         if self.embed_weight is None:
@@ -30,23 +30,23 @@ class BiDirectionalLstmEncoder(object):
         forward_param_cells = []
         forward_last_states = []
         for i in range(self.layer_num):
-            forward_param_cells.append(LSTMParam(i2h_weight=mx.sym.Variable("forward_source_l%d_i2h_weight" % i),
-                                                 i2h_bias=mx.sym.Variable("forward_source_l%d_i2h_bias" % i),
-                                                 h2h_weight=mx.sym.Variable("forward_source_l%d_h2h_weight" % i),
-                                                 h2h_bias=mx.sym.Variable("forward_source_l%d_h2h_bias" % i)))
-            forward_state = LSTMState(c=mx.sym.Variable("forward_source_l%d_init_c" % i),
-                                      h=mx.sym.Variable("forward_source_l%d_init_h" % i))
+            forward_param_cells.append(LSTMParam(i2h_weight=mx.sym.Variable("forward_encoder_l%d_i2h_weight" % i),
+                                                 i2h_bias=mx.sym.Variable("forward_encoder_l%d_i2h_bias" % i),
+                                                 h2h_weight=mx.sym.Variable("forward_encoder_l%d_h2h_weight" % i),
+                                                 h2h_bias=mx.sym.Variable("forward_encoder_l%d_h2h_bias" % i)))
+            forward_state = LSTMState(c=mx.sym.Variable("forward_encoder_l%d_init_c" % i),
+                                      h=mx.sym.Variable("forward_encoder_l%d_init_h" % i))
             forward_last_states.append(forward_state)
         assert (len(forward_last_states) == self.layer_num)
         backward_param_cells = []
         backward_last_states = []
         for i in range(self.layer_num):
-            backward_param_cells.append(LSTMParam(i2h_weight=mx.sym.Variable("backward_source_l%d_i2h_weight" % i),
-                                                  i2h_bias=mx.sym.Variable("backward_source_l%d_i2h_bias" % i),
-                                                  h2h_weight=mx.sym.Variable("backward_source_l%d_h2h_weight" % i),
-                                                  h2h_bias=mx.sym.Variable("backward_source_l%d_h2h_bias" % i)))
-            backward_state = LSTMState(c=mx.sym.Variable("backward_source_l%d_init_c" % i),
-                                       h=mx.sym.Variable("backward_source_l%d_init_h" % i))
+            backward_param_cells.append(LSTMParam(i2h_weight=mx.sym.Variable("backward_encoder_l%d_i2h_weight" % i),
+                                                  i2h_bias=mx.sym.Variable("backward_encoder_l%d_i2h_bias" % i),
+                                                  h2h_weight=mx.sym.Variable("backward_encoder_l%d_h2h_weight" % i),
+                                                  h2h_bias=mx.sym.Variable("backward_encoder_l%d_h2h_bias" % i)))
+            backward_state = LSTMState(c=mx.sym.Variable("backward_encoder_l%d_init_c" % i),
+                                       h=mx.sym.Variable("backward_encoder_l%d_init_h" % i))
             backward_last_states.append(backward_state)
         assert (len(backward_last_states) == self.layer_num)
 
@@ -57,8 +57,8 @@ class BiDirectionalLstmEncoder(object):
 
         # split mask
         if self.use_masking:
-            input_mask = mx.sym.Variable('source_mask')
-            masks = mx.sym.SliceChannel(data=input_mask, num_outputs=self.seq_len, name='sliced_source_mask')
+            input_mask = mx.sym.Variable('encoder_mask')
+            masks = mx.sym.SliceChannel(data=input_mask, num_outputs=self.seq_len, name='sliced_encoder_mask')
 
         forward_hidden_all = []
         backward_hidden_all = []
