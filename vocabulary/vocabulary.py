@@ -44,10 +44,10 @@ class Vocab(object):
         """Start execution of word-frequency."""
         global_counter = Counter()
         for filename in self.corpus_files:
-            logging.info("Counting words in %s" % file)
+            logging.info("Counting words in %s" % filename)
             counter = Counter(words_gen(filename))
             logging.info("%d unique words in %s with a total of %d words."
-                         % (len(counter), file, sum(counter.values())))
+                         % (len(counter), filename, sum(counter.values())))
             global_counter.update(counter)
             logging.info("Finish counting. %d unique words, a total of %d words in all files."
                          % (len(global_counter), sum(counter.values())))

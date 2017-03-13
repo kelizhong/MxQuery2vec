@@ -136,12 +136,12 @@ class Query2vecTrainer(Trainer):
         for (parameter, value) in chain(self.mxnet_para._asdict().iteritems(),
                                         self.model_para._asdict().iteritems()):
             setattr(self, parameter, value)
-        optimizer_params = dict()
 
         # create kvstore
         kv = mx.kvstore.create(self.kv_store)
         setattr(self, 'kv', kv)
 
+        optimizer_params = dict()
         for (parameter, value) in self.optimizer_para._asdict().iteritems():
             if parameter == "optimizer":
                 # set optimizer name
@@ -153,7 +153,7 @@ class Query2vecTrainer(Trainer):
 
         if self.optimizer_params.get('rescale_grad') < 0:
             # if rescale_grad has not been set, reset rescale_grad
-            self.optimizer_params.setdefault('rescale_grad', 1.0 / (self.batch_size * kv.num_workers))
+            self.optimizer_params['rescale_grad'] = 1.0 / (self.batch_size * kv.num_workers)
 
         # init log with kv
         init_log(self.log_level, self.log_path)
