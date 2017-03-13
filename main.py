@@ -114,9 +114,6 @@ def parse_args():
     train_parser.add_argument('vocabulary_path', default=os.path.join(os.getcwd(), 'data', 'vocabulary', 'vocab.pkl'),
                               type=str,
                               help='vocabulary with he most common words')
-    train_parser.add_argument('stop_words_dir',
-                              default=os.path.join(os.path.dirname(__file__), 'data', 'stop_words'),
-                              help='stop words file directory')
 
     # vocabulary parameter
     vocab_parser.add_argument('-tw', '--top-words', default=40000, type=int,
@@ -130,9 +127,7 @@ def parse_args():
                               type=FileType,
                               default=os.path.join(os.path.dirname(__file__), 'data', 'vocabulary', 'vocab.pkl'),
                               help='the file with the words which are the most command words in the corpus')
-    vocab_parser.add_argument('-swd', '--stop-words-dir',
-                              default=os.path.join(os.path.dirname(__file__), 'data', 'stop_words'),
-                              help='stop words file directory')
+
     return parser.parse_args()
 
 
@@ -164,7 +159,7 @@ if __name__ == "__main__":
 
         trainer = Query2vecTrainer(encoder_train_data_path=args.encoder_train_data_path,
                                    decoder_train_data_path=args.decoder_train_data_path,
-                                   vocabulary_path=args.vocabulary_path, stop_words_dir=args.stop_words_dir,
+                                   vocabulary_path=args.vocabulary_path,
                                    mxnet_para=mxnet_para, optimizer_para=optimizer_para, model_para=model_para)
         trainer.train()
     elif args.action == 'vocab':

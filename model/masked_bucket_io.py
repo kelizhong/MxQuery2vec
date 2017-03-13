@@ -34,9 +34,7 @@ class MaskedBucketSentenceIter(mx.io.DataIter):
         super(MaskedBucketSentenceIter, self).__init__()
 
         self.sentence2id = sentence2id
-        encoder_sentences = read_data(encoder_path, max_read_sample)
-
-        decoder_sentences = read_data(decoder_path, max_read_sample)
+        encoder_sentences, decoder_sentences = read_data(encoder_path, decoder_path, max_read_sample)
 
         assert len(encoder_sentences) == len(decoder_sentences)
 

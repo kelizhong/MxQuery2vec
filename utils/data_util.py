@@ -9,19 +9,23 @@ from nltk.tokenize import word_tokenize
 import itertools
 
 
-def read_data(path, max_line_num=sys.maxsize):
-    data = []
-    with codecs.open(path, encoding='utf-8', errors='ignore') as f:
-        for line in itertools.islice(f, max_line_num):
-            line = line.strip()
-            if len(line):
-                data.append(word_tokenize(line))
-    return data
+def read_data(encoder_path, decoder_path, max_line_num=sys.maxsize):
+    encoder_data = []
+    decoder_data = []
+    with codecs.open(encoder_path, encoding='utf-8') as encoder, codecs.open(decoder_path, encoding='utf-8') as decoder:
+        for encoder_line, decoder_line in itertools.izip(itertools.islice(encoder, max_line_num),
+                                                         itertools.islice(decoder, max_line_num)):
+            encoder_line = encoder_line.strip()
+            decoder_line = decoder_line.strip()
+            if len(encoder_line) and len(decoder_line):
+                encoder_data.append(word_tokenize(encoder_line))
+                decoder_data.append(word_tokenize(decoder_line))
+    return encoder_data, decoder_data
 
 
 def words_gen(filename):
     """Return each word in a line."""
-    with codecs.open(filename, encoding='utf-8', errors='ignore') as f:
+    with codecs.open(filename, encoding='utf-8') as f:
         for line in f:
             for w in word_tokenize(line):
                 w = w.strip().lower()

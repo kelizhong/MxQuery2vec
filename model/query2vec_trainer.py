@@ -12,7 +12,7 @@ from trainer import Trainer
 from utils.data_util import read_data, sentence2id, load_vocab
 from utils.decorator_util import memoized
 from utils.device_util import get_devices
-from utils.model_util import load_model, save_model, init_log
+from utils.model_util import load_model, save_model, init_log, Speedometer
 from utils.tuple_util import namedtuple_with_defaults
 
 """mxnet parameter
@@ -280,7 +280,7 @@ class Query2vecTrainer(Trainer):
             rnd_type='gaussian', factor_type="in", magnitude=2)
 
         # callbacks that run after each batch
-        batch_end_callbacks = [mx.callback.Speedometer(self.batch_size, self.disp_batches)]
+        batch_end_callbacks = [Speedometer(self.batch_size, self.kv.rank, self.disp_batches)]
 
         # run
         model.fit(data_loader,
