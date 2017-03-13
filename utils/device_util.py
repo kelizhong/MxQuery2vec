@@ -37,7 +37,7 @@ def get_devices(devices, device_mode='cpu', rank=0, hosts_num=1, workers_num=1):
         if workers_num > 8:
             warnings.warn('the workers number larger than 8 which may make the training process slower. Is it intended?')
 
-        gpus_num = get_gpus_num()
+        gpus_num = 16
         workers_num_per_host = math.ceil(workers_num / hosts_num)
 
         workers_num_per_host = int(workers_num_per_host)
@@ -49,4 +49,4 @@ def get_devices(devices, device_mode='cpu', rank=0, hosts_num=1, workers_num=1):
         devs = [mx.gpu(int(i)) for i in xrange(start_index, start_index + gpus_num_per_work)]
     return devs
 
-#print(get_devices(0, 2, 8))
+print(get_devices(None, 'gpu_auto', 3, 1, 4))

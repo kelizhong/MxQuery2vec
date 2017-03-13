@@ -74,7 +74,7 @@ def parse_args():
     train_parser.add_argument('-cg', '--clip-gradient', type=float, default=5.0,
                               help='clip gradient in range [-clip_gradient, clip_gradient]')
     # mxnet parameter
-    train_parser.add_argument('-dm', '--device-mode', choices=['cpu', 'gpu'],
+    train_parser.add_argument('-dm', '--device-mode', choices=['cpu', 'gpu', 'gpu_auto'],
                               help='define define mode, (default: %(default)s)',
                               default='cpu')
     train_parser.add_argument('-d', '--devices', type=str, default='0',
