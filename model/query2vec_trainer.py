@@ -156,7 +156,7 @@ class Query2vecTrainer(Trainer):
             self.optimizer_params.setdefault('rescale_grad', 1.0 / (self.batch_size * kv.num_workers))
 
         # init log with kv
-        init_log(kv.rank, self.log_level, self.log_path)
+        init_log(self.log_level, self.log_path)
 
         # print the variable before training
         if kv.rank == 0:

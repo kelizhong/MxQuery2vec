@@ -8,7 +8,7 @@ class LstmDecoder(object):
                  hidden_unit_num,
                  vocab_size, embed_size,
                  dropout=0.0, layer_num=1,
-                 embed_weight=None, embed_name='embed_weight'):
+                 embed_weight=None, name='decoder'):
         self.seq_len = seq_len
         self.use_masking = use_masking
         self.hidden_unit_num = hidden_unit_num
@@ -17,14 +17,14 @@ class LstmDecoder(object):
         self.dropout = dropout
         self.layer_num = layer_num
         self.embed_weight = embed_weight
-        self.embed_name = embed_name
+        self.name = name
 
     def decode(self, encoded):
         data = mx.sym.Variable('decoder_data')  # decoder input data
         label = mx.sym.Variable('decoder_softmax_label')  # decoder label data
         # declare variables
         if self.embed_weight is None:
-            self.embed_weight = mx.sym.Variable(self.embedding_name)
+            self.embed_weight = mx.sym.Variable("{}_embed_weight".format(self.name))
         cls_weight = mx.sym.Variable("decoder_cls_weight")
         cls_bias = mx.sym.Variable("decoder_cls_bias")
         init_weight = mx.sym.Variable("decoder_init_weight")
@@ -49,7 +49,8 @@ class LstmDecoder(object):
 
         # embedding layer
         embed = mx.sym.Embedding(data=data, input_dim=self.vocab_size + 1,
-                                 weight=self.embed_weight, output_dim=self.embed_size, name=self.embed_name)
+                                 weight=self.embed_weight, output_dim=self.embed_size,
+                                 name="{}_embed".format(self.name))
         wordvec = mx.sym.SliceChannel(data=embed, num_outputs=self.seq_len, squeeze_axis=1)
         # split mask
         if self.use_masking:
@@ -100,7 +101,7 @@ class LstmDecoder(object):
             loss_mask = mx.sym.Reshape(data=loss_mask, shape=(-1, 1))
             pred = mx.sym.broadcast_mul(pred, loss_mask)
         # softmaxwithloss http://caffe.berkeleyvision.org/tutorial/layers/softmaxwithloss.html
-        sm = mx.sym.SoftmaxOutput(data=pred, label=label, name='decoder_softmax', ignore_label=0, use_ignore=True, normalization='valid')
+        sm = mx.sym.SoftmaxOutput(data=pred, label=label, name='decoder_softmax', ignore_label=0, use_ignore=True,
+                                  normalization='valid')
 
         return sm
-

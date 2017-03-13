@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import mxnet as mx
-from ..rnn.LSTM import lstm,  LSTMParam, LSTMState
+from ..rnn.LSTM import lstm, LSTMParam, LSTMState
 
 
 class BiDirectionalLstmEncoder(object):
     def __init__(self, seq_len, use_masking,
                  hidden_unit_num,
                  vocab_size, embed_size,
-                 dropout=0.0, layer_num=1, embed_weight=None, embedding_name='embed_weight'):
+                 dropout=0.0, layer_num=1, embed_weight=None, name='encoder'):
         self.seq_len = seq_len
         self.use_masking = use_masking
         self.hidden_unit_num = hidden_unit_num
@@ -16,7 +16,7 @@ class BiDirectionalLstmEncoder(object):
         self.dropout = dropout
         self.layer_num = layer_num
         self.embed_weight = embed_weight
-        self.embedding_name = embedding_name
+        self.name = name
 
     def encode(self):
         # declare variables
@@ -24,7 +24,7 @@ class BiDirectionalLstmEncoder(object):
 
         # word embedding weight
         if self.embed_weight is None:
-            self.embed_weight = mx.sym.Variable(self.embedding_name)
+            self.embed_weight = mx.sym.Variable("{}_embed_weight".format(self.name))
 
         # encoder bi-lstm parameters
         forward_param_cells = []
@@ -52,7 +52,8 @@ class BiDirectionalLstmEncoder(object):
 
         # embedding layer
         embed = mx.sym.Embedding(data=data, input_dim=self.vocab_size + 1,
-                                 weight=self.embed_weight, output_dim=self.embed_size, name=self.embedding_name)
+                                 weight=self.embed_weight, output_dim=self.embed_size,
+                                 name="{}_embed".format(self.name))
         wordvec = mx.sym.SliceChannel(data=embed, num_outputs=self.seq_len, squeeze_axis=1)
 
         # split mask
@@ -123,7 +124,6 @@ class BiDirectionalLstmEncoder(object):
             backward_hidden_all.insert(0, backward_hidden)
 
         bi_hidden_all = []
-        # for seq_idx in range(self.seq_len):
         for f, b in zip(forward_hidden_all, backward_hidden_all):
             bi = mx.sym.Concat(f, b, dim=1)
             bi_hidden_all.append(bi)

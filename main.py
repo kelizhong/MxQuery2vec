@@ -29,16 +29,16 @@ def parse_args():
     vocab_parser.set_defaults(action='vocab')
 
     # model parameter
-    train_parser.add_argument('-sln', '--encoder-layer-num', default=1, type=int,
+    train_parser.add_argument('-sln', '--encoder-layer-num', default=5, type=int,
                               help='number of layers for the encoder LSTM recurrent neural network')
-    train_parser.add_argument('-shun', '--encoder-hidden-unit-num', default=512, type=int,
+    train_parser.add_argument('-shun', '--encoder-hidden-unit-num', default=10, type=int,
                               help='number of hidden units in the neural network for encoder')
-    train_parser.add_argument('-es', '--embed-size', default=128, type=int,
+    train_parser.add_argument('-es', '--embed-size', default=10, type=int,
                               help='embedding size ')
 
-    train_parser.add_argument('-tln', '--decoder-layer-num', default=1, type=int,
+    train_parser.add_argument('-tln', '--decoder-layer-num', default=5, type=int,
                               help='number of layers for the decoder LSTM recurrent neural network')
-    train_parser.add_argument('-thun', '--decoder-hidden-unit-num', default=512, type=int,
+    train_parser.add_argument('-thun', '--decoder-hidden-unit-num', default=10, type=int,
                               help='number of hidden units in the neural network for decoder')
 
     train_parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,

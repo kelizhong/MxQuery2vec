@@ -3,17 +3,14 @@ import numpy as np
 import argparse
 from collections import OrderedDict
 from utils.data_util import load_vocab, sentence2id, word2id
-from inference.inference_model import BiS2SInferenceModel_mask
+from inference.inference_model import Seq2seqInferenceModel
 import logging
 import os
 import time
 from conf.customArgType import LoggerLevelType, DirectoryType
 from conf.customArgAction import AppendTupleWithoutDefault
-from utils.data_util import get_stop_words
-from nltk.tokenize import  word_tokenize
+from nltk.tokenize import word_tokenize
 from common import constant
-import random
-import bisect
 from numpy import linalg as la
 import pickle
 
@@ -34,6 +31,7 @@ def cosSimilar(inA,inB):
     denom=la.norm(inA)*la.norm(inB)
     return 0.5+0.5*(num/denom)
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Train Seq2seq model for query2vec')
 
@@ -47,7 +45,7 @@ def parse_args():
                         help='vocabulary with he most common words')
     parser.add_argument('-le', '--load-epoch', dest='load_epoch', help='epoch of pretrained model',
                         type=int)
-    parser.add_argument('-mp', '--model-prefix', default='query2vec-2',
+    parser.add_argument('-mp', '--model-prefix', default='query2vec',
                         type=str,
                         help='the experiment name, this is also the prefix for the parameters file')
     parser.add_argument('-pd', '--model-path', default=os.path.join(os.getcwd(), 'data', 'model'),
@@ -55,16 +53,16 @@ def parse_args():
                         help='the directory to store the parameters of the training')
 
     # model parameter
-    parser.add_argument('-sln', '--source-layer-num', default=1, type=int,
+    parser.add_argument('-sln', '--source-layer-num', default=5, type=int,
                         help='number of layers for the source LSTM recurrent neural network')
-    parser.add_argument('-shun', '--source-hidden-unit-num', default=512, type=int,
+    parser.add_argument('-shun', '--source-hidden-unit-num', default=10, type=int,
                         help='number of hidden units in the neural network for encoder')
-    parser.add_argument('-es', '--embed-size', default=128, type=int,
+    parser.add_argument('-es', '--embed-size', default=10, type=int,
                         help='embedding size ')
 
-    parser.add_argument('-tln', '--target-layer-num', default=1, type=int,
+    parser.add_argument('-tln', '--target-layer-num', default=5, type=int,
                         help='number of layers for the target LSTM recurrent neural network')
-    parser.add_argument('-thun', '--target-hidden-unit-num', default=512, type=int,
+    parser.add_argument('-thun', '--target-hidden-unit-num', default=10, type=int,
                         help='number of hidden units in the neural network for decoder')
 
     parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,
@@ -75,20 +73,20 @@ def parse_args():
     return parser.parse_args()
 
 
-def get_inference_models(buckets, arg_params, source_vocab_size, target_vocab_size, ctx, batch_size):
+def get_inference_models(buckets, arg_params, encoder_vocab_size, decoder_vocab_size, ctx, batch_size):
     # build an inference model
     model_buckets = OrderedDict()
     for bucket in buckets:
-        model_buckets[bucket] = BiS2SInferenceModel_mask(s_num_lstm_layer=args.source_layer_num, s_seq_len=bucket[0],
-                                                         s_vocab_size=source_vocab_size,
-                                                         s_num_hidden=args.source_hidden_unit_num,
-                                                         s_num_embed=args.embed_size,
-                                                         s_dropout=0,
-                                                         t_num_lstm_layer=args.target_layer_num,
-                                                         t_vocab_size=target_vocab_size,
-                                                         t_num_hidden=args.target_hidden_unit_num,
-                                                         t_num_embed=args.embed_size,
-                                                         t_num_label=target_vocab_size, t_dropout=0,
+        model_buckets[bucket] = Seq2seqInferenceModel(encoder_layer_num=args.source_layer_num, encoder_seq_len=bucket[0],
+                                                      encoder_vocab_size=encoder_vocab_size,
+                                                      encoder_hidden_unit_num=args.source_hidden_unit_num,
+                                                      encoder_embed_size=args.embed_size,
+                                                      encoder_dropout=0,
+                                                      decoder_layer_num=args.target_layer_num,
+                                                      decoder_vocab_size=decoder_vocab_size,
+                                                      decoder_hidden_unit_num=args.target_hidden_unit_num,
+                                                      decoder_embed_size=args.embed_size,
+                                                      decoder_dropout=0,
                                                          arg_params=arg_params,
                                                          use_masking=True,
                                                          ctx=ctx, batch_size=batch_size)
@@ -104,7 +102,7 @@ def get_bucket_model(model_buckets, input_len):
 
 # make input from char
 def MakeInput(sentence, vocab, unroll_len, data_arr, mask_arr):
-    idx = sentence2id(sentence, vocab, stop_words)
+    idx = sentence2id(sentence, vocab)
     tmp = np.zeros((1, unroll_len))
     mask = np.zeros((1, unroll_len))
     for i in range(min(len(idx), unroll_len)):
@@ -157,7 +155,7 @@ def encode(sentence, model_buckets, source_vocab):
     input_ndarray = mx.nd.zeros((1, unroll_len))
     mask_ndarray = mx.nd.zeros((1, unroll_len))
     MakeInput(sentence, source_vocab, unroll_len, input_ndarray, mask_ndarray)
-    last_encoded, _ = cur_model.encode(input_ndarray,
+    last_encoded = cur_model.encode(input_ndarray,
                                        mask_ndarray)  # last_encoded means the last time step hidden
 
     return last_encoded
@@ -224,19 +222,18 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 1
-    stop_words = get_stop_words(args.stop_words_dir, 'english')
+    args.load_epoch = 100
 
     # load vocabulary
     vocab = load_vocab(args.vocabulary_path)
     # load model from check-point
     _, arg_params, __ = mx.model.load_checkpoint(os.path.join(args.model_path, args.model_prefix), args.load_epoch)
-    vocab_size = len(vocab) + 1
+    vocab_size = len(vocab)
     logging.info('vocab size: {0}'.format(vocab_size))
     revert_vocab = MakeRevertVocab(vocab)
     buckets = args.buckets
     model_buckets = load_model_buckets(vocab_size)
-    generate_embeddings(model_buckets, vocab)
+    #generate_embeddings(model_buckets, vocab)
     #with open('./data/train_corpus/conversation.post') as f:
     #    for line in f:
     #        line = line.strip()
@@ -273,7 +270,7 @@ if __name__ == "__main__":
     #print(cosSimilar(a, b))
     #c = encode(word_tokenize("thank you"), model_buckets, vocab).asnumpy()
     #print(cosSimilar(b, c))
-    a = encode(word_tokenize("men wallet"), model_buckets, vocab).asnumpy()
+    a = encode(word_tokenize("apple"), model_buckets, vocab).asnumpy()
     b = encode(word_tokenize("men addidas shoe"), model_buckets, vocab).asnumpy()
     print(cosSimilar(a, b))
     c = encode(word_tokenize("women nike shoe"), model_buckets, vocab).asnumpy()
