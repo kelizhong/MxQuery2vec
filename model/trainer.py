@@ -12,7 +12,7 @@ class Trainer(object):
         raise NotImplementedError
 
     @property
-    def devices(self):
+    def ctx_devices(self):
         """return devices"""
         raise NotImplementedError
 
