@@ -63,7 +63,7 @@ class Seq2seqModel(Model):
         encoder = self.encoder(encoder_seq_len)
         decoder = self.decoder(decoder_seq_len)
 
-        forward_hidden_all, backward_hidden_all, _, _ = encoder.encode()
+        forward_hidden_all, backward_hidden_all, _ = encoder.encode()
 
         decoded_init_state = mx.sym.Concat(forward_hidden_all[-1], backward_hidden_all[0], dim=1,
                                            name='decoded_init_state')

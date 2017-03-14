@@ -242,11 +242,11 @@ class Query2vecTrainer(Trainer):
         sym = Seq2seqModel(encoder_para, decoder_para, data_label_names_para).network_symbol()
         return sym
 
-    @memoized
     @property
-    def devices(self):
+    @memoized
+    def ctx_devices(self):
         """return devices"""
-        devs = get_devices(self.devices, self.device_mode, self.rank, self.hosts_num, self.workers_num)
+        devs = get_devices(self.devices, self.device_mode, self.kv.rank, self.hosts_num, self.workers_num)
         return devs
 
     def print_all_variable(self):
@@ -268,8 +268,7 @@ class Query2vecTrainer(Trainer):
         # save model
         checkpoint = save_model(self.model_path_prefix, self.kv.rank, self.save_checkpoint_freq)
 
-        devices = self.devices
-
+        devices = self.ctx_devices
         # create bucket model
         model = mx.mod.BucketingModule(network_symbol, default_bucket_key=data_loader.default_bucket_key,
                                        context=devices)
