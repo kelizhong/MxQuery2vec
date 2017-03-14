@@ -147,7 +147,7 @@ if __name__ == "__main__":
                                      enable_evaluation=args.enable_evaluation, invalid_label=args.invalid_label,
                                      load_epoch=args.load_epoch, train_max_samples=args.train_max_samples)
 
-        optimizer_para = optimizer_parameter(clip_gradient=args.clip_gradient)
+        optimizer_para = optimizer_parameter(optimizer=args.optimizer, clip_gradient=args.clip_gradient)
 
         model_para = model_parameter(encoder_layer_num=args.encoder_layer_num,
                                      encoder_hidden_unit_num=args.encoder_hidden_unit_num,

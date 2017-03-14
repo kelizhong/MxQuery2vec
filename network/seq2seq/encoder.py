@@ -63,7 +63,7 @@ class BiDirectionalLstmEncoder(object):
 
         forward_hidden_all = []
         backward_hidden_all = []
-        for seq_idx in range(self.seq_len):
+        for seq_idx in xrange(self.seq_len):
             forward_hidden = wordvec[seq_idx]
             backward_hidden = wordvec[self.seq_len - 1 - seq_idx]
             if self.use_masking:
@@ -71,7 +71,7 @@ class BiDirectionalLstmEncoder(object):
                 backward_mask = masks[self.seq_len - 1 - seq_idx]
 
             # stack LSTM
-            for i in range(self.layer_num):
+            for i in xrange(self.layer_num):
                 if i == 0:
                     dropout = 0.
                 else:
