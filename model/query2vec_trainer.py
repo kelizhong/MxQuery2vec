@@ -243,9 +243,10 @@ class Query2vecTrainer(Trainer):
         return sym
 
     @memoized
-    def _get_devices(self, rank):
+    @property
+    def devices(self):
         """return devices"""
-        devs = get_devices(self.devices, self.device_mode, rank, self.hosts_num, self.workers_num)
+        devs = get_devices(self.devices, self.device_mode, self.rank, self.hosts_num, self.workers_num)
         return devs
 
     def print_all_variable(self):
@@ -267,10 +268,11 @@ class Query2vecTrainer(Trainer):
         # save model
         checkpoint = save_model(self.model_path_prefix, self.kv.rank, self.save_checkpoint_freq)
 
-        devs = self._get_devices(self.kv.rank)
+        devices = self.devices
 
         # create bucket model
-        model = mx.mod.BucketingModule(network_symbol, default_bucket_key=data_loader.default_bucket_key, context=devs)
+        model = mx.mod.BucketingModule(network_symbol, default_bucket_key=data_loader.default_bucket_key,
+                                       context=devices)
 
         # set monitor
         monitor = mx.mon.Monitor(self.monitor_interval, pattern=".*") if self.monitor_interval > 0 else None

@@ -11,8 +11,8 @@ class Trainer(object):
         """train process"""
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def _get_devices(self):
+    @property
+    def devices(self):
         """return devices"""
         raise NotImplementedError
 

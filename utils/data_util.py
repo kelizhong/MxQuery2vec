@@ -56,6 +56,7 @@ def sentence2id(sentence, the_vocab):
 
 
 def word2id(word, the_vocab):
+    word = word.strip().lower()
     return the_vocab[word] if word in the_vocab else the_vocab[config.unk_word]
 
 

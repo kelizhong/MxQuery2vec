@@ -23,7 +23,8 @@ class Vocab(object):
         self._init_log(log_level)
 
     def _init_log(self, log_level):
-        logging.basicConfig(format='%(asctime)s %(levelname)s:%(name)s:%(message)s', level=log_level, datefmt='%H:%M:%S')
+        logging.basicConfig(format='%(asctime)s %(levelname)s:%(name)s:%(message)s', level=log_level,
+                            datefmt='%H:%M:%S')
         file_handler = logging.FileHandler(os.path.join(self.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
         file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
         logging.root.addHandler(file_handler)
@@ -49,8 +50,9 @@ class Vocab(object):
             logging.info("%d unique words in %s with a total of %d words."
                          % (len(counter), filename, sum(counter.values())))
             global_counter.update(counter)
-            logging.info("Finish counting. %d unique words, a total of %d words in all files."
-                         % (len(global_counter), sum(counter.values())))
+
+        logging.info("Finish counting. %d unique words, a total of %d words in all files."
+                     % (len(global_counter), sum(counter.values())))
 
         words_num = len(global_counter)
         special_words_num = len(self.special_words)
