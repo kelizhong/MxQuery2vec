@@ -14,6 +14,7 @@ from utils.decorator_util import memoized
 from utils.device_util import get_devices
 from utils.model_util import load_model, save_model, init_log, Speedometer
 from utils.tuple_util import namedtuple_with_defaults
+from metric import Perplexity, Accuracy
 
 """mxnet parameter
 Parameter:
@@ -289,13 +290,13 @@ class Query2vecTrainer(Trainer):
 
         # callbacks that run after each batch
         batch_end_callbacks = [Speedometer(self.batch_size, self.kv.rank, self.disp_batches)]
-
+        metric = [mx.metric.np(Perplexity), mx.metric.np(Accuracy)]
         # run
         model.fit(data_loader,
                   begin_epoch=self.load_epoch if self.load_epoch else 0,
                   num_epoch=self.num_epoch,
                   eval_data=eval_data_loader if self.enable_evaluation else None,
-                  eval_metric=mx.metric.Perplexity(self.invalid_label),
+                  eval_metric=metric,
                   kvstore=self.kv,
                   optimizer=self.optimizer,
                   optimizer_params=self.optimizer_params,
