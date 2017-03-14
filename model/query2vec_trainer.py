@@ -66,9 +66,16 @@ Parameter:
         clip gradient in range [-clip_gradient, clip_gradient]
     rescale_grad: float
         rescaling factor of gradient. Normally should be 1/batch_size.
+    learning_rate: float
+        learning rate of the stochastic gradient descent
+    momentum: float
+        momentum for sgd
+    wd: float
+        weight decay
 """
-optimizer_parameter = namedtuple_with_defaults('optimizer_parameter', 'optimizer clip_gradient rescale_grad',
-                                               ['Adadelta', 5.0, -1.0])
+optimizer_parameter = namedtuple_with_defaults('optimizer_parameter',
+                                               'optimizer clip_gradient rescale_grad learning_rate wd',
+                                               ['Adadelta', 5.0, -1.0, 0.01, 0.0005])
 
 """model parameter
 Parameter:
