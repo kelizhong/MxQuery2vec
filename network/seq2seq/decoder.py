@@ -48,7 +48,7 @@ class LstmDecoder(object):
         assert (len(last_states) == self.layer_num)
 
         # embedding layer
-        embed = mx.sym.Embedding(data=data, input_dim=self.vocab_size + 1,
+        embed = mx.sym.Embedding(data=data, input_dim=self.vocab_size,
                                  weight=self.embed_weight, output_dim=self.embed_size,
                                  name="{}_embed".format(self.name))
         wordvec = mx.sym.SliceChannel(data=embed, num_outputs=self.seq_len, squeeze_axis=1)

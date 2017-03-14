@@ -14,7 +14,7 @@ from utils.decorator_util import memoized
 from utils.device_util import get_devices
 from utils.model_util import load_model, save_model, init_log, Speedometer
 from utils.tuple_util import namedtuple_with_defaults
-from metric import Perplexity, Accuracy
+from metric import MetricManage
 
 """mxnet parameter
 Parameter:
@@ -42,8 +42,8 @@ Parameter:
         the frequency to save checkpoint
     enable_evaluation: boolean
         whether to enable evaluation
-    invalid_label: int
-        index for invalid token
+    ignore_label: int
+        index for ignore_label token
     load_epoch: int
         epoch of pretrained model
     train_max_sample: int
@@ -54,7 +54,7 @@ mxnet_parameter = namedtuple_with_defaults('mxnet_parameter',
                                            'kv_store hosts_num workers_num device_mode devices num_epoch '
                                            'disp_batches monitor_interval '
                                            'log_level log_path save_checkpoint_freq model_path_prefix '
-                                           'enable_evaluation invalid_label load_epoch train_max_samples',
+                                           'enable_evaluation ignore_label load_epoch train_max_samples',
                                            ['local', 1, 1, 'cpu', '0', 65535, 10, 2, logging.ERROR, './logs',
                                             'query2vec', 100,
                                             False, 0, 1, sys.maxsize])
@@ -210,7 +210,7 @@ class Query2vecTrainer(Trainer):
     @memoized
     def vocab_size(self):
         """return vocabulary size"""
-        return len(self.vocab)
+        return len(self.vocab) + 1
 
     @property
     @memoized
@@ -290,13 +290,15 @@ class Query2vecTrainer(Trainer):
 
         # callbacks that run after each batch
         batch_end_callbacks = [Speedometer(self.batch_size, self.kv.rank, self.disp_batches)]
-        metric = [mx.metric.np(Perplexity), mx.metric.np(Accuracy)]
+
+        metric_manager = MetricManage(self.ignore_label)
+        metrics = [metric_manager.create_metric('perplexity')]
         # run
         model.fit(data_loader,
                   begin_epoch=self.load_epoch if self.load_epoch else 0,
                   num_epoch=self.num_epoch,
                   eval_data=eval_data_loader if self.enable_evaluation else None,
-                  eval_metric=metric,
+                  eval_metric=metrics,
                   kvstore=self.kv,
                   optimizer=self.optimizer,
                   optimizer_params=self.optimizer_params,

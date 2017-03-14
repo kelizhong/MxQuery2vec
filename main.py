@@ -99,7 +99,7 @@ def parse_args():
 
     train_parser.add_argument('-wll', '--work-load-ist', dest='work_load_list', help='work load for different devices',
                               default=None, type=list)
-    train_parser.add_argument('--invalid-label', dest='invalid_label', help='invalid label',
+    train_parser.add_argument('--ignore-label', dest='ignore_label', help='ignore label',
                               default=0, type=int)
     train_parser.add_argument('--hosts-num', dest='hosts_num', help='the number of the hosts',
                               default=1, type=int)
@@ -144,7 +144,7 @@ if __name__ == "__main__":
                                      log_level=args.log_level, log_path=args.log_path,
                                      save_checkpoint_freq=args.save_checkpoint_freq,
                                      model_path_prefix=os.path.join(args.model_path, args.model_prefix),
-                                     enable_evaluation=args.enable_evaluation, invalid_label=args.invalid_label,
+                                     enable_evaluation=args.enable_evaluation, ignore_label=args.ignore_label,
                                      load_epoch=args.load_epoch, train_max_samples=args.train_max_samples)
 
         optimizer_para = optimizer_parameter(optimizer=args.optimizer, clip_gradient=args.clip_gradient)
