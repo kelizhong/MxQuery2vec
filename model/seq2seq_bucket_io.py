@@ -1,6 +1,4 @@
 import mxnet as mx
-import bisect
-import random
 import numpy as np
 import sys
 from common.constant import bos_word, eos_word

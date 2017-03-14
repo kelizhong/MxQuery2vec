@@ -15,8 +15,8 @@ def read_data(encoder_path, decoder_path, max_line_num=sys.maxsize):
     with codecs.open(encoder_path, encoding='utf-8') as encoder, codecs.open(decoder_path, encoding='utf-8') as decoder:
         for encoder_line, decoder_line in itertools.izip(itertools.islice(encoder, max_line_num),
                                                          itertools.islice(decoder, max_line_num)):
-            encoder_line = encoder_line.strip().low()
-            decoder_line = decoder_line.strip().low()
+            encoder_line = encoder_line.strip().lower()
+            decoder_line = decoder_line.strip().lower()
             if len(encoder_line) and len(decoder_line):
                 encoder_data.append(word_tokenize(encoder_line))
                 decoder_data.append(word_tokenize(decoder_line))
