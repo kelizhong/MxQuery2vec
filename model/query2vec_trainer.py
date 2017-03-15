@@ -7,14 +7,15 @@ from itertools import chain
 import mxnet as mx
 
 from masked_bucket_io import MaskedBucketSentenceIter
+from metric.model_metric import MetricManage
+from metric.speedometer import Speedometer
 from network.seq2seq.seq2seq_model import encoder_parameter, decoder_parameter, data_label_names_parameter, Seq2seqModel
 from trainer import Trainer
 from utils.data_util import read_data, sentence2id, load_vocab
 from utils.decorator_util import memoized
 from utils.device_util import get_devices
-from utils.model_util import load_model, save_model, init_log, Speedometer
+from utils.model_util import load_model, save_model, init_log
 from utils.tuple_util import namedtuple_with_defaults
-from metric import MetricManage
 
 """mxnet parameter
 Parameter:

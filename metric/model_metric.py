@@ -21,7 +21,7 @@ class MetricManage(object):
             if int(label[i]) != self.ignore_label:
                 num += 1
                 loss += -np.log(max(1e-10, pred[i][int(label[i])]))
-        return loss / num
+        return np.exp(loss / num)
 
     def accuracy(self, label, pred):
         label = label.T.reshape((-1,))
