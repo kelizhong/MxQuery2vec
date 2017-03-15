@@ -109,8 +109,8 @@ class Seq2seqInferenceModel(object):
         prob = self.decoder_executor.outputs[0].asnumpy()
         # print(prob)
         for i in xrange(1, self.decoder_layer_num * 2, 2):
-            self.decoder_executor.outputs[i].copyto(self.decoder_executor.arg_dict["decoder_l%d_init_h" % i])
-            self.decoder_executor.outputs[i+1].copyto(self.decoder_executor.arg_dict["decoder_l%d_init_c" % i])
+            self.decoder_executor.outputs[i].copyto(self.decoder_executor.arg_dict["decoder_l%d_init_h" % (i/2)])
+            self.decoder_executor.outputs[i+1].copyto(self.decoder_executor.arg_dict["decoder_l%d_init_c" % (i/2)])
         return prob
 
 
@@ -122,7 +122,7 @@ def bidirectional_encoder_symbol(encoder_layer_num, encoders_seq_len, use_maskin
                                        hidden_unit_num=encoder_hidden_unit_num,
                                        vocab_size=encoder_vocab_size, embed_size=encoder_embed_size,
                                        dropout=s_dropout, layer_num=encoder_layer_num, embed_weight=embed_weight)
-    forward_hidden_all, backward_hidden_all, _, _ = encoder.encode()
+    forward_hidden_all, backward_hidden_all, _  = encoder.encode()
     decoded_init_state = mx.sym.Concat(forward_hidden_all[-1], backward_hidden_all[0], dim=1,
                                        name='decoded_init_state')
     return decoded_init_state
@@ -154,7 +154,7 @@ def lstm_decoder_symbol(decoder_layer_num, decoder_vocab_size, decoder_hidden_un
     assert (len(last_states) == decoder_layer_num)
 
     hidden = mx.sym.Embedding(data=data,
-                              input_dim=decoder_vocab_size + 1,
+                              input_dim=decoder_vocab_size ,
                               output_dim=decoder_embed_size,
                               weight=embed_weight,
                               name="decoder_embed")

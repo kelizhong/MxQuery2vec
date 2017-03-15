@@ -53,20 +53,20 @@ def parse_args():
                         help='the directory to store the parameters of the training')
 
     # model parameter
-    parser.add_argument('-sln', '--source-layer-num', default=5, type=int,
+    parser.add_argument('-sln', '--source-layer-num', default=1, type=int,
                         help='number of layers for the source LSTM recurrent neural network')
-    parser.add_argument('-shun', '--source-hidden-unit-num', default=10, type=int,
+    parser.add_argument('-shun', '--source-hidden-unit-num', default=3, type=int,
                         help='number of hidden units in the neural network for encoder')
-    parser.add_argument('-es', '--embed-size', default=10, type=int,
+    parser.add_argument('-es', '--embed-size', default=3, type=int,
                         help='embedding size ')
 
-    parser.add_argument('-tln', '--target-layer-num', default=5, type=int,
+    parser.add_argument('-tln', '--target-layer-num', default=1, type=int,
                         help='number of layers for the target LSTM recurrent neural network')
-    parser.add_argument('-thun', '--target-hidden-unit-num', default=10, type=int,
+    parser.add_argument('-thun', '--target-hidden-unit-num', default=3, type=int,
                         help='number of hidden units in the neural network for decoder')
 
     parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,
-                        default=[(5,10), (10,15), (20,25), (40,50)])
+                        default=[(3,10), (3,20), (5,20), (7,30)])
     parser.add_argument('-swd', '--stop-words-dir',
                         default=os.path.join(os.path.dirname(__file__), 'data', 'stop_words'),
                         help='stop words file directory')
@@ -136,13 +136,13 @@ def reponse(max_decode_len, sentence, model_buckets, source_vocab, target_vocab,
     mask_ndarray = mx.nd.zeros((1, unroll_len))
     output = [constant.bos_word]
     MakeInput(sentence, source_vocab, unroll_len, input_ndarray, mask_ndarray)
-    last_encoded, _ = cur_model.encode(input_ndarray,
+    last_encoded= cur_model.encode(input_ndarray,
                                        mask_ndarray)  # last_encoded means the last time step hidden
     for i in range(max_decode_len):
         MakeTargetInput(output[-1], target_vocab, target_ndarray)
         prob = cur_model.decode_forward(last_encoded, target_ndarray,
                                         i == 0)
-        next_char = MakeOutput(prob, revert_vocab, sample=False)
+        next_char = MakeOutput(prob, revert_vocab)
         if next_char == constant.eos_word:
             break
         output.append(next_char)
@@ -222,13 +222,13 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 100
+    args.load_epoch = 2200
 
     # load vocabulary
     vocab = load_vocab(args.vocabulary_path)
     # load model from check-point
     _, arg_params, __ = mx.model.load_checkpoint(os.path.join(args.model_path, args.model_prefix), args.load_epoch)
-    vocab_size = len(vocab)
+    vocab_size = len(vocab) + 1
     logging.info('vocab size: {0}'.format(vocab_size))
     revert_vocab = MakeRevertVocab(vocab)
     buckets = args.buckets
@@ -270,8 +270,15 @@ if __name__ == "__main__":
     #print(cosSimilar(a, b))
     #c = encode(word_tokenize("thank you"), model_buckets, vocab).asnumpy()
     #print(cosSimilar(b, c))
-    a = encode(word_tokenize("apple"), model_buckets, vocab).asnumpy()
-    b = encode(word_tokenize("men addidas shoe"), model_buckets, vocab).asnumpy()
+    a = encode(word_tokenize("nike"), model_buckets, vocab).asnumpy()
+    b = encode(word_tokenize("iphone"), model_buckets, vocab).asnumpy()
     print(cosSimilar(a, b))
-    c = encode(word_tokenize("women nike shoe"), model_buckets, vocab).asnumpy()
+    c = encode(word_tokenize("iphone6"), model_buckets, vocab).asnumpy()
     print(cosSimilar(b, c))
+
+    target_ndarray = mx.nd.zeros((1,), ctx=mx.cpu())
+    en = reponse(15, word_tokenize("what is your name"), model_buckets, vocab, vocab,
+                       revert_vocab,
+                       target_ndarray)
+    en = ' '.join(en)
+    print(en)
