@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from network.seq2seq.encoder import BiDirectionalLstmEncoder
+from network.seq2seq.encoder import LstmEncoder, BiDirectionalLstmEncoder
 from network.seq2seq.decoder import LstmDecoder
 
 import mxnet as mx
@@ -45,7 +45,7 @@ class Seq2seqModel(Model):
         return embed_weight
 
     def encoder(self, seq_len):
-        encoder = BiDirectionalLstmEncoder(seq_len=seq_len, use_masking=True,
+        encoder = LstmEncoder(seq_len=seq_len, use_masking=True,
                                            hidden_unit_num=self.encoder_hidden_unit_num,
                                            vocab_size=self.encoder_vocab_size, embed_size=self.encoder_embed_size,
                                            dropout=self.encoder_dropout, layer_num=self.encoder_layer_num,
@@ -63,10 +63,11 @@ class Seq2seqModel(Model):
         encoder = self.encoder(encoder_seq_len)
         decoder = self.decoder(decoder_seq_len)
 
-        forward_hidden_all, backward_hidden_all, _ = encoder.encode()
-
-        decoded_init_state = mx.sym.Concat(forward_hidden_all[-1], backward_hidden_all[0], dim=1,
-                                           name='decoded_init_state')
+        #forward_hidden_all, backward_hidden_all, _ = encoder.encode()
+        hidden_all = encoder.encode()
+        #decoded_init_state = mx.sym.Concat(forward_hidden_all[-1], backward_hidden_all[0], dim=1,
+        #                                   name='decoded_init_state')
+        decoded_init_state = hidden_all[-1]
         decoder_softmax = decoder.decode(decoded_init_state)
         return decoder_softmax
 

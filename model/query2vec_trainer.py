@@ -176,6 +176,28 @@ class Query2vecTrainer(Trainer):
     def init_state_shape(self):
         """initalize states for LSTM"""
 
+        encoder_init_c = [('encoder_l%d_init_c' % l, (self.batch_size, self.encoder_hidden_unit_num))
+                                  for l
+                                  in
+                                  range(self.encoder_layer_num)]
+        encoder_init_h = [('encoder_l%d_init_h' % l, (self.batch_size, self.encoder_hidden_unit_num))
+                                  for l
+                                  in
+                                  range(self.encoder_layer_num)]
+
+        encoder_init_states = encoder_init_c + encoder_init_h
+
+        decoder_init_c = [('decoder_l%d_init_c' % l, (self.batch_size, self.decoder_hidden_unit_num)) for l in
+                          range(self.decoder_layer_num)]
+        decoder_init_states = decoder_init_c
+        return encoder_init_states, decoder_init_states
+
+
+    @property
+    @memoized
+    def bi_init_state_shape(self):
+        """initalize states for bi-LSTM"""
+
         forward_encoder_init_c = [('forward_encoder_l%d_init_c' % l, (self.batch_size, self.encoder_hidden_unit_num))
                                   for l
                                   in
