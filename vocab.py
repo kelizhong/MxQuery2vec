@@ -21,4 +21,4 @@ if __name__ == "__main__":
     for (k, v) in vocab.items():
         print (k,v)
     print(rev_vocab.get(7, -1))
-    print(vocab.get('hi', -1))
+    print(vocab.get('addidas', -1))

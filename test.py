@@ -55,14 +55,14 @@ def parse_args():
     # model parameter
     parser.add_argument('-sln', '--source-layer-num', default=1, type=int,
                         help='number of layers for the source LSTM recurrent neural network')
-    parser.add_argument('-shun', '--source-hidden-unit-num', default=3, type=int,
+    parser.add_argument('-shun', '--source-hidden-unit-num', default=256, type=int,
                         help='number of hidden units in the neural network for encoder')
-    parser.add_argument('-es', '--embed-size', default=3, type=int,
+    parser.add_argument('-es', '--embed-size', default=128, type=int,
                         help='embedding size ')
 
     parser.add_argument('-tln', '--target-layer-num', default=1, type=int,
                         help='number of layers for the target LSTM recurrent neural network')
-    parser.add_argument('-thun', '--target-hidden-unit-num', default=3, type=int,
+    parser.add_argument('-thun', '--target-hidden-unit-num', default=256, type=int,
                         help='number of hidden units in the neural network for decoder')
 
     parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,
@@ -222,7 +222,7 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 2200
+    args.load_epoch = 17
 
     # load vocabulary
     vocab = load_vocab(args.vocabulary_path)
@@ -270,14 +270,14 @@ if __name__ == "__main__":
     #print(cosSimilar(a, b))
     #c = encode(word_tokenize("thank you"), model_buckets, vocab).asnumpy()
     #print(cosSimilar(b, c))
-    a = encode(word_tokenize("nike"), model_buckets, vocab).asnumpy()
+    a = encode(word_tokenize("women nike shoe"), model_buckets, vocab).asnumpy()
     b = encode(word_tokenize("iphone"), model_buckets, vocab).asnumpy()
     print(cosSimilar(a, b))
     c = encode(word_tokenize("iphone6"), model_buckets, vocab).asnumpy()
     print(cosSimilar(b, c))
 
     target_ndarray = mx.nd.zeros((1,), ctx=mx.cpu())
-    en = reponse(15, word_tokenize("what is your name"), model_buckets, vocab, vocab,
+    en = reponse(15, word_tokenize("iphone6"), model_buckets, vocab, vocab,
                        revert_vocab,
                        target_ndarray)
     en = ' '.join(en)

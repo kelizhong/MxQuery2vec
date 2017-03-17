@@ -2,11 +2,10 @@
 """Count the frequency of unique words in a file.
 """
 import logging
-import pickle
 import os
 from collections import Counter
 import time
-from utils.file_util import ensure_dir_exists
+from utils.pickle_util import save_obj_pickle
 from utils.data_util import words_gen
 
 
@@ -28,18 +27,6 @@ class Vocab(object):
         file_handler = logging.FileHandler(os.path.join(self.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
         file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
         logging.root.addHandler(file_handler)
-
-    def _save_vocab_pickle(self, obj, filename):
-        ensure_dir_exists(filename, is_dir=False)
-        if os.path.isfile(filename) and not self.overwrite:
-            logging.warning("Not saving %s, already exists." % (filename))
-        else:
-            if os.path.isfile(filename):
-                logging.info("Overwriting %s." % filename)
-            else:
-                logging.info("Saving to %s." % filename)
-            with open(filename, 'wb') as f:
-                pickle.dump(obj, f, protocol=pickle.HIGHEST_PROTOCOL)
 
     def create_dictionary(self):
         """Start execution of word-frequency."""
@@ -72,4 +59,4 @@ class Vocab(object):
                 idx += 1
         vocab.update(self.special_words)
         logging.info("store vocabulary with most_common_words file, vocabulary size: " + str(len(vocab)))
-        self._save_vocab_pickle(vocab, self.vocab_file)
+        save_obj_pickle(vocab, self.vocab_file, self.overwrite)

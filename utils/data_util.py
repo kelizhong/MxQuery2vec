@@ -23,11 +23,14 @@ def read_data(encoder_path, decoder_path, max_line_num=sys.maxsize):
     return encoder_data, decoder_data
 
 
-def words_gen(filename):
+def words_gen(filename, bos=None, eos=None):
     """Return each word in a line."""
-    with codecs.open(filename, encoding='utf-8') as f:
+    with codecs.open(filename, encoding='utf-8', errors='ignore') as f:
         for line in f:
-            for w in word_tokenize(line):
+            tokens = word_tokenize(line)
+            tokens = [bos] + tokens if bos is not None else tokens
+            tokens = tokens + [eos] if eos is not None else tokens
+            for w in tokens:
                 w = w.strip().lower()
                 if len(w):
                     yield w

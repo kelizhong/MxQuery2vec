@@ -6,6 +6,7 @@ LSTMState = namedtuple("LSTMState", ["c", "h"])
 LSTMParam = namedtuple("LSTMParam", ["i2h_weight", "i2h_bias",
                                      "h2h_weight", "h2h_bias"])
 
+
 def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0.):
     """LSTM Cell"""
     # TODO remove this cell, will use the mx build-in cell in next version

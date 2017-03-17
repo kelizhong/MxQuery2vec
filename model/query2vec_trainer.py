@@ -7,7 +7,7 @@ from itertools import chain
 import mxnet as mx
 
 from masked_bucket_io import MaskedBucketSentenceIter
-from metric.model_metric import MetricManage
+from metric.seq2seq_metric import MetricManage
 from metric.speedometer import Speedometer
 from network.seq2seq.seq2seq_model import encoder_parameter, decoder_parameter, data_label_names_parameter, Seq2seqModel
 from trainer import Trainer
@@ -192,7 +192,6 @@ class Query2vecTrainer(Trainer):
         decoder_init_states = decoder_init_c
         return encoder_init_states, decoder_init_states
 
-
     @property
     @memoized
     def bi_init_state_shape(self):
@@ -293,6 +292,9 @@ class Query2vecTrainer(Trainer):
 
         # load model
         sym, arg_params, aux_params = load_model(self.model_path_prefix, self.kv.rank, self.load_epoch)
+        #if arg_params is None:
+        #    arg_params = dict()
+        #    arg_params['share_embed_weight'] = mx.nd.zeros((self.vocab_size, self.encoder_embed_size))
         if sym is not None:
             assert sym.tojson() == network_symbol.tojson()
 
