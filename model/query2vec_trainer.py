@@ -7,15 +7,16 @@ from itertools import chain
 import mxnet as mx
 
 from masked_bucket_io import MaskedBucketSentenceIter
-from metric.seq2seq_metric import MetricManage
-from metric.speedometer import Speedometer
 from network.seq2seq.seq2seq_model import encoder_parameter, decoder_parameter, data_label_names_parameter, Seq2seqModel
 from trainer import Trainer
-from utils.data_util import read_data, sentence2id, load_vocab
+from utils.data_util import read_data, sentence2id, load_pickle_object
 from utils.decorator_util import memoized
 from utils.device_util import get_devices
 from utils.model_util import load_model, save_model, init_log
 from utils.tuple_util import namedtuple_with_defaults
+import numpy as np
+from metric.speedometer import Speedometer
+from metric.seq2seq_metric import MetricManage
 
 """mxnet parameter
 Parameter:
@@ -225,8 +226,15 @@ class Query2vecTrainer(Trainer):
     @memoized
     def vocab(self):
         """load vocabulary"""
-        vocab = load_vocab(self.vocabulary_path)
+        vocab = load_pickle_object(self.vocabulary_path)
         return vocab
+
+    @property
+    @memoized
+    def word2vec(self):
+        """load vocabulary"""
+        w2v = load_pickle_object('./data/word2vec/w2v.pkl')
+        return w2v
 
     @property
     @memoized
@@ -283,6 +291,20 @@ class Query2vecTrainer(Trainer):
         for arg, value in self.__dict__.iteritems():
             logging.info("%s: %s" % (arg, value))
 
+    def _load_model_with_pretrain_word2vec(self, embed_weight_name):
+        sym, arg_params, aux_params = load_model(self.model_path_prefix, self.kv.rank, self.load_epoch)
+        if arg_params is not None:
+            return sym, arg_params, aux_params
+        w2v = self.word2vec
+        vocab = self.vocab
+        embed_weight = np.random.rand(self.vocab_size, self.encoder_embed_size)
+        for word, id in vocab.iteritems():
+            if word in w2v:
+                embed_weight[id] = w2v[word]
+        arg_params = dict()
+        arg_params[embed_weight_name] = embed_weight
+        return sym, arg_params, aux_params
+
     def train(self):
         """Train the module parameters"""
 
@@ -291,7 +313,7 @@ class Query2vecTrainer(Trainer):
         eval_data_loader = self.eval_data_loader
 
         # load model
-        sym, arg_params, aux_params = load_model(self.model_path_prefix, self.kv.rank, self.load_epoch)
+        sym, arg_params, aux_params = self._load_model_with_pretrain_word2vec('share_embed_weight')
         #if arg_params is None:
         #    arg_params = dict()
         #    arg_params['share_embed_weight'] = mx.nd.zeros((self.vocab_size, self.encoder_embed_size))

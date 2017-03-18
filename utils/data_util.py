@@ -36,7 +36,7 @@ def words_gen(filename, bos=None, eos=None):
                     yield w
 
 
-def load_vocab(path):
+def load_pickle_object(path):
     """
     Load vocab from file, the 0, 1, 2, 3 should be reserved for pad, <unk>, <s>, </s>
 
@@ -47,9 +47,9 @@ def load_vocab(path):
         vocab dict
     """
     with open(path, 'rb') as f:
-        vocab = pickle.load(f)
+        obj = pickle.load(f)
 
-    return vocab
+    return obj
 
 
 def sentence2id(sentence, the_vocab):

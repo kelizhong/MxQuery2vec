@@ -13,7 +13,7 @@ class Speedometer(object):
         How many batches between calculations.
         Defaults to calculating & logging every 50 batches.
     """
-    def __init__(self, batch_size, rank=0,frequent=50):
+    def __init__(self, batch_size, rank=0, frequent=50):
         self.batch_size = batch_size
         self.rank = rank
         self.frequent = frequent

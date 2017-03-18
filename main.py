@@ -33,7 +33,7 @@ def parse_args():
                               help='number of layers for the encoder LSTM recurrent neural network')
     train_parser.add_argument('-shun', '--encoder-hidden-unit-num', default=3, type=int,
                               help='number of hidden units in the neural network for encoder')
-    train_parser.add_argument('-es', '--embed-size', default=3, type=int,
+    train_parser.add_argument('-es', '--embed-size', default=128, type=int,
                               help='embedding size ')
 
     train_parser.add_argument('-tln', '--decoder-layer-num', default=1, type=int,
