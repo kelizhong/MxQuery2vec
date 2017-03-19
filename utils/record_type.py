@@ -1,7 +1,7 @@
 from collections import namedtuple
 
 
-class Record(object):
+class RecordType(object):
     def __init__(self, typename, strict_fields, verbose=False):
         ''' Store all of the field and type data as class methods so they aren't regenerated
             everytime a new named tuple is required'''
