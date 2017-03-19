@@ -8,9 +8,9 @@ from word2vec_io import Word2vecDataIter
 from utils.model_util import load_model, save_model, init_log
 from utils.tuple_util import namedtuple_with_defaults
 import logging
-import sys
 from itertools import chain
-
+from base.trainer import Trainer
+from recordtype import recordtype
 
 """mxnet parameter
 Parameter:
@@ -26,7 +26,7 @@ Parameter:
     devices: str
         the devices will be used, e.g "0,1,2,3"
     num_epoch: int
-        end epoch of model training
+        end epoch of query2vec training
     disp_batches: int
         show progress for every n batches
     monitor_interval: int
@@ -41,7 +41,7 @@ Parameter:
     ignore_label: int
         index for ignore_label token
     load_epoch: int
-        epoch of pretrained model
+        epoch of pretrained query2vec
     train_max_sample: int
         the max sample num for training
 
@@ -50,10 +50,10 @@ mxnet_parameter = namedtuple_with_defaults('mxnet_parameter',
                                            'kv_store hosts_num workers_num device_mode devices num_epoch '
                                            'disp_batches monitor_interval '
                                            'log_level log_path save_checkpoint_freq model_path_prefix '
-                                           'enable_evaluation load_epoch train_max_samples',
+                                           'enable_evaluation load_epoch',
                                            ['local', 1, 1, 'cpu', '0', 65535, 10, 2, logging.ERROR, './logs',
-                                            'query2vec', 100,
-                                            False,  1, sys.maxsize])
+                                            'word2vec', 100,
+                                            False,  1])
 
 """optimizer parameter
 Parameter:
@@ -75,7 +75,7 @@ optimizer_parameter = namedtuple_with_defaults('optimizer_parameter',
                                                ['Adadelta', 5.0, -1.0, 0.01, 0.0005, 0.9])
 
 
-"""model parameter
+"""query2vec parameter
 Parameter:
     encoder_layer_num: int
         number of layers for the LSTM recurrent neural network for encoder
@@ -102,7 +102,7 @@ model_parameter = namedtuple_with_defaults('model_parameter', 'embed_size batch_
                                            [128, 128, 2])
 
 
-class Word2vecTrainer(object):
+class Word2vecTrainer(Trainer):
     def __init__(self, data_path, vocabulary_save_path, mxnet_para=mxnet_parameter, optimizer_para=optimizer_parameter,
                  model_para=model_parameter):
         self.mxnet_para = mxnet_para
@@ -172,14 +172,18 @@ class Word2vecTrainer(object):
         data_loader = Word2vecDataIter(self.data_path, self.vocabulary_save_path, self.batch_size, 2 * self.window_size + 1)
         return data_loader
 
+    @property
+    def eval_data_loader(self):
+        return None
+
     def train(self):
         network_symbol = self.network_symbol
         devices = self.ctx_devices
         data_loader = self.data_loader
 
-        # load model
+        # load query2vec
         sym, arg_params, aux_params = load_model(self.model_path_prefix, self.kv.rank, self.load_epoch)
-        # save model
+        # save query2vec
         checkpoint = save_model(self.model_path_prefix, self.kv.rank, self.save_checkpoint_freq)
 
         # set initializer to initialize the module parameters

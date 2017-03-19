@@ -8,7 +8,7 @@ class LstmDecoder(object):
                  hidden_unit_num,
                  vocab_size, embed_size,
                  dropout=0.0, layer_num=1,
-                 embed_weight=None, name='decoder'):
+                 embed_weight=None, attention=None, name='decoder'):
         self.seq_len = seq_len
         self.use_masking = use_masking
         self.hidden_unit_num = hidden_unit_num
@@ -17,9 +17,15 @@ class LstmDecoder(object):
         self.dropout = dropout
         self.layer_num = layer_num
         self.embed_weight = embed_weight
+        self.attention = attention
         self.name = name
 
-    def decode(self, encoded):
+    def decode(self, init_state, encoder_hidden_all=None, encoder_mask=None, encoder_hidden_size=None):
+        if self.attention:
+            all_attended = mx.sym.Concat(*encoder_hidden_all, dim=1, name='concat_attended')  # (batch, n * seq_len)
+            all_attended = mx.sym.Reshape(data=all_attended,
+                                          shape=(-1, len(encoder_hidden_all), encoder_hidden_size),
+                                          name='_reshape_concat_attended')
         data = mx.sym.Variable('decoder_data')  # decoder input data
         label = mx.sym.Variable('decoder_softmax_label')  # decoder label data
         # declare variables
@@ -33,7 +39,7 @@ class LstmDecoder(object):
 
         param_cells = []
         last_states = []
-        init_h = mx.sym.FullyConnected(data=encoded, num_hidden=self.hidden_unit_num * self.layer_num,
+        init_h = mx.sym.FullyConnected(data=init_state, num_hidden=self.hidden_unit_num * self.layer_num,
                                        weight=init_weight, bias=init_bias, name='init_fc')
         init_h = mx.sym.Activation(data=init_h, act_type='tanh', name='init_act')
         init_hs = mx.sym.SliceChannel(data=init_h, num_outputs=self.layer_num)
@@ -56,10 +62,16 @@ class LstmDecoder(object):
         if self.use_masking:
             input_mask = mx.sym.Variable('decoder_mask')
             masks = mx.sym.SliceChannel(data=input_mask, num_outputs=self.seq_len, name='sliced_decoder_mask')
-
         hidden_all = []
         for seq_idx in range(self.seq_len):
-            con = mx.sym.Concat(wordvec[seq_idx], encoded)
+            if self.attention:
+                hidden = self.attention.attend(attended=encoder_hidden_all, concat_attended=all_attended,
+                                                                  state=last_states[0].h,
+                                                                  attend_masks=encoder_mask,
+                                                                  use_masking=True)
+            else:
+                hidden = init_state
+            con = mx.sym.Concat(wordvec[seq_idx], hidden)
             hidden = mx.sym.FullyConnected(data=con, num_hidden=self.embed_size,
                                            weight=input_weight, no_bias=True, name='input_fc')
 

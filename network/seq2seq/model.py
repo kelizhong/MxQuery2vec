@@ -4,7 +4,7 @@ import abc
 
 @six.add_metaclass(abc.ABCMeta)
 class Model(object):
-    """A model abstract interface object."""
+    """A query2vec abstract interface object."""
 
     @abc.abstractmethod
     def encoder(self, seq_len):

@@ -19,7 +19,7 @@ def get_gpus_num():
 
 def get_devices(devices, device_mode='cpu', rank=0, hosts_num=1, workers_num=1):
     """devices for training"""
-    assert device_mode in ['cpu', 'gpu', 'gpu_auto'], "device model should in ['cpu', 'gpu', 'gpu_auto']"
+    assert device_mode in ['cpu', 'gpu', 'gpu_auto'], "device query2vec should in ['cpu', 'gpu', 'gpu_auto']"
 
     if device_mode == 'cpu':
         devs = mx.cpu() if devices is None or devices is '' else [

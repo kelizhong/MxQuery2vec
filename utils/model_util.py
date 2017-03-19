@@ -13,7 +13,7 @@ def load_model(model_prefix, rank=0, load_epoch=None):
         model_prefix += "-%d" % (rank)
     sym, arg_params, aux_params = mx.model.load_checkpoint(
         model_prefix, load_epoch)
-    logging.info('Loaded model %s_%04d.params', model_prefix, load_epoch)
+    logging.info('Loaded query2vec %s_%04d.params', model_prefix, load_epoch)
     return sym, arg_params, aux_params
 
 

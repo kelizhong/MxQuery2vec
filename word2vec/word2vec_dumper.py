@@ -5,12 +5,11 @@ from utils.pickle_util import save_obj_pickle
 
 
 class W2vDumper(object):
-    def __init__(self, model_path, vocab_path, w2v_save_path, embedding_save_path, rank=0, load_epoch=1,
+    def __init__(self, w2v_model_path, vocab_path, w2v_save_path, rank=0, load_epoch=1,
                  embedding_weight_name='embed_weight'):
-        self.model_path = model_path
+        self.w2v_model_path = w2v_model_path
         self.vocab_path = vocab_path
         self.w2v_save_path = w2v_save_path
-        self.embedding_save_path = embedding_save_path
         self.rank = rank
         self.load_epoch = load_epoch
         self.embedding_weight_name = embedding_weight_name
@@ -23,9 +22,9 @@ class W2vDumper(object):
     @property
     @memoized
     def _embedding(self):
-        # load model
-        _, arg_params, _ = load_model(self.model_path, self.rank, self.load_epoch)
-        assert self.embedding_weight_name in arg_params, "{} parameter not in the w2v model, " \
+        # load query2vec
+        _, arg_params, _ = load_model(self.w2v_model_path, self.rank, self.load_epoch)
+        assert self.embedding_weight_name in arg_params, "{} parameter not in the w2v query2vec, " \
                                                          "please check the embedding weight name".format(
             self.embedding_weight_name)
 
@@ -47,5 +46,4 @@ class W2vDumper(object):
 
 
 if __name__ == '__main__':
-    W2vDumper('../data/model/query2vec', '../data/word2vec/vocab.pkl', '../data/word2vec/w2v.pkl',
-              '../data/word2vec/embed.pkl').dumper()
+    W2vDumper('../data/query2vec/query2vec', '../data/word2vec/vocab.pkl', '../data/word2vec/w2v.pkl').dumper()

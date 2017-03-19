@@ -201,7 +201,12 @@ class BiDirectionalLstmEncoder(object):
             forward_hidden_all.append(forward_hidden)
             backward_hidden_all.insert(0, backward_hidden)
 
+        bi_hidden_all = []
+        for f, b in zip(forward_hidden_all, backward_hidden_all):
+            bi = mx.sym.Concat(f, b, dim=1)
+            bi_hidden_all.append(bi)
+
         if self.use_masking:
-            return forward_hidden_all, backward_hidden_all, masks
+            return forward_hidden_all, backward_hidden_all, bi_hidden_all, masks
         else:
-            return forward_hidden_all, backward_hidden_all
+            return forward_hidden_all, backward_hidden_all, bi_hidden_all
