@@ -31,7 +31,7 @@ def parse_args():
     w2v_dumper_parser = subparsers.add_parser("dump_word2vec")
     w2v_dumper_parser.set_defaults(action='dump_word2vec')
 
-    # query2vec parameter
+    # model parameter
     q2v_trainer_parser.add_argument('-sln', '--encoder-layer-num', default=1, type=int,
                               help='number of layers for the encoder LSTM recurrent neural network')
     q2v_trainer_parser.add_argument('-shun', '--encoder-hidden-unit-num', default=3, type=int,
@@ -165,15 +165,15 @@ def parse_args():
     w2v_trainer_parser.add_argument('-db', '--disp-batches', dest='disp_batches',
                                     help='show progress for every n batches',
                                     default=1, type=int)
-    w2v_trainer_parser.add_argument('-le', '--load-epoch', dest='load_epoch', help='epoch of pretrained query2vec',
+    w2v_trainer_parser.add_argument('-le', '--load-epoch', dest='load_epoch', help='epoch of pretrained model',
                                     type=int, default=1)
-    w2v_trainer_parser.add_argument('-r', '--rank', dest='rank', help='epoch of pretrained query2vec',
+    w2v_trainer_parser.add_argument('-r', '--rank', dest='rank', help='epoch of pretrained model',
                                     type=int, default=0)
-    w2v_trainer_parser.add_argument('-mp', '--query2vec-prefix', default='word2vec',
+    w2v_trainer_parser.add_argument('-mp', '--model-prefix', default='word2vec',
                                     type=str,
                                     help='the experiment name, this is also the prefix for the parameters file')
-    w2v_trainer_parser.add_argument('-pd', '--query2vec-path',
-                                    default=os.path.join(os.getcwd(), 'data', 'word2vec', 'query2vec'),
+    w2v_trainer_parser.add_argument('-pd', '--model-path',
+                                    default=os.path.join(os.getcwd(), 'data', 'word2vec', 'model'),
                                     type=DirectoryType,
                                     help='the directory to store the parameters of the training')
 
@@ -189,7 +189,7 @@ def parse_args():
     w2v_trainer_parser.add_argument('--lr', dest='learning_rate', type=float, default=0.01,
                                     help='initial learning rate')
 
-    # query2vec parameter
+    # model parameter
     w2v_trainer_parser.add_argument('-bs', '--batch-size', default=128, type=int,
                                     help='batch size for each databatch')
     w2v_trainer_parser.add_argument('-es', '--embed-size', default=128, type=int,
@@ -215,7 +215,7 @@ def parse_args():
                                    type=int,
                                    help='the experiment name, this is also the prefix for the parameters file')
 
-    w2v_dumper_parser.add_argument('-le', '--load-epoch', dest='load_epoch', help='epoch of pretrained query2vec',
+    w2v_dumper_parser.add_argument('-le', '--load-epoch', dest='load_epoch', help='epoch of pretrained model',
                                    type=int, default=1)
     w2v_dumper_parser.add_argument('w2v_vocabulary_path', type=str,
                                    help='the file name of the corpus')

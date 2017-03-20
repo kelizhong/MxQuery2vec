@@ -10,7 +10,6 @@ from utils.tuple_util import namedtuple_with_defaults
 import logging
 from itertools import chain
 from base.trainer import Trainer
-from recordtype import recordtype
 
 """mxnet parameter
 Parameter:
