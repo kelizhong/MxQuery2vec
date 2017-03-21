@@ -1,9 +1,31 @@
 # -*- coding: utf-8 -*-
 import mxnet as mx
-from ..rnn.LSTM import lstm, LSTMParam, LSTMState
+from ..rnn.lstm import lstm, LSTMParam, LSTMState
 
 
 class LstmEncoder(object):
+    """ Encoder for seq2seq model
+    Parameters
+    ----------
+    seq_len: int
+        encoder sequence length
+    use_masking: bool
+        whether use masking
+    hidden_unit_num: int
+        number of hidden units in the neural network for encoder
+    vocab_size: int
+        vocabulary size
+    embed_size: int
+        word embedding size
+    dropout: float
+        the probability to ignore the neuron outputs
+    layer_num int
+        decoder layer num
+    embed_weight: sym.Variable
+        word embedding weight
+    name: str
+        decoder name
+    """
     def __init__(self, seq_len, use_masking,
                  hidden_unit_num,
                  vocab_size, embed_size,

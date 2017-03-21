@@ -2,10 +2,20 @@ import numpy as np
 
 
 class MetricManage(object):
+    """metric manage for seq2seq model
+    Parameters
+    ----------
+    ignore_label : int or None
+        index of invalid label to ignore when
+        counting. usually should be 0. Include
+        all entries if None.
+    """
+
     def __init__(self, ignore_label):
         self.ignore_label = ignore_label
 
     def create_metric(self, metric_name):
+        """Create metric by metric name, metric name should be the function name in MetricManage"""
         try:
             metric = getattr(self, metric_name)
         except AttributeError:
@@ -14,6 +24,7 @@ class MetricManage(object):
         return metric
 
     def perplexity(self, label, pred):
+        """Calculate perplexity"""
         label = label.T.reshape((-1,))
         loss = 0.
         num = 0.
@@ -24,6 +35,7 @@ class MetricManage(object):
         return np.exp(loss / num)
 
     def accuracy(self, label, pred):
+        """Calculate predictions accuracy"""
         label = label.T.reshape((-1,))
         pred_indices = np.argmax(pred, axis=1)
         num = 0

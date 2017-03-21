@@ -8,7 +8,9 @@ class Speedometer(object):
     Parameters
     ----------
     batch_size: int
-        batch_size of data
+        Batch_size of data
+    rank: int
+        The rank of worker node, which is in [0, kv.get_num_workers())
     frequent: int
         How many batches between calculations.
         Defaults to calculating & logging every 50 batches.

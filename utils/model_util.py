@@ -6,7 +6,7 @@ import time
 
 
 def load_model(model_prefix, rank=0, load_epoch=None):
-    if load_epoch is None:
+    if load_epoch is None or load_epoch < 0:
         return None, None, None
     assert model_prefix is not None
     if rank > 0 and os.path.exists("%s-%d-symbol.json" % (model_prefix, rank)):

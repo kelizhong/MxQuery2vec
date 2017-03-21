@@ -8,7 +8,28 @@ LSTMParam = namedtuple("LSTMParam", ["i2h_weight", "i2h_bias",
 
 
 def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0.):
-    """LSTM Cell"""
+    """Long-Short Term Memory (LSTM) network cell
+    Parameters
+    ----------
+    num_hidden : int
+        number of units in output symbol
+    indata : sym.Variable
+        input symbol, 2D, batch * num_hidden
+    prev_state : sym.Variable
+        state from previous step
+    param: LSTMParam
+        namedtuple for weight sharing between cells.
+    seqidx: int
+        sequence id
+    layerid:
+        layer id
+    dropout: float
+        the probability to ignore the neuron outputs
+
+    Returns
+    -------
+    LSTMState
+    """
     # TODO remove this cell, will use the mx build-in cell in next version
     if dropout > 0.:
         indata = mx.sym.Dropout(data=indata, p=dropout)

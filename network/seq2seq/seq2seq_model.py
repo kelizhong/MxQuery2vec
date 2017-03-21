@@ -17,6 +17,20 @@ decoder_parameter = namedtuple('decoder_parameter', 'decoder_layer_num decoder_v
 
 
 class Seq2seqModel(Model):
+    """Sequence-to-sequence model with attention and for multiple buckets.
+    This class implements a multi-layer recurrent neural network as encoder,
+    and an attention-based decoder. This is the same as the model described in
+    this paper: http://arxiv.org/abs/1412.7449 - please look there for details,
+    or into the seq2seq library for complete model implementation.
+    Parameters
+    ----------
+    encoder_para: namedtuple
+        encoder parameter
+    decoder_para: namedtuple
+        decoder parameter
+    share_embed: bool
+        whether share embedding weight
+    """
     def __init__(self, encoder_para, decoder_para, share_embed=True):
         self.encoder_para = encoder_para
         self.decoder_para = decoder_para
@@ -105,7 +119,7 @@ class Seq2seqModel(Model):
         return decoder
 
     def attention(self, encoder_seq_len):
-        attention = SoftAttention(seq_len=encoder_seq_len, attend_dim=self.encoder_hidden_unit_num * 2,
+        attention = SoftAttention(seq_len=encoder_seq_len, encoder_hidden_output_dim=self.encoder_hidden_unit_num * 2,
                                    state_dim=self.decoder_hidden_unit_num)
         return attention
 

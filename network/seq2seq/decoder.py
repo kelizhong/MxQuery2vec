@@ -1,9 +1,33 @@
 import mxnet as mx
 
-from network.rnn.LSTM import lstm, LSTMParam, LSTMState
+from network.rnn.lstm import lstm, LSTMParam, LSTMState
 
 
 class LstmDecoder(object):
+    """An attention-based decoder
+    Parameters
+    ----------
+    seq_len: int
+        decoder sequence length
+    use_masking: bool
+        whether use masking
+    hidden_unit_num: int
+        number of hidden units in the neural network for decoder
+    vocab_size: int
+        vocabulary size
+    embed_size: int
+        word embedding size
+    dropout: float
+        the probability to ignore the neuron outputs
+    layer_num int
+        decoder layer num
+    embed_weight: sym.Variable
+        word embedding weight
+    attention: attention class
+        attention for decoder
+    name: str
+        decoder name
+    """
     def __init__(self, seq_len, use_masking,
                  hidden_unit_num,
                  vocab_size, embed_size,
@@ -65,7 +89,7 @@ class LstmDecoder(object):
         hidden_all = []
         for seq_idx in range(self.seq_len):
             if self.attention:
-                hidden = self.attention.attend(attended=encoder_hidden_all, concat_attended=all_attended,
+                hidden = self.attention.attend(encoder_hidden_all=encoder_hidden_all, concat_attended=all_attended,
                                                                   state=last_states[0].h,
                                                                   attend_masks=encoder_mask,
                                                                   use_masking=True)

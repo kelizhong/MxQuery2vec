@@ -34,14 +34,14 @@ def parse_args():
     # model parameter
     q2v_trainer_parser.add_argument('-sln', '--encoder-layer-num', default=1, type=int,
                               help='number of layers for the encoder LSTM recurrent neural network')
-    q2v_trainer_parser.add_argument('-shun', '--encoder-hidden-unit-num', default=3, type=int,
+    q2v_trainer_parser.add_argument('-shun', '--encoder-hidden-unit-num', default=5, type=int,
                               help='number of hidden units in the neural network for encoder')
-    q2v_trainer_parser.add_argument('-es', '--embed-size', default=128, type=int,
+    q2v_trainer_parser.add_argument('-es', '--embed-size', default=5, type=int,
                               help='embedding size ')
 
     q2v_trainer_parser.add_argument('-tln', '--decoder-layer-num', default=1, type=int,
                               help='number of layers for the decoder LSTM recurrent neural network')
-    q2v_trainer_parser.add_argument('-thun', '--decoder-hidden-unit-num', default=3, type=int,
+    q2v_trainer_parser.add_argument('-thun', '--decoder-hidden-unit-num', default=5, type=int,
                               help='number of hidden units in the neural network for decoder')
 
     q2v_trainer_parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,
@@ -52,7 +52,7 @@ def parse_args():
     q2v_trainer_parser.add_argument('-do', '--dropout', default=0.0, type=float,
                               help='dropout is the probability to ignore the neuron outputs')
     q2v_trainer_parser.add_argument('-le', '--load-epoch', dest='load_epoch', help='epoch of pretrained query2vec',
-                              type=int)
+                              type=int, default=-1)
     q2v_trainer_parser.add_argument('-mp', '--model-prefix', default='query2vec',
                               type=str,
                               help='the experiment name, this is also the prefix for the parameters file')
@@ -86,7 +86,7 @@ def parse_args():
     q2v_trainer_parser.add_argument('-lf', '--log-freq', default=1000, type=int,
                               help='the frequency to printout the training verbose information')
 
-    q2v_trainer_parser.add_argument('-scf', '--save-checkpoint-freq', default=1, type=int,
+    q2v_trainer_parser.add_argument('-scf', '--save-checkpoint-freq', default=100, type=int,
                               help='the frequency to save checkpoint')
 
     q2v_trainer_parser.add_argument('-kv', '--kv-store', dest='kv_store', help='the kv-store type',
@@ -109,7 +109,7 @@ def parse_args():
     q2v_trainer_parser.add_argument('--workers-num', dest='workers_num', help='the number of the workers',
                               default=1, type=int)
     q2v_trainer_parser.add_argument('--word2vec-path', dest='word2vec_path', help='the number of the workers',
-                              default=os.path.join(os.getcwd(), 'data', 'word2vec', 'model', 'w2v.pkl'), type=str)
+                              type=str)
 
     # data parameter
     q2v_trainer_parser.add_argument('encoder_train_data_path', type=str,
@@ -166,7 +166,7 @@ def parse_args():
                                     help='show progress for every n batches',
                                     default=1, type=int)
     w2v_trainer_parser.add_argument('-le', '--load-epoch', dest='load_epoch', help='epoch of pretrained model',
-                                    type=int, default=1)
+                                    type=int, default=-1)
     w2v_trainer_parser.add_argument('-r', '--rank', dest='rank', help='epoch of pretrained model',
                                     type=int, default=0)
     w2v_trainer_parser.add_argument('-mp', '--model-prefix', default='word2vec',

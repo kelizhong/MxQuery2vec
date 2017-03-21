@@ -3,11 +3,11 @@ from collections import namedtuple
 
 class RecordType(object):
     def __init__(self, typename, strict_fields, verbose=False):
-        ''' Store all of the field and type data as class methods so they aren't regenerated
-            everytime a new named tuple is required'''
+        """ Store all of the field and type data as class methods so they aren't regenerated
+            everytime a new named tuple is required"""
         self.typename = typename
 
-        ### Store field type and default information in varous formats for easy access by methods ###
+        # Store field type and default information in varous formats for easy access by methods ###
         self.strict_fields = strict_fields
         self._strict_names = [v[0] for v in strict_fields]
         self._strict_types = [type(v[1]) for v in strict_fields]
@@ -19,7 +19,7 @@ class RecordType(object):
         self.record = self._dict_make(**dict(strict_fields))
 
     def _typecheck(self, arg, fieldtype, warning=False):
-        ''' Takes in an argument and a field type and trys to recast if necessary, then returns recast argument'''
+        """Takes in an argument and a field type and trys to recast if necessary, then returns recast argument"""
         if not isinstance(arg, fieldtype):
             try:
                 oldarg = arg  # Keep for error printout
@@ -32,8 +32,8 @@ class RecordType(object):
         return arg
 
     def _dict_make(self, **kwargs):
-        ''' User can pass a dictionary of attributes in and they will be typechecked/recast.  Similiar to passing
-        dictionary directly to namedtuple using **d notation'''
+        """ User can pass a dictionary of attributes in and they will be typechecked/recast.  Similiar to passing
+        dictionary directly to namedtuple using **d notation"""
         warning = kwargs.pop('warning', False)
 
         for name, default in self.strict_fields:
@@ -57,4 +57,10 @@ class RecordType(object):
 
     @property
     def dict(self):
+        """Return a new dict which maps field types to their values."""
         return self.record._asdict()
+
+    def iteritems(self):
+        """record.iteritems -> an iterator over the (key, value) items in record"""
+        for k, v in self.dict.iteritems():
+            yield (k, v)

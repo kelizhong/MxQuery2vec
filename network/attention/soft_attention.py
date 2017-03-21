@@ -2,28 +2,47 @@ import mxnet as mx
 
 
 class SoftAttention:
-    def __init__(self, seq_len, attend_dim, state_dim):
+    """This is an attention Seq2seq model based on
+    [Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/pdf/1409.0473v6.pdf)
+    The math:
+        Encoder:
+            X = Input Sequence of length m.
+            H = Bidirection_LSTM(X);
+            so H is a sequence of vectors of length m.
+    """
+    def __init__(self, seq_len, encoder_hidden_output_dim, state_dim):
         self.e_weight_W = mx.sym.Variable('energy_W_weight', shape=(state_dim, state_dim))
-        self.e_weight_U = mx.sym.Variable('energy_U_weight', shape=(attend_dim, state_dim))
+        self.e_weight_U = mx.sym.Variable('energy_U_weight', shape=(encoder_hidden_output_dim, state_dim))
         self.e_weight_v = mx.sym.Variable('energy_v_bias', shape=(state_dim, 1))
         self.seq_len = seq_len
-        self.attend_dim = attend_dim
+        self.encoder_hidden_output_dim = encoder_hidden_output_dim
         self.state_dim = state_dim
 
-    def attend(self, attended, concat_attended, state, attend_masks, use_masking):
+    def attend(self, encoder_hidden_all, concat_attended, state, attend_masks, use_masking):
         '''
-
-        :param attended: list [seq_len, (batch, attend_dim)]
-        :param concat_attended:  (batch, seq_len, attend_dim )
-        :param state: (batch, state_dim)
-        :param attend_masks: list [seq_len, (batch, 1)]
-        :param use_masking: boolean
-        :return:
+        Encoder:
+            X = Input Sequence of length m.
+            encoder_hidden_all = Bidirection_LSTM(X);
+            so encoder_hidden_all is a sequence of hidden vectors of length m.
+        v(i) =  sigma(j = 0 to m-1)  alpha(i, j) * H(j)
+        The weight alpha[i, j] for each hj is computed as follows:
+        energy = a(s(i-1), H(j))
+        alhpa = softmax(energy)
+        Where a is a feed forward network.
+        Parameters
+        ----------
+            encoder_hidden_all: list [seq_len, (batch, encoder_hidden_output_dim)]
+            concat_attended:  (batch, seq_len, encoder_hidden_output_dim )
+            state: (batch, state_dim)
+            attend_masks: list [seq_len, (batch, 1)]
+            use_masking: boolean
+        Returns
+        -------
         '''
         energy_all = []
         pre_compute = mx.sym.dot(state, self.e_weight_W, name='_energy_0')
         for idx in range(self.seq_len):
-            h = attended[idx]  # (batch, attend_dim)
+            h = encoder_hidden_all[idx]  # (batch, attend_dim)
             energy = pre_compute + mx.sym.dot(h, self.e_weight_U,
                                               name='_energy_1_{0:03d}'.format(idx))  # (batch, state_dim)
             energy = mx.sym.Activation(energy, act_type="tanh",

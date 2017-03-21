@@ -2,11 +2,8 @@
 
 import logging
 import sys
-from itertools import chain
-
 import mxnet as mx
 import numpy as np
-
 from base.trainer import Trainer
 from masked_bucket_io import MaskedBucketSentenceIter
 from metric.seq2seq_metric import MetricManage
@@ -14,8 +11,8 @@ from metric.speedometer import Speedometer
 from network.seq2seq.seq2seq_model import encoder_parameter, decoder_parameter, Seq2seqModel
 from utils.data_util import read_data, sentence2id, load_pickle_object
 from utils.decorator_util import memoized
-from utils.model_util import load_model, save_model, init_log
-from utils.tuple_util import namedtuple_with_defaults
+from utils.model_util import load_model, save_model
+from utils.record_type import RecordType
 
 """mxnet parameter
 Parameter:
@@ -31,7 +28,7 @@ Parameter:
     devices: str
         the devices will be used, e.g "0,1,2,3"
     num_epoch: int
-        end epoch of query2vec training
+        end epoch of model training
     disp_batches: int
         show progress for every n batches
     monitor_interval: int
@@ -46,20 +43,21 @@ Parameter:
     ignore_label: int
         index for ignore_label token
     load_epoch: int
-        epoch of pretrained query2vec
+        epoch of pretrained model
     train_max_sample: int
         the max sample num for training
 
 """
-mxnet_parameter = namedtuple_with_defaults('mxnet_parameter',
-                                           'kv_store hosts_num workers_num device_mode devices num_epoch '
-                                           'disp_batches monitor_interval '
-                                           'log_level log_path save_checkpoint_freq model_path_prefix '
-                                           'enable_evaluation ignore_label load_epoch train_max_samples word2vec_path',
-                                           ['local', 1, 1, 'cpu', '0', 65535, 10, 2, logging.ERROR, './logs',
-                                            'query2vec', 100,
-                                            False, 0, 1, sys.maxsize, './data/word2vec/model/w2v.pkl'])
 
+mxnet_parameter = RecordType('mxnet_parameter', [('kv_store', 'local'), ('hosts_num', 1), ('workers_num', 1),
+                                                 ('device_mode', 'cpu'), ('devices', '0'), ('num_epoch', 65535),
+                                                 ('disp_batches', 1), ('monitor_interval', -1),
+                                                 ('log_level', logging.ERROR), ('log_path', './logs'),
+                                                 ('save_checkpoint_freq', 1),
+                                                 ('model_path_prefix', 'query2vec'), ('enable_evaluation', False),
+                                                 ('ignore_label', 0),
+                                                 ('load_epoch', -1), ('train_max_samples', sys.maxsize),
+                                                 ('word2vec_path', './data/word2vec/model/w2v.pkl')])
 """optimizer parameter
 Parameter:
     optimizer: str
@@ -75,11 +73,11 @@ Parameter:
     wd: float
         weight decay
 """
-optimizer_parameter = namedtuple_with_defaults('optimizer_parameter',
-                                               'optimizer clip_gradient rescale_grad learning_rate wd',
-                                               ['Adadelta', 5.0, -1.0, 0.01, 0.0005])
+optimizer_parameter = RecordType('optimizer_parameter',
+                                 [('optimizer', 'Adadelta'), ('clip_gradient', 5.0), ('rescale_grad', -1.0),
+                                  ('learning_rate', 0.01), ('wd', 0.0005), ('momentum', 0.9)])
 
-"""query2vec parameter
+"""model parameter
 Parameter:
     encoder_layer_num: int
         number of layers for the LSTM recurrent neural network for encoder
@@ -102,19 +100,19 @@ Parameter:
     buckets: tuple list
         bucket for encoder sequence length and decoder sequence length
 """
-model_parameter = namedtuple_with_defaults('model_parameter', 'encoder_layer_num encoder_hidden_unit_num '
-                                                              'encoder_embed_size encoder_dropout decoder_layer_num '
-                                                              'decoder_hidden_unit_num decoder_embed_size '
-                                                              'decoder_dropout batch_size buckets',
-                                           [1, 512, 512, 0.0, 1, 512, 512, 0.0, 128,
-                                            [(3, 10), (3, 20), (5, 20), (7, 30)]])
+
+model_parameter = RecordType('model_parameter',
+                             [('encoder_layer_num', 1), ('encoder_hidden_unit_num', 256), ('encoder_embed_size', 128),
+                              ('encoder_dropout', 0.0), ('decoder_layer_num', 1), ('decoder_hidden_unit_num', 256),
+                              ('decoder_embed_size', 128), ('decoder_dropout', 0.0), ('batch_size', 128),
+                              ('buckets', [(3, 10), (3, 20), (5, 20), (7, 30)])])
 
 
 class Query2vecTrainer(Trainer):
     def __init__(self, encoder_train_data_path, decoder_train_data_path, vocabulary_path,
                  mxnet_para=mxnet_parameter, optimizer_para=optimizer_parameter,
                  model_para=model_parameter):
-        """Trainer for query2vec query2vec
+        """Trainer for query2vec model
         Args:
             encoder_train_data_path: str
                 path for encoder train data
@@ -122,54 +120,18 @@ class Query2vecTrainer(Trainer):
                 path for decoder train data
             vocabulary_path: str
                 path for vocabulary
-            mxnet_para: namedtuple_with_defaults
+            mxnet_para: RecordType
                 mxnet parameter
-            optimizer_para: namedtuple_with_defaults
+            optimizer_para: RecordType
                 optimizer parameter
-            model_para: namedtuple_with_defaults
-                query2vec parameter
+            model_para: RecordType
+                model parameter
         """
+        super(Query2vecTrainer, self).__init__(mxnet_para=mxnet_para, optimizer_para=optimizer_para,
+                                               model_para=model_para)
         self.encoder_train_data_path = encoder_train_data_path
         self.decoder_train_data_path = decoder_train_data_path
         self.vocabulary_path = vocabulary_path
-        self.mxnet_para = mxnet_para
-        self.optimizer_para = optimizer_para
-        self.model_para = model_para
-        self._initialize()
-
-    def _initialize(self):
-        assert isinstance(self.mxnet_para, mxnet_parameter)
-        assert isinstance(self.optimizer_para, optimizer_parameter)
-        assert isinstance(self.model_para, model_parameter)
-
-        for (parameter, value) in chain(self.mxnet_para._asdict().iteritems(),
-                                        self.model_para._asdict().iteritems()):
-            setattr(self, parameter, value)
-
-        # create kvstore
-        kv = mx.kvstore.create(self.kv_store)
-        setattr(self, 'kv', kv)
-
-        optimizer_params = dict()
-        for (parameter, value) in self.optimizer_para._asdict().iteritems():
-            if parameter == "optimizer":
-                # set optimizer name
-                setattr(self, parameter, value)
-            else:
-                # set optimizer parameter
-                optimizer_params.setdefault(parameter, value)
-        setattr(self, 'optimizer_params', optimizer_params)
-
-        if self.optimizer_params.get('rescale_grad') < 0:
-            # if rescale_grad has not been set, reset rescale_grad
-            self.optimizer_params['rescale_grad'] = 1.0 / (self.batch_size * kv.num_workers)
-
-        # init log with kv
-        init_log(self.log_level, self.log_path)
-
-        # print the variable before training
-        if kv.rank == 0:
-            self.print_all_variable()
 
     @property
     @memoized
@@ -181,8 +143,10 @@ class Query2vecTrainer(Trainer):
     @property
     @memoized
     def word2vec(self):
-        """load vocabulary"""
-        w2v = load_pickle_object(self.word2vec_path)
+        """load pretrain word2vec"""
+        if not self.word2vec_path:
+            print("Fsdf")
+        w2v = load_pickle_object(self.word2vec_path) if not self.word2vec_path else None
         return w2v
 
     @property
@@ -190,10 +154,6 @@ class Query2vecTrainer(Trainer):
     def vocab_size(self):
         """return vocabulary size"""
         return len(self.vocab) + 1
-
-    @property
-    def eval_data_loader(self):
-        return None
 
     @property
     @memoized
@@ -214,7 +174,7 @@ class Query2vecTrainer(Trainer):
 
     @property
     @memoized
-    def data_loader(self):
+    def train_data_loader(self):
         # get states shapes
         encoder_init_states, decoder_init_states = self.network_symbol.get_bi_init_state_shape(self.batch_size)
         # build data iterator
@@ -227,9 +187,15 @@ class Query2vecTrainer(Trainer):
                                                max_read_sample=self.train_max_samples)
         return data_loader
 
+    @property
+    def eval_data_loader(self):
+
+        return None
+
     def _load_model_with_pretrain_word2vec(self, embed_weight_name):
         sym, arg_params, aux_params = load_model(self.model_path_prefix, self.kv.rank, self.load_epoch)
-        if arg_params is not None:
+        # load the pretrain word2vec only for new model training and word2vec_path is defined
+        if not arg_params or not self.word2vec_path:
             return sym, arg_params, aux_params
         w2v = self.word2vec
         vocab = self.vocab
@@ -245,22 +211,22 @@ class Query2vecTrainer(Trainer):
     def train(self):
         """Train the module parameters"""
 
-        network_symbol = self.network_symbol.network_symbol(self.data_loader.data_names, self.data_loader.label_names)
-        data_loader = self.data_loader
+        train_data_loader = self.train_data_loader
         eval_data_loader = self.eval_data_loader
+        network_symbol = self.network_symbol.network_symbol(train_data_loader.data_names, train_data_loader.label_names)
 
-        # load query2vec
+        # load model
         sym, arg_params, aux_params = self._load_model_with_pretrain_word2vec('share_embed_weight')
 
         if sym is not None:
             assert sym.tojson() == network_symbol.tojson()
 
-        # save query2vec
+        # save model
         checkpoint = save_model(self.model_path_prefix, self.kv.rank, self.save_checkpoint_freq)
 
         devices = self.ctx_devices
-        # create bucket query2vec
-        model = mx.mod.BucketingModule(network_symbol, default_bucket_key=data_loader.default_bucket_key,
+        # create bucket model
+        model = mx.mod.BucketingModule(network_symbol, default_bucket_key=train_data_loader.default_bucket_key,
                                        context=devices)
 
         # set monitor
@@ -276,7 +242,7 @@ class Query2vecTrainer(Trainer):
         metric_manager = MetricManage(self.ignore_label)
         metrics = [metric_manager.create_metric('perplexity')]
         # run
-        model.fit(data_loader,
+        model.fit(train_data_loader,
                   begin_epoch=self.load_epoch if self.load_epoch else 0,
                   num_epoch=self.num_epoch,
                   eval_data=eval_data_loader if self.enable_evaluation else None,

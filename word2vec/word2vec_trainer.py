@@ -6,10 +6,10 @@ from metric.word2vec_metric import NceAuc
 from metric.speedometer import Speedometer
 from word2vec_io import Word2vecDataIter
 from utils.model_util import load_model, save_model, init_log
-from utils.tuple_util import namedtuple_with_defaults
 import logging
 from itertools import chain
 from base.trainer import Trainer
+from utils.record_type import RecordType
 
 """mxnet parameter
 Parameter:
@@ -25,11 +25,11 @@ Parameter:
     devices: str
         the devices will be used, e.g "0,1,2,3"
     num_epoch: int
-        end epoch of query2vec training
+        end epoch of model training
     disp_batches: int
         show progress for every n batches
     monitor_interval: int
-        Number of batches between printing.
+        Number of batches between printing. if monitor_interval < 0, disabale  monitor
     log_level: log level
     log_path: str
         path to store log
@@ -37,23 +37,17 @@ Parameter:
         the frequency to save checkpoint
     enable_evaluation: boolean
         whether to enable evaluation
-    ignore_label: int
-        index for ignore_label token
     load_epoch: int
-        epoch of pretrained query2vec
-    train_max_sample: int
-        the max sample num for training
-
+        epoch of pretrained model, if load_epoch < 0, create new model to train
+    model_path_prefix: str
+        word2vec model path prefix
 """
-mxnet_parameter = namedtuple_with_defaults('mxnet_parameter',
-                                           'kv_store hosts_num workers_num device_mode devices num_epoch '
-                                           'disp_batches monitor_interval '
-                                           'log_level log_path save_checkpoint_freq model_path_prefix '
-                                           'enable_evaluation load_epoch',
-                                           ['local', 1, 1, 'cpu', '0', 65535, 10, 2, logging.ERROR, './logs',
-                                            'word2vec', 100,
-                                            False,  1])
 
+mxnet_parameter = RecordType('mxnet_parameter',
+                             [('kv_store', 'local'), ('hosts_num', 1), ('workers_num', 1), ('device_mode', 'cpu'),
+                              ('devices', '0'), ('num_epoch', 65535), ('disp_batches', 1), ('monitor_interval', 2),
+                              ('log_level', logging.ERROR), ('log_path', './logs'), ('save_checkpoint_freq', 1),
+                              ('model_path_prefix', 'word2vec'), ('enable_evaluation', False), ('load_epoch', 1)])
 """optimizer parameter
 Parameter:
     optimizer: str
@@ -69,88 +63,30 @@ Parameter:
     wd: float
         weight decay
 """
-optimizer_parameter = namedtuple_with_defaults('optimizer_parameter',
-                                               'optimizer clip_gradient rescale_grad learning_rate wd momentum',
-                                               ['Adadelta', 5.0, -1.0, 0.01, 0.0005, 0.9])
 
+optimizer_parameter = RecordType('optimizer_parameter',
+                                 [('optimizer', 'Adadelta'), ('clip_gradient', 5.0), ('rescale_grad', -1.0),
+                                  ('learning_rate', 0.01), ('wd', 0.0005), ('momentum', 0.9)])
 
-"""query2vec parameter
+"""model parameter
 Parameter:
-    encoder_layer_num: int
-        number of layers for the LSTM recurrent neural network for encoder
-    encoder_hidden_unit_num: int
-        number of hidden units in the neural network for encoder
-    encoder_embed_size: int
-        word embedding size for encoder
-    encoder_dropout: float
-        the probability to ignore the neuron outputs
-    decoder_layer_num: int
-        number of layers for the LSTM recurrent neural network for decoder
-    decoder_hidden_unit_num: int
-        number of hidden units in the neural network for decoder
-    decoder_embed_size: int
-        word embedding size for decoder
-    decoder_dropout: float
-        the probability to ignore the neuron outputs
+    embed_size: int
+       word embedding size
+    window_size: int
+       context window size
     batch_size: int
-        batch size for each databatch'
-    buckets: tuple list
-        bucket for encoder sequence length and decoder sequence length
+        batch size for each databatch
 """
-model_parameter = namedtuple_with_defaults('model_parameter', 'embed_size batch_size window_size',
-                                           [128, 128, 2])
+model_parameter = RecordType('model_parameter', [('embed_size', 128), ('batch_size', 128), ('window_size', 2)])
 
 
 class Word2vecTrainer(Trainer):
     def __init__(self, data_path, vocabulary_save_path, mxnet_para=mxnet_parameter, optimizer_para=optimizer_parameter,
                  model_para=model_parameter):
-        self.mxnet_para = mxnet_para
-        self.optimizer_para = optimizer_para
-        self.model_para = model_para
-        self.data_path = data_path #./data/word2vec/train.dec
+        super(Word2vecTrainer, self).__init__(mxnet_para=mxnet_para, optimizer_para=optimizer_para,
+                                               model_para=model_para)
+        self.data_path = data_path  # ./data/word2vec/train.dec
         self.vocabulary_save_path = vocabulary_save_path
-        self._initialize()
-
-    def _initialize(self):
-        assert isinstance(self.mxnet_para, mxnet_parameter)
-        assert isinstance(self.optimizer_para, optimizer_parameter)
-        assert isinstance(self.model_para, model_parameter)
-
-        for (parameter, value) in chain(self.mxnet_para._asdict().iteritems(),
-                                        self.model_para._asdict().iteritems()):
-            setattr(self, parameter, value)
-
-        # create kvstore
-        kv = mx.kvstore.create(self.kv_store)
-        setattr(self, 'kv', kv)
-
-        optimizer_params = dict()
-        for (parameter, value) in self.optimizer_para._asdict().iteritems():
-            if parameter == "optimizer":
-                # set optimizer name
-                setattr(self, parameter, value)
-            else:
-                # set optimizer parameter
-                optimizer_params.setdefault(parameter, value)
-
-        if self.optimizer.lower() in ['adadelta', 'adagrad', 'adam', 'rmsprop']:
-            optimizer_params.__delitem__('momentum')
-        setattr(self, 'optimizer_params', optimizer_params)
-
-        if self.optimizer_params.get('rescale_grad') < 0:
-            # if rescale_grad has not been set, reset rescale_grad
-            self.optimizer_params['rescale_grad'] = 1.0 / (self.batch_size * kv.num_workers)
-
-        # init log with kv
-        init_log(self.log_level, self.log_path)
-
-        # print the variable before training
-        if kv.rank == 0:
-            self.print_all_variable()
-
-    def print_all_variable(self):
-        for arg, value in self.__dict__.iteritems():
-            logging.info("%s: %s" % (arg, value))
 
     @property
     @memoized
@@ -166,9 +102,10 @@ class Word2vecTrainer(Trainer):
 
     @property
     @memoized
-    def data_loader(self):
+    def train_data_loader(self):
         # build data iterator
-        data_loader = Word2vecDataIter(self.data_path, self.vocabulary_save_path, self.batch_size, 2 * self.window_size + 1)
+        data_loader = Word2vecDataIter(self.data_path, self.vocabulary_save_path, self.batch_size,
+                                       2 * self.window_size + 1)
         return data_loader
 
     @property
@@ -178,19 +115,19 @@ class Word2vecTrainer(Trainer):
     def train(self):
         network_symbol = self.network_symbol
         devices = self.ctx_devices
-        data_loader = self.data_loader
+        data_loader = self.train_data_loader
 
-        # load query2vec
+        # load model
         sym, arg_params, aux_params = load_model(self.model_path_prefix, self.kv.rank, self.load_epoch)
-        # save query2vec
+        # save model
         checkpoint = save_model(self.model_path_prefix, self.kv.rank, self.save_checkpoint_freq)
 
         # set initializer to initialize the module parameters
         initializer = mx.init.Xavier(
             rnd_type='gaussian', factor_type="in", magnitude=2)
         model = mx.mod.Module(context=devices,
-                              symbol=network_symbol, data_names=self.data_loader.data_names,
-                              label_names=self.data_loader.label_names)
+                              symbol=network_symbol, data_names=self.train_data_loader.data_names,
+                              label_names=self.train_data_loader.label_names)
 
         # callbacks that run after each batch
         batch_end_callbacks = [Speedometer(self.batch_size, self.kv.rank, self.disp_batches)]

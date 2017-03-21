@@ -1,13 +1,29 @@
 import six
+import os
+import time
 import abc
 from utils.device_util import get_devices
 from utils.decorator_util import memoized
 import logging
+from utils.record_type import RecordType
+from itertools import chain
+import mxnet as mx
+from utils.file_util import ensure_dir_exists
 
 
 @six.add_metaclass(abc.ABCMeta)
 class Trainer(object):
     """A trainer abstract interface object."""
+
+    def __init__(self, mxnet_para, optimizer_para, model_para):
+        self._mxnet_para = mxnet_para
+        self._optimizer_para = optimizer_para
+        self._model_para = model_para
+        self._init_parameter()
+        self._init_log(self.log_level, self.log_path)
+        # print the variable before training
+        if self.kv.rank == 0:
+            self.print_all_variable()
 
     @abc.abstractmethod
     def train(self):
@@ -22,19 +38,66 @@ class Trainer(object):
         return devs
 
     @property
-    def data_loader(self):
+    def train_data_loader(self):
+        """return train data loader"""
         raise NotImplementedError
 
     @property
     def eval_data_loader(self):
+        """return evaluation data loader"""
         raise NotImplementedError
 
     @property
     def network_symbol(self):
+        """return network graph"""
         raise NotImplementedError
 
     def print_all_variable(self):
+        """log training parameter to check before training"""
         for arg, value in self.__dict__.iteritems():
             logging.info("%s: %s" % (arg, value))
+
+    def _init_parameter(self):
+        """initialize mxnet, optimizer, model parameter and kv store for training"""
+        assert isinstance(self._mxnet_para, RecordType)
+        assert isinstance(self._optimizer_para, RecordType)
+        assert isinstance(self._model_para, RecordType)
+
+        for (parameter, value) in chain(self._mxnet_para.iteritems(),
+                                        self._model_para.iteritems()):
+            setattr(self, parameter, value)
+
+        # create kvstore
+        kv = mx.kvstore.create(self.kv_store)
+        setattr(self, 'kv', kv)
+
+        optimizer_params = dict()
+        for (parameter, value) in self._optimizer_para.iteritems():
+            if parameter == "optimizer":
+                # set optimizer name
+                setattr(self, parameter, value)
+            else:
+                # set optimizer parameter
+                optimizer_params.setdefault(parameter, value)
+        if self.optimizer not in ['adadelta', 'adagrad', 'adam', 'rmsprop']:
+            optimizer_params.pop('momentum')
+        setattr(self, 'optimizer_params', optimizer_params)
+
+        if self.optimizer_params.get('rescale_grad') < 0:
+            # if rescale_grad has not been set, reset rescale_grad
+            self.optimizer_params['rescale_grad'] = 1.0 / (self.batch_size * kv.num_workers)
+
+    def _init_log(self, log_level, log_path):
+        """set up logger"""
+        head = '%(asctime)s %(levelname)s:%(name)s:%(message)s'
+        logging.basicConfig(format=head,
+                            level=log_level,
+                            datefmt='%H:%M:%S')
+        if log_level is not None and log_path is not None:
+            ensure_dir_exists(log_path)
+            file_handler = logging.FileHandler(os.path.join(log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
+            file_handler.setFormatter(logging.Formatter(head))
+            logging.root.addHandler(file_handler)
+
 
 

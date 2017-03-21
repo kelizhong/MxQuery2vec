@@ -2,8 +2,8 @@ import mxnet as mx
 import numpy as np
 import argparse
 from collections import OrderedDict
-from utils.data_util import load_vocab, sentence2id, word2id
-from inference.inference_model import Seq2seqInferenceModel
+from utils.data_util import load_pickle_object, sentence2id, word2id
+from inference.inference_model import  BiSeq2seqInferenceModel
 import logging
 import os
 import time
@@ -48,21 +48,21 @@ def parse_args():
     parser.add_argument('-mp', '--model-prefix', default='query2vec',
                         type=str,
                         help='the experiment name, this is also the prefix for the parameters file')
-    parser.add_argument('-pd', '--model-path', default=os.path.join(os.getcwd(), 'data', 'model'),
+    parser.add_argument('-pd', '--model-path', default=os.path.join(os.getcwd(), 'data', 'query2vec/model'),
                         type=DirectoryType,
                         help='the directory to store the parameters of the training')
 
     # model parameter
     parser.add_argument('-sln', '--source-layer-num', default=1, type=int,
                         help='number of layers for the source LSTM recurrent neural network')
-    parser.add_argument('-shun', '--source-hidden-unit-num', default=256, type=int,
+    parser.add_argument('-shun', '--source-hidden-unit-num', default=5, type=int,
                         help='number of hidden units in the neural network for encoder')
-    parser.add_argument('-es', '--embed-size', default=128, type=int,
+    parser.add_argument('-es', '--embed-size', default=5, type=int,
                         help='embedding size ')
 
     parser.add_argument('-tln', '--target-layer-num', default=1, type=int,
                         help='number of layers for the target LSTM recurrent neural network')
-    parser.add_argument('-thun', '--target-hidden-unit-num', default=256, type=int,
+    parser.add_argument('-thun', '--target-hidden-unit-num', default=5, type=int,
                         help='number of hidden units in the neural network for decoder')
 
     parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,
@@ -77,7 +77,7 @@ def get_inference_models(buckets, arg_params, encoder_vocab_size, decoder_vocab_
     # build an inference model
     model_buckets = OrderedDict()
     for bucket in buckets:
-        model_buckets[bucket] = Seq2seqInferenceModel(encoder_layer_num=args.source_layer_num, encoder_seq_len=bucket[0],
+        model_buckets[bucket] = BiSeq2seqInferenceModel(encoder_layer_num=args.source_layer_num, encoder_seq_len=bucket[0],
                                                       encoder_vocab_size=encoder_vocab_size,
                                                       encoder_hidden_unit_num=args.source_hidden_unit_num,
                                                       encoder_embed_size=args.embed_size,
@@ -136,11 +136,11 @@ def reponse(max_decode_len, sentence, model_buckets, source_vocab, target_vocab,
     mask_ndarray = mx.nd.zeros((1, unroll_len))
     output = [constant.bos_word]
     MakeInput(sentence, source_vocab, unroll_len, input_ndarray, mask_ndarray)
-    last_encoded= cur_model.encode(input_ndarray,
+    last_encoded, all_encoded= cur_model.encode(input_ndarray,
                                        mask_ndarray)  # last_encoded means the last time step hidden
     for i in range(max_decode_len):
         MakeTargetInput(output[-1], target_vocab, target_ndarray)
-        prob = cur_model.decode_forward(last_encoded, target_ndarray,
+        prob = cur_model.decode_forward(last_encoded, all_encoded, target_ndarray,
                                         i == 0)
         next_char = MakeOutput(prob, revert_vocab)
         if next_char == constant.eos_word:
@@ -155,7 +155,7 @@ def encode(sentence, model_buckets, source_vocab):
     input_ndarray = mx.nd.zeros((1, unroll_len))
     mask_ndarray = mx.nd.zeros((1, unroll_len))
     MakeInput(sentence, source_vocab, unroll_len, input_ndarray, mask_ndarray)
-    last_encoded = cur_model.encode(input_ndarray,
+    last_encoded, _ = cur_model.encode(input_ndarray,
                                        mask_ndarray)  # last_encoded means the last time step hidden
 
     return last_encoded
@@ -170,7 +170,7 @@ def MakeRevertVocab(vocab):
 
 def test_use_model_param(str):
     # load vocabulary
-    vocab = load_vocab(args.vocabulary_path)
+    vocab = load_pickle_object(args.vocabulary_path)
     # load model from check-point
     _, arg_params, __ = mx.model.load_checkpoint(os.path.join(args.model_path, args.model_prefix), args.load_epoch)
     vocab_size = len(vocab) + 1
@@ -222,10 +222,10 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 17
+    args.load_epoch = 800
 
     # load vocabulary
-    vocab = load_vocab(args.vocabulary_path)
+    vocab = load_pickle_object(args.vocabulary_path)
     # load model from check-point
     _, arg_params, __ = mx.model.load_checkpoint(os.path.join(args.model_path, args.model_prefix), args.load_epoch)
     vocab_size = len(vocab) + 1
@@ -277,7 +277,7 @@ if __name__ == "__main__":
     print(cosSimilar(b, c))
 
     target_ndarray = mx.nd.zeros((1,), ctx=mx.cpu())
-    en = reponse(15, word_tokenize("iphone6"), model_buckets, vocab, vocab,
+    en = reponse(15, word_tokenize("what is your name"), model_buckets, vocab, vocab,
                        revert_vocab,
                        target_ndarray)
     en = ' '.join(en)
