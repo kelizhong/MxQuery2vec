@@ -15,6 +15,10 @@ class Model(object):
         raise NotImplementedError
 
     @abc.abstractmethod
+    def attention(self, seq_len):
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def unroll(self, encoder_seq_len, decoder_seq_len):
         raise NotImplementedError
 

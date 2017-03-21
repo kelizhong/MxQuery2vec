@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from network.seq2seq.encoder import LstmEncoder, BiDirectionalLstmEncoder
+from network.seq2seq.encoder import BiDirectionalLstmEncoder
 from network.seq2seq.decoder import LstmDecoder
 
 import mxnet as mx
@@ -7,7 +7,11 @@ from collections import namedtuple
 from itertools import chain
 from utils.decorator_util import memoized
 from model import Model
-from network.attention.soft_attention import SoftAttention
+'''
+Papers:
+[1] Neural Machine Translation by Jointly Learning to Align and Translate(https://arxiv.org/pdf/1409.0473v6.pdf)
+'''
+
 
 encoder_parameter = namedtuple('encoder_parameter', 'encoder_layer_num encoder_vocab_size '
                                                     'encoder_hidden_unit_num encoder_embed_size encoder_dropout')
@@ -31,6 +35,7 @@ class Seq2seqModel(Model):
     share_embed: bool
         whether share embedding weight
     """
+
     def __init__(self, encoder_para, decoder_para, share_embed=True):
         self.encoder_para = encoder_para
         self.decoder_para = decoder_para
@@ -49,48 +54,11 @@ class Seq2seqModel(Model):
     def get_init_state_shape(self, batch_size):
         """initalize states for LSTM"""
 
-        encoder_init_c = [('encoder_l%d_init_c' % l, (batch_size, self.encoder_hidden_unit_num))
-                                  for l
-                                  in
-                                  range(self.encoder_layer_num)]
-        encoder_init_h = [('encoder_l%d_init_h' % l, (batch_size, self.encoder_hidden_unit_num))
-                                  for l
-                                  in
-                                  range(self.encoder_layer_num)]
+        encoder_init_states = BiDirectionalLstmEncoder.get_init_state_shape(batch_size, self.encoder_layer_num,
+                                                                            self.encoder_hidden_unit_num)
 
-        encoder_init_states = encoder_init_c + encoder_init_h
-
-        decoder_init_c = [('decoder_l%d_init_c' % l, (batch_size, self.decoder_hidden_unit_num)) for l in
-                          range(self.decoder_layer_num)]
-        decoder_init_states = decoder_init_c
-        return encoder_init_states, decoder_init_states
-
-    @memoized
-    def get_bi_init_state_shape(self, batch_size):
-        """initalize states for bi-LSTM"""
-
-        forward_encoder_init_c = [('forward_encoder_l%d_init_c' % l, (batch_size, self.encoder_hidden_unit_num))
-                                  for l
-                                  in
-                                  range(self.encoder_layer_num)]
-        forward_encoder_init_h = [('forward_encoder_l%d_init_h' % l, (batch_size, self.encoder_hidden_unit_num))
-                                  for l
-                                  in
-                                  range(self.encoder_layer_num)]
-        backward_encoder_init_c = [('backward_encoder_l%d_init_c' % l, (batch_size, self.encoder_hidden_unit_num))
-                                   for
-                                   l in
-                                   range(self.encoder_layer_num)]
-        backward_encoder_init_h = [('backward_encoder_l%d_init_h' % l, (batch_size, self.encoder_hidden_unit_num))
-                                   for
-                                   l in
-                                   range(self.encoder_layer_num)]
-        encoder_init_states = forward_encoder_init_c + forward_encoder_init_h + backward_encoder_init_c + \
-                              backward_encoder_init_h
-
-        decoder_init_c = [('decoder_l%d_init_c' % l, (batch_size, self.decoder_hidden_unit_num)) for l in
-                          range(self.decoder_layer_num)]
-        decoder_init_states = decoder_init_c
+        decoder_init_states = LstmDecoder.get_init_state_shape(batch_size, self.decoder_layer_num,
+                                                               self.decoder_hidden_unit_num)
         return encoder_init_states, decoder_init_states
 
     @property
@@ -111,27 +79,24 @@ class Seq2seqModel(Model):
                                            embed_weight=self.embed_weight)
         return encoder
 
-    def decoder(self, seq_len, attention=None):
+    def decoder(self, seq_len):
         decoder = LstmDecoder(seq_len=seq_len, use_masking=True, hidden_unit_num=self.decoder_hidden_unit_num,
                               vocab_size=self.decoder_vocab_size, embed_size=self.decoder_embed_size,
                               dropout=self.decoder_dropout,
-                              layer_num=self.decoder_layer_num, embed_weight=self.embed_weight, attention=attention)
+                              layer_num=self.decoder_layer_num, embed_weight=self.embed_weight)
         return decoder
 
     def attention(self, encoder_seq_len):
-        attention = SoftAttention(seq_len=encoder_seq_len, encoder_hidden_output_dim=self.encoder_hidden_unit_num * 2,
-                                   state_dim=self.decoder_hidden_unit_num)
-        return attention
+        """ base on [1] """
+        # TODO add attention mechanism
+        return None
 
     def unroll(self, encoder_seq_len, decoder_seq_len):
         encoder = self.encoder(encoder_seq_len)
-        attention = self.attention(encoder_seq_len)
-        decoder = self.decoder(decoder_seq_len, attention)
+        decoder = self.decoder(decoder_seq_len)
 
-        forward_hidden_all, backward_hidden_all, hidden_all, encoder_mask_sliced = encoder.encode()
-        decoded_init_state = mx.sym.Concat(forward_hidden_all[-1], backward_hidden_all[0], dim=1,
-                                           name='decoded_init_state')
-        decoder_softmax = decoder.decode(decoded_init_state, hidden_all, encoder_mask_sliced, self.encoder_hidden_unit_num * 2)
+        encoder_last_state = encoder.encode()
+        decoder_softmax = decoder.decode(encoder_last_state)
         return decoder_softmax
 
     def network_symbol(self, data_names, label_names):

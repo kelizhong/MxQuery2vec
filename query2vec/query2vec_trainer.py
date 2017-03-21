@@ -176,7 +176,7 @@ class Query2vecTrainer(Trainer):
     @memoized
     def train_data_loader(self):
         # get states shapes
-        encoder_init_states, decoder_init_states = self.network_symbol.get_bi_init_state_shape(self.batch_size)
+        encoder_init_states, decoder_init_states = self.network_symbol.get_init_state_shape(self.batch_size)
         # build data iterator
         data_loader = MaskedBucketSentenceIter(self.encoder_train_data_path, self.decoder_train_data_path,
                                                self.vocab,
