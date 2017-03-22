@@ -2,10 +2,33 @@ import os
 from utils.file_util import ensure_dir_exists
 import logging
 import mxnet as mx
-import time
 
 
 def load_model(model_prefix, rank=0, load_epoch=None):
+    """load existed model
+    Parameters
+    ----------
+    model_prefix: str
+        the prefix for the parameters file
+    rank: int
+        the rank of worker node
+    load_epoch: int
+        Epoch number of model we would like to load.
+    Returns
+    -------
+    symbol : Symbol
+        The symbol configuration of computation network.
+    arg_params : dict of str to NDArray
+        Model parameter, dict of name to NDArray of net's weights.
+    aux_params : dict of str to NDArray
+        Model parameter, dict of name to NDArray of net's auxiliary states.
+
+    Notes
+    -----
+    - if load_epoch is None or value < 0, will return None, None, None
+    - symbol will be loaded from ``prefix-symbol.json``.
+    - parameters will be loaded from ``prefix-epoch.params``.
+    """
     if load_epoch is None or load_epoch < 0:
         return None, None, None
     assert model_prefix is not None
@@ -17,21 +40,29 @@ def load_model(model_prefix, rank=0, load_epoch=None):
     return sym, arg_params, aux_params
 
 
-def save_model(model_prefix, rank=0, period=10):
+def save_model_callback(model_prefix, rank=0, period=1):
+    """Callback to checkpoint the model to prefix every period.
+
+    Parameters
+    ----------
+    model_prefix : str
+        The file prefix to checkpoint to
+    rank: int
+        the rank of worker node
+    period : int
+        How many epochs to wait before checkpointing. Default is 1.
+
+    Returns
+    -------
+    callback : function
+        The callback function that can be passed as iter_end_callback to fit.
+    Notes
+    -----
+    - model_prefix is not a directory name
+    """
     if model_prefix is None:
         return None
     ensure_dir_exists(model_prefix, is_dir=False)
     return mx.callback.do_checkpoint(model_prefix if rank == 0 else "%s-%d" % (
         model_prefix, rank), period)
 
-
-def init_log(log_level, log_path):
-    head = '%(asctime)s %(levelname)s:%(name)s:%(message)s'
-    logging.basicConfig(format=head,
-                        level=log_level,
-                        datefmt='%H:%M:%S')
-    if log_level is not None and log_path is not None:
-        ensure_dir_exists(log_path)
-        file_handler = logging.FileHandler(os.path.join(log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
-        file_handler.setFormatter(logging.Formatter(head))
-        logging.root.addHandler(file_handler)

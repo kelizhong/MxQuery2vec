@@ -1,15 +1,13 @@
 from wordvec_model import Word2vec
 import mxnet as mx
 from utils.decorator_util import memoized
-from utils.device_util import get_devices
 from metric.word2vec_metric import NceAuc
 from metric.speedometer import Speedometer
 from word2vec_io import Word2vecDataIter
-from utils.model_util import load_model, save_model, init_log
+from utils.model_util import load_model, save_model_callback
 import logging
-from itertools import chain
 from base.trainer import Trainer
-from utils.record_type import RecordType
+from utils.record_util import RecordType
 
 """mxnet parameter
 Parameter:
@@ -81,6 +79,22 @@ model_parameter = RecordType('model_parameter', [('embed_size', 128), ('batch_si
 
 
 class Word2vecTrainer(Trainer):
+    """Train the word2vec, in this project, this word2vec is used for initializing the embedding weight of query2vec.
+    A new vocabulary will be created every time when train the word2vec, not generate the vocabulary in advance.
+    Parameters
+    ----------
+    data_path: str
+        corpus path using for training the word2vec
+    vocabulary_save_path:
+        vocabulary file path where the vocabulary will be created, this vocabulary is not used to train the query2vec
+        model, it is used for the word2vev dumper
+    mxnet_para: RecordType
+        mxnet parameter
+    optimizer_para: RecordType
+        optimizer parameter
+    model_para: RecordType
+        model parameter
+    """
     def __init__(self, data_path, vocabulary_save_path, mxnet_para=mxnet_parameter, optimizer_para=optimizer_parameter,
                  model_para=model_parameter):
         super(Word2vecTrainer, self).__init__(mxnet_para=mxnet_para, optimizer_para=optimizer_para,
@@ -89,16 +103,9 @@ class Word2vecTrainer(Trainer):
         self.vocabulary_save_path = vocabulary_save_path
 
     @property
-    @memoized
-    def ctx_devices(self):
-        """return devices"""
-        devs = get_devices(self.devices, self.device_mode, self.kv.rank, self.hosts_num, self.workers_num)
-        return devs
-
-    @property
-    def network_symbol(self):
-        sym = Word2vec(self.batch_size, self.data_loader.vocab_size, self.embed_size, self.window_size).network_symbol()
-        return sym
+    def model(self):
+        m = Word2vec(self.batch_size, self.data_loader.vocab_size, self.embed_size, self.window_size)
+        return m
 
     @property
     @memoized
@@ -113,14 +120,14 @@ class Word2vecTrainer(Trainer):
         return None
 
     def train(self):
-        network_symbol = self.network_symbol
+        network_symbol = self.model.network_symbol()
         devices = self.ctx_devices
         data_loader = self.train_data_loader
 
         # load model
         sym, arg_params, aux_params = load_model(self.model_path_prefix, self.kv.rank, self.load_epoch)
-        # save model
-        checkpoint = save_model(self.model_path_prefix, self.kv.rank, self.save_checkpoint_freq)
+        # save model callback
+        checkpoint = save_model_callback(self.model_path_prefix, self.kv.rank, self.save_checkpoint_freq)
 
         # set initializer to initialize the module parameters
         initializer = mx.init.Xavier(

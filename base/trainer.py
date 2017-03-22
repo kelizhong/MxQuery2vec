@@ -5,7 +5,7 @@ import abc
 from utils.device_util import get_devices
 from utils.decorator_util import memoized
 import logging
-from utils.record_type import RecordType
+from utils.record_util import RecordType
 from itertools import chain
 import mxnet as mx
 from utils.file_util import ensure_dir_exists
@@ -48,8 +48,8 @@ class Trainer(object):
         raise NotImplementedError
 
     @property
-    def network_symbol(self):
-        """return network graph"""
+    def model(self):
+        """return model instance"""
         raise NotImplementedError
 
     def print_all_variable(self):

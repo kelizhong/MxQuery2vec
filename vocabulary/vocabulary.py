@@ -1,6 +1,4 @@
 # coding=utf-8
-"""Count the frequency of unique words in a file.
-"""
 import logging
 import os
 from collections import Counter
@@ -10,6 +8,30 @@ from utils.data_util import words_gen
 
 
 class Vocab(object):
+    """
+    Create vocabulary file (if it does not exist yet) from data file.
+    Data file should have one sentence per line.
+    Each sentence will be tokenized.
+    Vocabulary contains the most-frequent tokens up to top_words.
+    We write it to vocab_file in pickle format.
+    special_words will be added into the vocabulary file
+    Parameters
+    ----------
+    corpus_files: list
+        corpus files list that will be used to create vocabulary
+    vocab_file: str
+        vocab file name where the vocabulary will be created
+    special_words: dict
+        special words, e.g.<s>, </s>, <unk>
+    top_words: int
+        limit on the size of the created vocabulary
+    log_level: level name, e.g.INFO, ERROR
+        log level
+    log_path: str
+        log path where the log will be saved
+    overwrite: bool
+        whether to overwrite the existed vocabulary
+    """
     def __init__(self, corpus_files, vocab_file, special_words=dict(), top_words=40000,
                  log_level=logging.INFO,
                  log_path='./', overwrite=True):

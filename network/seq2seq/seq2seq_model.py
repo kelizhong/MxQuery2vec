@@ -1,23 +1,15 @@
 # -*- coding: utf-8 -*-
-from network.seq2seq.encoder import BiDirectionalLstmEncoder
-from network.seq2seq.decoder import LstmDecoder
-
 import mxnet as mx
-from collections import namedtuple
-from itertools import chain
+
+from base.model import Model
+from network.seq2seq.decoder import LstmDecoder
+from network.seq2seq.encoder import BiDirectionalLstmEncoder
 from utils.decorator_util import memoized
-from model import Model
+
 '''
 Papers:
 [1] Neural Machine Translation by Jointly Learning to Align and Translate(https://arxiv.org/pdf/1409.0473v6.pdf)
 '''
-
-
-encoder_parameter = namedtuple('encoder_parameter', 'encoder_layer_num encoder_vocab_size '
-                                                    'encoder_hidden_unit_num encoder_embed_size encoder_dropout')
-
-decoder_parameter = namedtuple('decoder_parameter', 'decoder_layer_num decoder_vocab_size '
-                                                    'decoder_hidden_unit_num decoder_embed_size decoder_dropout')
 
 
 class Seq2seqModel(Model):
@@ -26,6 +18,7 @@ class Seq2seqModel(Model):
     and an attention-based decoder. This is the same as the model described in
     this paper: http://arxiv.org/abs/1412.7449 - please look there for details,
     or into the seq2seq library for complete model implementation.
+    In this class, the encoder is bi-Directional Lstm, the decoder is not attention base
     Parameters
     ----------
     encoder_para: namedtuple
@@ -37,22 +30,12 @@ class Seq2seqModel(Model):
     """
 
     def __init__(self, encoder_para, decoder_para, share_embed=True):
-        self.encoder_para = encoder_para
-        self.decoder_para = decoder_para
-        self.share_embed = share_embed
-        self._initialize()
-
-    def _initialize(self):
-        assert isinstance(self.encoder_para, encoder_parameter)
-        assert isinstance(self.decoder_para, decoder_parameter)
-
-        for (parameter, value) in chain(self.encoder_para._asdict().iteritems(),
-                                        self.decoder_para._asdict().iteritems()):
-            setattr(self, parameter, value)
+        super(Seq2seqModel, self).__init__(encoder_para=encoder_para, decoder_para=decoder_para,
+                                           share_embed=share_embed)
 
     @memoized
     def get_init_state_shape(self, batch_size):
-        """initalize states for LSTM"""
+        """initalize states for LSTM encoder and decoder"""
 
         encoder_init_states = BiDirectionalLstmEncoder.get_init_state_shape(batch_size, self.encoder_layer_num,
                                                                             self.encoder_hidden_unit_num)
@@ -64,7 +47,9 @@ class Seq2seqModel(Model):
     @property
     @memoized
     def embed_weight(self):
-        # embedding
+        """embedding weight, for the query2vec task, the vector of encoder and decoder is
+          in the same space, so they share the same embed weight
+        """
         if self.share_embed:
             embed_weight = mx.sym.Variable("share_embed_weight")
         else:
@@ -91,7 +76,7 @@ class Seq2seqModel(Model):
         # TODO add attention mechanism
         return None
 
-    def unroll(self, encoder_seq_len, decoder_seq_len):
+    def graph(self, encoder_seq_len, decoder_seq_len):
         encoder = self.encoder(encoder_seq_len)
         decoder = self.decoder(decoder_seq_len)
 
@@ -101,7 +86,7 @@ class Seq2seqModel(Model):
 
     def network_symbol(self, data_names, label_names):
         def _sym_gen(bucket_key):
-            sym = self.unroll(bucket_key[0], bucket_key[1])
+            sym = self.graph(bucket_key[0], bucket_key[1])
             return sym, data_names, label_names
 
         return _sym_gen

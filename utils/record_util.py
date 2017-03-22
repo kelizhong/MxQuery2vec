@@ -4,7 +4,7 @@ from collections import namedtuple
 class RecordType(object):
     def __init__(self, typename, strict_fields, verbose=False):
         """ Store all of the field and type data as class methods so they aren't regenerated
-            everytime a new named tuple is required"""
+            everytime a new named tuple is required, strict_files format: [(key,value), (key,value)]"""
         self.typename = typename
 
         # Store field type and default information in varous formats for easy access by methods ###

@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import mxnet as mx
 from common.constant import bos_word, eos_word
+from utils.data_util import read_data, sentence2id
 
 
 class SimpleBatch(object):
@@ -24,17 +25,53 @@ class SimpleBatch(object):
 
 
 class MaskedBucketSentenceIter(mx.io.DataIter):
+    """masked bucketing iterator for seq2seq model. This class is only used for test
+
+    Parameters
+    ----------
+    encoder_path : str
+        encoder corpus path
+    decoder_path: str
+        decoder corpus path
+    encoder_vocab: dict
+        vocabulary from encoder corpus.
+    decoder_vocab: dict
+        vocabulary from decoder corpus.
+    buckets : list of int
+        size of data buckets.
+    batch_size : int
+        batch_size of data
+    encoder_init_states : list
+        init states for encoder
+    decoder_init_states : list
+        init states for decoder
+    encoder_data_name: str
+        data name for encoder which is in accordance with the data name in encoder
+    decoder_data_name: str
+        data name for decoder which is in accordance with the data name in decoder
+    encoder_mask_name: str
+        masked data name for encoder
+    decoder_mask_name: str
+        masked data name for decoder
+    label_name : str
+        name of label
+    max_sentence_num: int
+        the max size of sentence to read
+    Notes
+    -----
+    - For query2vec, the vocabulary in encoder is the same with the vocabulary in decoder.
+        The vocabulary is from all the corpus including encoder corpus(search query) adn decoder corpus(asin information)
+    """
     def __init__(self, encoder_path, decoder_path, encoder_vocab, decoder_vocab,
                  buckets, batch_size,
                  encoder_init_states, decoder_init_states,
                  encoder_data_name='encoder_data', encoder_mask_name='encoder_mask',
                  decoder_data_name='decoder_data', decoder_mask_name='decoder_mask',
                  label_name='decoder_softmax_label',
-                 sentence2id=None, read_data=None, max_read_sample=sys.maxsize):
+                 max_sentence_num=sys.maxsize):
         super(MaskedBucketSentenceIter, self).__init__()
 
-        self.sentence2id = sentence2id
-        encoder_sentences, decoder_sentences = read_data(encoder_path, decoder_path, max_read_sample)
+        encoder_sentences, decoder_sentences = read_data(encoder_path, decoder_path, max_sentence_num)
 
         assert len(encoder_sentences) == len(decoder_sentences)
 
@@ -63,9 +100,9 @@ class MaskedBucketSentenceIter(mx.io.DataIter):
             encoder = encoder_sentences[i]
             decoder = [bos_word] + decoder_sentences[i]
             label = decoder_sentences[i] + [eos_word]
-            encoder_sentence = self.sentence2id(encoder, encoder_vocab)
-            decoder_sentence = self.sentence2id(decoder, decoder_vocab)
-            label_id = self.sentence2id(label, decoder_vocab)
+            encoder_sentence = sentence2id(encoder, encoder_vocab)
+            decoder_sentence = sentence2id(decoder, decoder_vocab)
+            label_id = sentence2id(label, decoder_vocab)
             if len(encoder_sentence) == 0 or len(decoder_sentence) == 0:
                 continue
             for j, bkt in enumerate(buckets):

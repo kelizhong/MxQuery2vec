@@ -3,20 +3,28 @@ import logging
 import os
 import errno
 
+
 def IntegerType(value):
+    """convert str to int and convert 'inf' to sys.maxsize"""
     return sys.maxsize if value == 'inf' else int(value)
 
+
 def LoggerLevelType(value):
+    """convert str to log level"""
     choices = {'debug': logging.DEBUG, 'info': logging.INFO, 'warn': logging.WARN, 'error': logging.ERROR}
     result = choices.get(value, logging.ERROR)
     return result
 
+
 def DirectoryType(value):
+    """directory type, create directory if not exist"""
     if not os.path.exists(value):
         os.makedirs(value)
     return value
 
+
 def FileType(value):
+    """file type, create file if not exist"""
     if not os.path.exists(os.path.dirname(value)):
         try:
             os.makedirs(os.path.dirname(value))

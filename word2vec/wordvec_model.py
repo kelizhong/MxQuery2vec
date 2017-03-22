@@ -6,6 +6,19 @@ logging.basicConfig(level=logging.INFO, format=head)
 
 
 class Word2vec(object):
+    """The model of word2vec, using nce loss
+    Parameters
+    ----------
+    batch_size: int
+        batch size for each data batch
+    vocab_size: int
+        the size of vocabulary of the corpus
+    embed_size: int
+        word embedding size
+    window_size: int
+        the maximum distance between the current and predicted word within a sentence
+    """
+
     def __init__(self, batch_size, vocab_size, embed_size, window_size):
         self.batch_size = batch_size
         self.embed_size = embed_size
@@ -13,6 +26,7 @@ class Word2vec(object):
         self.vocab_size = vocab_size
 
     def network_symbol(self):
+        """word2vec network stmbol for training"""
         input_num = 2 * self.window_size
         data = mx.sym.Variable('data')
         label = mx.sym.Variable('label')
@@ -34,6 +48,7 @@ class Word2vec(object):
                              embed_weight=embed_weight)
 
     def nce_loss(self, data, label, label_weight, embed_weight):
+        """Noise contrastive Estimation"""
         label_embed = mx.sym.Embedding(data=label, input_dim=self.vocab_size,
                                        weight=embed_weight,
                                        output_dim=self.embed_size, name='label_embed')

@@ -8,9 +8,10 @@ def ensure_dir_exists(path, is_dir=True, mode=0o755):
     If it doesn't exist, try to create it and protect against a race condition
     if another process is doing the same.
 
-    Args:
+    Parameters
+    ----------
         path: str, the path to check
-        is_dir: If 'dir_type' is true, the path is a directory, else the path is file
+        is_dir: If 'dir_type' is true, the type of path is a directory, else the path is a file
         mode: The default permissions are 755, which differ from os.makedirs default of 777.
     """
     path = path if is_dir else os.path.dirname(path)
