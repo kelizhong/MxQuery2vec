@@ -6,6 +6,8 @@ import mxnet as mx
 import numpy as np
 from base.trainer import Trainer
 from masked_bucket_io import MaskedBucketSentenceIter
+from seq2seq_bucket_io_stream import Seq2seqMaskedBucketIoStreamIter
+from seq2seq_data_stream import Seq2seqDataStream
 from metric.seq2seq_metric import MetricManage
 from metric.speedometer import Speedometer
 from network.seq2seq.seq2seq_model import Seq2seqModel
@@ -178,12 +180,9 @@ class Query2vecTrainer(Trainer):
         # get states shapes
         encoder_init_states, decoder_init_states = self.model.get_init_state_shape(self.batch_size)
         # build data iterator
-        data_loader = MaskedBucketSentenceIter(self.encoder_train_data_path, self.decoder_train_data_path,
-                                               self.vocab,
-                                               self.vocab,
-                                               self.buckets, self.batch_size,
-                                               encoder_init_states, decoder_init_states,
-                                               max_sentence_num=self.train_max_samples)
+        data_stream = Seq2seqDataStream(self.encoder_train_data_path, self.decoder_train_data_path, self.vocab, self.vocab, self.buckets, self.batch_size, max_sentence_num=self.train_max_samples)
+        data_loader = Seq2seqMaskedBucketIoStreamIter(data_stream,
+                                               encoder_init_states, decoder_init_states, max(self.buckets), self.batch_size)
         return data_loader
 
     @property
