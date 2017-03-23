@@ -180,9 +180,12 @@ class Query2vecTrainer(Trainer):
         # get states shapes
         encoder_init_states, decoder_init_states = self.model.get_init_state_shape(self.batch_size)
         # build data iterator
-        data_stream = Seq2seqDataStream(self.encoder_train_data_path, self.decoder_train_data_path, self.vocab, self.vocab, self.buckets, self.batch_size, max_sentence_num=self.train_max_samples)
+        data_stream = Seq2seqDataStream(self.encoder_train_data_path, self.decoder_train_data_path, self.vocab,
+                                        self.vocab, self.buckets, self.batch_size,
+                                        max_sentence_num=self.train_max_samples)
         data_loader = Seq2seqMaskedBucketIoStreamIter(data_stream,
-                                               encoder_init_states, decoder_init_states, max(self.buckets), self.batch_size)
+                                                      encoder_init_states, decoder_init_states, max(self.buckets),
+                                                      self.batch_size)
         return data_loader
 
     @property

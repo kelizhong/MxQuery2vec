@@ -2,10 +2,16 @@ import mxnet as mx
 
 from network.rnn.lstm import lstm, LSTMState
 from base.decoder import Decoder
+'''
+Papers:
+[1] Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation (http://arxiv.org/abs/1406.1078)
+'''
 
 
 class LstmDecoder(Decoder):
-    """decoder
+    """Lstm decoder, accept the encoder to init the state. Implementation base on[1]
+        y(t) = LSTM(s(t-1), y(t-1), C); Where s is the hidden state of the LSTM (h and c)
+        y(0) = LSTM(s0, C); C is the context vector from the encoder
     Parameters
     ----------
     seq_len: int
@@ -27,16 +33,17 @@ class LstmDecoder(Decoder):
     name: str
         decoder name
     """
+
     def __init__(self, seq_len, use_masking,
                  hidden_unit_num,
                  vocab_size, embed_size,
                  dropout=0.0, layer_num=1,
                  embed_weight=None, name='decoder'):
         super(LstmDecoder, self).__init__(seq_len, use_masking,
-                 hidden_unit_num,
-                 vocab_size, embed_size,
-                 dropout=dropout, layer_num=layer_num,
-                 embed_weight=embed_weight, name=name)
+                                          hidden_unit_num,
+                                          vocab_size, embed_size,
+                                          dropout=dropout, layer_num=layer_num,
+                                          embed_weight=embed_weight, name=name)
 
     def decode(self, init_state):
 
@@ -67,7 +74,6 @@ class LstmDecoder(Decoder):
             if self.use_masking:
                 mask = masks[seq_idx]
 
-            # stack LSTM
             for i in range(self.layer_num):
                 if i == 0:
                     dp_ratio = 0.

@@ -2,17 +2,12 @@ import six
 import abc
 from network.rnn.lstm import LSTMParam, LSTMState
 import mxnet as mx
-'''
-Papers:
-[1] Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation (http://arxiv.org/abs/1406.1078)
-'''
 
 
 @six.add_metaclass(abc.ABCMeta)
 class Decoder(object):
-    """ A decoder abstract interface object[1].
-        y(t) = LSTM(s(t-1), y(t-1), C); Where s is the hidden state of the LSTM (h and c)
-        y(0) = LSTM(s0, C); C is the context vector from the encoder.
+    """ A decoder abstract interface object.
+
     Parameters
     ----------
     seq_len: int
@@ -58,7 +53,6 @@ class Decoder(object):
         init_weight = mx.sym.Variable("decoder_init_weight")
         init_bias = mx.sym.Variable("decoder_init_bias")
         # decoder lstm parameters
-
         init_h = mx.sym.FullyConnected(data=init_state, num_hidden=self.hidden_unit_num * self.layer_num,
                                        weight=init_weight, bias=init_bias, name='init_fc')
         init_h = mx.sym.Activation(data=init_h, act_type='tanh', name='init_act')
@@ -81,7 +75,7 @@ class Decoder(object):
 
     @staticmethod
     def get_init_state_shape(batch_size, decoder_layer_num, decoder_hidden_unit_num):
-        """initialize states for lstm decoder"""
+        """return init states for lstm decoder"""
 
         decoder_init_c = [('decoder_l%d_init_c' % l, (batch_size, decoder_hidden_unit_num)) for l in
                           range(decoder_layer_num)]

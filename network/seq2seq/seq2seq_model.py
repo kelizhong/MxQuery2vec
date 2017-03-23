@@ -9,14 +9,15 @@ from utils.decorator_util import memoized
 '''
 Papers:
 [1] Neural Machine Translation by Jointly Learning to Align and Translate(https://arxiv.org/pdf/1409.0473v6.pdf)
+[2] Grammar as a Foreign Language(https://arxiv.org/abs/1412.7449)
 '''
 
 
 class Seq2seqModel(Model):
     """Sequence-to-sequence model with attention and for multiple buckets.
     This class implements a multi-layer recurrent neural network as encoder,
-    and an attention-based decoder. This is the same as the model described in
-    this paper: http://arxiv.org/abs/1412.7449 - please look there for details,
+    and an [attention-based, to-do] decoder. This is the same as the model described in
+    these papers[1] and [2] - please look there for details,
     or into the seq2seq library for complete model implementation.
     In this class, the encoder is bi-Directional Lstm, the decoder is not attention base
     Parameters
@@ -35,7 +36,7 @@ class Seq2seqModel(Model):
 
     @memoized
     def get_init_state_shape(self, batch_size):
-        """initalize states for LSTM encoder and decoder"""
+        """ return init-states for LSTM encoder and decoder"""
 
         encoder_init_states = BiDirectionalLstmEncoder.get_init_state_shape(batch_size, self.encoder_layer_num,
                                                                             self.encoder_hidden_unit_num)

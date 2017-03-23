@@ -1,4 +1,3 @@
-import numpy as np
 from operator import itemgetter
 import mxnet as mx
 

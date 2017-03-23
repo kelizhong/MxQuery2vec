@@ -10,7 +10,36 @@ import numpy as np
 
 
 class Seq2seqDataStream(object):
-    def __init__(self, encoder_path, decoder_path, encoder_vocab, decoder_vocab, buckets, batch_size, max_sentence_num=sys.maxsize):
+    """masked bucketing iterator for seq2seq model. This class is only used for test
+
+    Parameters
+    ----------
+    encoder_path : str
+        encoder corpus path
+    decoder_path: str
+        decoder corpus path
+    encoder_vocab: dict
+        vocabulary from encoder corpus.
+    decoder_vocab: dict
+        vocabulary from decoder corpus.
+    buckets : list of int
+        size of data buckets.
+    batch_size : int
+        batch_size of data
+    ignore_label : int
+        key for ignore label, the label value will be ignored during backward in softmax. Recommend to set 0
+    dtype : str, default 'float32'
+        data type
+    max_sentence_num: int
+        the max size of sentence to read
+    Notes
+    -----
+    - For query2vec, the vocabulary in encoder is the same with the vocabulary in decoder.
+        The vocabulary is from all the corpus including encoder corpus(search query) adn decoder corpus(asin information)
+    """
+
+    def __init__(self, encoder_path, decoder_path, encoder_vocab, decoder_vocab, buckets, batch_size, ignore_label=0,
+                 dtype='float32', max_sentence_num=sys.maxsize):
         self.encoder_path = encoder_path
         self.decoder_path = decoder_path
         self.buckets = buckets
@@ -19,6 +48,8 @@ class Seq2seqDataStream(object):
         self.max_sentence_num = max_sentence_num
         self.data_gen = self.data_generator()
         self.batch_size = batch_size
+        self.ignore_label = ignore_label
+        self.dtype = dtype
         self.bucket_queue = dict()
         self._init_queue()
 
@@ -50,7 +81,7 @@ class Seq2seqDataStream(object):
 
         while True:
             encoder_words, decoder_words = self.data_gen.next()
-            #print(encoder_words, decoder_words)
+            # print(encoder_words, decoder_words)
             bucket, queue = self.add_to_queue(encoder_words, decoder_words)
             if queue:
                 return self.get_batch_data_from_queue(bucket, queue)
@@ -79,12 +110,14 @@ class Seq2seqDataStream(object):
 
     def get_batch_data_from_queue(self, bucket, queue):
         batch_size = self.batch_size
+        ignore_label = self.ignore_label
+        dtype = self.dtype
         assert len(queue) >= batch_size, "size of {} queue less than batch size {}".format(bucket, batch_size)
-        encoder_data = np.zeros((batch_size, bucket[0]))
-        encoder_mask_data = np.zeros((batch_size, bucket[0]))
-        decoder_data = np.zeros((batch_size, bucket[1]))
-        decoder_mask_data = np.zeros((batch_size, bucket[1]))
-        label_data = np.zeros((batch_size, bucket[1]))
+        encoder_data = np.full((batch_size, bucket[0]), ignore_label, dtype=dtype)
+        encoder_mask_data = np.full((batch_size, bucket[0]), ignore_label, dtype=dtype)
+        decoder_data = np.full((batch_size, bucket[1]), ignore_label, dtype=dtype)
+        decoder_mask_data = np.full((batch_size, bucket[1]), ignore_label, dtype=dtype)
+        label_data = np.full((batch_size, bucket[1]), ignore_label, dtype=dtype)
         for i in xrange(batch_size):
             encoder_sentence_id, decoder_sentence_id, label_id = queue.popleft()
             encoder_data[i, :len(encoder_sentence_id)] = encoder_sentence_id
@@ -107,6 +140,6 @@ class Seq2seqDataStream(object):
 if __name__ == '__main__':
     vocab = load_pickle_object('../data/vocabulary/vocab.pkl')
     s = Seq2seqDataStream('../data/query2vec/train_corpus/small.enc', '../data/query2vec/train_corpus/small.dec', vocab,
-                          vocab, 'fds')
+                          vocab, [(3, 10), (3, 20), (5, 20), (7, 30)], 3)
     for encoder_data, encoder_mask_data, decoder_data, decoder_mask_data, label_data, bucket in s:
         print(encoder_data, decoder_data)

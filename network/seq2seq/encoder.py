@@ -39,6 +39,7 @@ class BiDirectionalLstmEncoder(Encoder):
                                                        name=name)
 
     def encode(self):
+        """return last hidden state for decoder in seq2sseq model"""
         forward_param_cells = self.forward_param_cells
         forward_last_states = self.forward_last_states
         backward_param_cells = self.backward_param_cells

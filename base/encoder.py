@@ -52,7 +52,8 @@ class Encoder(object):
         self._init_cell_parameter()
 
     def _init_cell_parameter(self):
-        # encoder bi-lstm parameters
+        """encoder bi-lstm parameters"""
+        # forward part
         for i in range(self.layer_num):
             self.forward_param_cells.append(LSTMParam(i2h_weight=mx.sym.Variable("forward_encoder_l%d_i2h_weight" % i),
                                                       i2h_bias=mx.sym.Variable("forward_encoder_l%d_i2h_bias" % i),
@@ -62,6 +63,7 @@ class Encoder(object):
                                       h=mx.sym.Variable("forward_encoder_l%d_init_h" % i))
             self.forward_last_states.append(forward_state)
         assert (len(self.forward_last_states) == self.layer_num)
+        # backward part
         for i in range(self.layer_num):
             self.backward_param_cells.append(
                 LSTMParam(i2h_weight=mx.sym.Variable("backward_encoder_l%d_i2h_weight" % i),
@@ -74,12 +76,13 @@ class Encoder(object):
         assert (len(self.backward_last_states) == self.layer_num)
 
     def _init_embedding_weight(self):
-        # word embedding weight
+        """word embedding weight"""
         if self.embed_weight is None:
             self.embed_weight = mx.sym.Variable("{}_embed_weight".format(self.name))
 
     @staticmethod
     def get_encoder_last_state(forward_hidden_state, backward_hidden_state):
+        """return the last state. Decoder use it to initialize the state"""
         encoder_last_state = mx.sym.Concat(forward_hidden_state, backward_hidden_state, dim=1,
                                            name='encoder_last_state')
 
@@ -87,7 +90,7 @@ class Encoder(object):
 
     @staticmethod
     def get_init_state_shape(batch_size, encoder_layer_num, encoder_hidden_unit_num):
-        """initalize states for bi-LSTM"""
+        """return init-states for bi-LSTM"""
 
         forward_encoder_init_c = [('forward_encoder_l%d_init_c' % l, (batch_size, encoder_hidden_unit_num))
                                   for l
