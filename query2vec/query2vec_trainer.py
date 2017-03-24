@@ -2,17 +2,18 @@
 
 import logging
 import sys
+
 import mxnet as mx
 import numpy as np
+
+from base.model import encoder_parameter, decoder_parameter
 from base.trainer import Trainer
-from masked_bucket_io import MaskedBucketSentenceIter
-from seq2seq_bucket_io_stream import Seq2seqMaskedBucketIoStreamIter
-from seq2seq_data_stream import Seq2seqDataStream
+from data_io.data_stream.seq2seq_data_stream import Seq2seqDataStream
 from metric.seq2seq_metric import MetricManage
 from metric.speedometer import Speedometer
 from network.seq2seq.seq2seq_model import Seq2seqModel
-from base.model import encoder_parameter, decoder_parameter
-from utils.data_util import read_data, sentence2id, load_pickle_object
+from seq2seq_bucket_io_stream import Seq2seqMaskedBucketIoStreamIter
+from utils.data_util import load_pickle_object
 from utils.decorator_util import memoized
 from utils.model_util import load_model, save_model_callback
 from utils.record_util import RecordType
@@ -148,7 +149,7 @@ class Query2vecTrainer(Trainer):
     @memoized
     def word2vec(self):
         """load pretrain word2vec"""
-        w2v = load_pickle_object(self.word2vec_path) if not self.word2vec_path else None
+        w2v = load_pickle_object(self.word2vec_path) if self.word2vec_path else None
         return w2v
 
     @property
