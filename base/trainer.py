@@ -15,10 +15,11 @@ from utils.file_util import ensure_dir_exists
 class Trainer(object):
     """A trainer abstract interface object."""
 
-    def __init__(self, mxnet_para, optimizer_para, model_para):
+    def __init__(self, mxnet_para, optimizer_para, model_para, data_para):
         self._mxnet_para = mxnet_para
         self._optimizer_para = optimizer_para
         self._model_para = model_para
+        self._data_para = data_para
         self._init_parameter()
         self._init_log(self.log_level, self.log_path)
         # print the variable before training
@@ -62,9 +63,11 @@ class Trainer(object):
         assert isinstance(self._mxnet_para, RecordType)
         assert isinstance(self._optimizer_para, RecordType)
         assert isinstance(self._model_para, RecordType)
+        assert isinstance(self._data_para, RecordType)
 
         for (parameter, value) in chain(self._mxnet_para.iteritems(),
-                                        self._model_para.iteritems()):
+                                        self._model_para.iteritems(),
+                                        self._data_para.iteritems()):
             setattr(self, parameter, value)
 
         # create kvstore

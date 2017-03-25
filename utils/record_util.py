@@ -18,6 +18,13 @@ class RecordType(object):
 
         self.record = self._dict_make(**dict(strict_fields))
 
+    @staticmethod
+    def _is_none_type(arg):
+        if isinstance(arg, type(None)):
+            return True
+        return False
+
+
     def _typecheck(self, arg, fieldtype, warning=False):
         """Takes in an argument and a field type and trys to recast if necessary, then returns recast argument"""
         if not isinstance(arg, fieldtype):
@@ -42,7 +49,8 @@ class RecordType(object):
             except KeyError:
                 kwargs[name] = default  # Throw the default value in if missing
             else:
-                value = self._typecheck(value, type(default), warning)  # Typecheck if found
+                if not self._is_none_type(default):
+                    value = self._typecheck(value, type(default), warning)  # Typecheck if found
                 kwargs[name] = value
 
         return vars(self)[self.typename](**kwargs)

@@ -8,11 +8,12 @@ import numpy as np
 
 from base.model import encoder_parameter, decoder_parameter
 from base.trainer import Trainer
+from data_io.distribute_stream.seq2seq_data_receiver import Seq2seqDataReceiver
 from data_io.data_stream.seq2seq_data_stream import Seq2seqDataStream
+from data_io.seq2seq_bucket_io_iter import Seq2seqMaskedBucketIoIter
 from metric.seq2seq_metric import MetricManage
 from metric.speedometer import Speedometer
 from network.seq2seq.seq2seq_model import Seq2seqModel
-from seq2seq_bucket_io_stream import Seq2seqMaskedBucketIoStreamIter
 from utils.data_util import load_pickle_object
 from utils.decorator_util import memoized
 from utils.model_util import load_model, save_model_callback
@@ -61,8 +62,13 @@ mxnet_parameter = RecordType('mxnet_parameter', [('kv_store', 'local'), ('hosts_
                                                  ('model_path_prefix', 'query2vec'), ('enable_evaluation', False),
                                                  ('ignore_label', 0),
                                                  ('load_epoch', -1), ('train_max_samples', sys.maxsize),
-                                                 ('word2vec_path', './data/word2vec/model/w2v.pkl'),
-                                                 ('monitor_pattern', '.*'), ("metric", "perplexity")])
+                                                 ('monitor_pattern', '.*'), ("metric", "perplexity"),
+                                                 ('save_checkpoint_x_batch', 1000)])
+
+data_parameter = RecordType('data_parameter',
+                            [('encoder_train_data_path', None), ('decoder_train_data_path', None),
+                             ('vocabulary_path', ''),
+                             ('word2vec_path', './data/word2vec/model/w2v.pkl'), ('ip_addr', None), ('port', None)])
 """optimizer parameter
 Parameter:
     optimizer: str
@@ -114,9 +120,9 @@ model_parameter = RecordType('model_parameter',
 
 
 class Query2vecTrainer(Trainer):
-    def __init__(self, encoder_train_data_path, decoder_train_data_path, vocabulary_path,
+    def __init__(self,
                  mxnet_para=mxnet_parameter, optimizer_para=optimizer_parameter,
-                 model_para=model_parameter):
+                 model_para=model_parameter, data_para=data_parameter):
         """Trainer for query2vec model
         Args:
             encoder_train_data_path: str
@@ -133,10 +139,13 @@ class Query2vecTrainer(Trainer):
                 model parameter
         """
         super(Query2vecTrainer, self).__init__(mxnet_para=mxnet_para, optimizer_para=optimizer_para,
-                                               model_para=model_para)
-        self.encoder_train_data_path = encoder_train_data_path
-        self.decoder_train_data_path = decoder_train_data_path
-        self.vocabulary_path = vocabulary_path
+                                               model_para=model_para, data_para=data_para)
+        self.check_args()
+
+    def check_args(self):
+        if (self.ip_addr or self.port) and (self.encoder_train_data_path or self.decoder_train_data_path):
+            print "ip_addr and port|encoder_train_data_path and decoder_train_data_path are mutually exclusive ..."
+            sys.exit(2)
 
     @property
     @memoized
@@ -176,17 +185,30 @@ class Query2vecTrainer(Trainer):
         return m
 
     @property
+    def data_stream_from_file(self):
+        data_stream = Seq2seqDataStream(self.encoder_train_data_path, self.decoder_train_data_path, self.vocab,
+                                        self.vocab, self.buckets, self.batch_size,
+                                        max_sentence_num=self.train_max_samples)
+        return data_stream
+
+    @property
+    def data_stream_from_zmq(self):
+        data_stream = Seq2seqDataReceiver(self.ip_addr, self.port, self.save_checkpoint_x_batch)
+        return data_stream
+
+    @property
     @memoized
     def train_data_loader(self):
         # get states shapes
         encoder_init_states, decoder_init_states = self.model.get_init_state_shape(self.batch_size)
         # build data iterator
-        data_stream = Seq2seqDataStream(self.encoder_train_data_path, self.decoder_train_data_path, self.vocab,
-                                        self.vocab, self.buckets, self.batch_size,
-                                        max_sentence_num=self.train_max_samples)
-        data_loader = Seq2seqMaskedBucketIoStreamIter(data_stream,
-                                                      encoder_init_states, decoder_init_states, max(self.buckets),
-                                                      self.batch_size)
+        # data_stream = Seq2seqDataStream(self.encoder_train_data_path, self.decoder_train_data_path, self.vocab,
+        #                                self.vocab, self.buckets, self.batch_size,
+        #                                max_sentence_num=self.train_max_samples)
+        data_stream = self.data_stream_from_zmq
+        data_loader = Seq2seqMaskedBucketIoIter(data_stream,
+                                                encoder_init_states, decoder_init_states, max(self.buckets),
+                                                self.batch_size)
         return data_loader
 
     @property
@@ -253,7 +275,7 @@ class Query2vecTrainer(Trainer):
         logging.info("begin training")
         # run
         model.fit(train_data_loader,
-                  begin_epoch=self.load_epoch if self.load_epoch else 0,
+                  begin_epoch=self.load_epoch if self.load_epoch > 0 else 0,
                   num_epoch=self.num_epoch,
                   eval_data=eval_data_loader if self.enable_evaluation else None,
                   eval_metric=metrics,

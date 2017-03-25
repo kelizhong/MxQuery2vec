@@ -24,7 +24,7 @@ class DataBatch(object):
         return [(n, x.shape) for n, x in zip(self.label_names, self.label)]
 
 
-class Seq2seqMaskedBucketIoStreamIter(mx.io.DataIter):
+class Seq2seqMaskedBucketIoIter(mx.io.DataIter):
     """DataIter to given number of batches per epoch for seq2seq model.
        Every batch contains encoder, decoder data, mask data and bucket key.
        data_stream: object with iterator

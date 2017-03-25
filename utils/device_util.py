@@ -29,7 +29,7 @@ def get_devices(devices, device_mode='cpu', rank=0, hosts_num=1, workers_num=1):
     rank: int
         the rank of worker node
     hosts_num: int
-        the number of hosts for local/distribute training
+        the number of hosts for local/distribute_stream training
     workers_num: int
         the number of workers in all hosts
     Returns
