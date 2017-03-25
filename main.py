@@ -30,6 +30,8 @@ def parse_args():
     w2v_trainer_parser.set_defaults(action='train_word2vec')
     w2v_dumper_parser = subparsers.add_parser("dump_word2vec")
     w2v_dumper_parser.set_defaults(action='dump_word2vec')
+    q2v_ventiliator_parser = subparsers.add_parser("q2v_ventiliator")
+    q2v_ventiliator_parser.set_defaults(action='q2v_ventiliator')
 
     # model parameter
     q2v_trainer_parser.add_argument('-sln', '--encoder-layer-num', default=1, type=int,
@@ -221,6 +223,19 @@ def parse_args():
                                    help='the file name of the corpus')
     w2v_dumper_parser.add_argument('w2v_save_path', type=str,
                                    help='the file name of the corpus')
+
+    q2v_ventiliator_parser.add_argument('encoder_train_data_path', type=str,
+                                    help='the file name of the encoder input for training')
+    q2v_ventiliator_parser.add_argument('decoder_train_data_path', type=str,
+                                    help='the file name of the decoder input for training')
+    q2v_ventiliator_parser.add_argument('vocabulary_path',
+                                    default=os.path.join(os.getcwd(), 'data', 'vocabulary', 'vocab.pkl'),
+                                    type=str,
+                                    help='vocabulary with he most common words')
+    q2v_ventiliator_parser.add_argument('--ip-addr', type=str, help='ip address')
+    q2v_ventiliator_parser.add_argument('--port', type=str, help='zmq port')
+    q2v_ventiliator_parser.add_argument('-bs', '--batch-size', default=128, type=int,
+                                    help='batch size for each databatch')
     return parser.parse_args()
 
 
@@ -293,3 +308,14 @@ if __name__ == "__main__":
 
         W2vDumper(w2v_model_path=os.path.join(args.model_path, args.model_prefix), vocab_path=args.w2v_vocabulary_path,
                   w2v_save_path=args.w2v_save_path, rank=args.rank, load_epoch=args.load_epoch).dumper()
+    elif args.action == 'q2v_ventiliator':
+        from data_io.distribute_stream.seq2seq_data_ventilator import Seq2seqDataVentilator
+        from data_io.data_stream.seq2seq_data_stream import Seq2seqDataStream
+        from utils.data_util import load_pickle_object
+
+        vocab = load_pickle_object(args.vocabulary_path)
+        s = Seq2seqDataStream(args.encoder_train_data_path,
+                              args.decoder_train_data_path, vocab,
+                              vocab, [(3, 10), (3, 20), (5, 20), (7, 30)], args.batch_size)
+        a = Seq2seqDataVentilator(s)
+        a.produce()
