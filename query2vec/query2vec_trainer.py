@@ -219,8 +219,8 @@ class Query2vecTrainer(Trainer):
     def _load_model_with_pretrain_word2vec(self, embed_weight_name):
         sym, arg_params, aux_params = load_model(self.model_path_prefix, self.kv.rank, self.load_epoch)
         # load the pretrain word2vec only for new model training and word2vec_path is defined
-        if arg_params is None or self.word2vec_path is None:
-            logging.info("create a new model")
+        if arg_params is not None or self.word2vec_path is None:
+            logging.info("reuse existed model")
             return sym, arg_params, aux_params
         logging.info("initialize embedding weight using pretrain word2vec model")
         w2v = self.word2vec

@@ -44,36 +44,41 @@ class Encoder(object):
         self.layer_num = layer_num
         self.embed_weight = embed_weight
         self.name = name
-        self.forward_param_cells = []
-        self.forward_last_states = []
-        self.backward_param_cells = []
-        self.backward_last_states = []
+        #self.forward_param_cells = []
+        #self.forward_last_states = []
+        #self.backward_param_cells = []
+        #self.backward_last_states = []
         self._init_embedding_weight()
-        self._init_cell_parameter()
+        #self._init_cell_parameter()
 
-    def _init_cell_parameter(self):
+    def init_cell_parameter(self):
         """encoder bi-lstm parameters"""
+        forward_param_cells = []
+        forward_last_states = []
+        backward_param_cells = []
+        backward_last_states = []
         # forward part
         for i in range(self.layer_num):
-            self.forward_param_cells.append(LSTMParam(i2h_weight=mx.sym.Variable("forward_encoder_l%d_i2h_weight" % i),
+            forward_param_cells.append(LSTMParam(i2h_weight=mx.sym.Variable("forward_encoder_l%d_i2h_weight" % i),
                                                       i2h_bias=mx.sym.Variable("forward_encoder_l%d_i2h_bias" % i),
                                                       h2h_weight=mx.sym.Variable("forward_encoder_l%d_h2h_weight" % i),
                                                       h2h_bias=mx.sym.Variable("forward_encoder_l%d_h2h_bias" % i)))
             forward_state = LSTMState(c=mx.sym.Variable("forward_encoder_l%d_init_c" % i),
                                       h=mx.sym.Variable("forward_encoder_l%d_init_h" % i))
-            self.forward_last_states.append(forward_state)
-        assert (len(self.forward_last_states) == self.layer_num)
+            forward_last_states.append(forward_state)
+        assert (len(forward_last_states) == self.layer_num)
         # backward part
         for i in range(self.layer_num):
-            self.backward_param_cells.append(
+            backward_param_cells.append(
                 LSTMParam(i2h_weight=mx.sym.Variable("backward_encoder_l%d_i2h_weight" % i),
                           i2h_bias=mx.sym.Variable("backward_encoder_l%d_i2h_bias" % i),
                           h2h_weight=mx.sym.Variable("backward_encoder_l%d_h2h_weight" % i),
                           h2h_bias=mx.sym.Variable("backward_encoder_l%d_h2h_bias" % i)))
             backward_state = LSTMState(c=mx.sym.Variable("backward_encoder_l%d_init_c" % i),
                                        h=mx.sym.Variable("backward_encoder_l%d_init_h" % i))
-            self.backward_last_states.append(backward_state)
-        assert (len(self.backward_last_states) == self.layer_num)
+            backward_last_states.append(backward_state)
+        assert (len(backward_last_states) == self.layer_num)
+        return forward_param_cells, forward_last_states, backward_param_cells, backward_last_states
 
     def _init_embedding_weight(self):
         """word embedding weight"""
