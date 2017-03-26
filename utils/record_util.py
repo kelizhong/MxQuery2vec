@@ -24,7 +24,6 @@ class RecordType(object):
             return True
         return False
 
-
     def _typecheck(self, arg, fieldtype, warning=False):
         """Takes in an argument and a field type and trys to recast if necessary, then returns recast argument"""
         if not isinstance(arg, fieldtype):

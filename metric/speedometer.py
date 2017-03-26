@@ -37,10 +37,10 @@ class Speedometer(object):
                     name_value = param.eval_metric.get_name_value()
                     param.eval_metric.reset()
                     for name, value in name_value:
-                        logging.info('Node[%d] Epoch[%d] Batch [%d]\tSpeed: %.2f samples/sec\tTrain-%s=%f',
+                        logging.info('Worker[%d] Epoch[%d] Batch [%d]\tSpeed: %.2f samples/sec\tTrain-%s=%f',
                                      self.rank, param.epoch, count, speed, name, value)
                 else:
-                    logging.info("Node[%d] Iter[%d] Batch [%d]\tSpeed: %.2f samples/sec",
+                    logging.info("Worker[%d] Iter[%d] Batch [%d]\tSpeed: %.2f samples/sec",
                                  self.rank, param.epoch, count, speed)
                 self.tic = time.time()
         else:

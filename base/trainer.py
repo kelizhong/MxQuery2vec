@@ -59,7 +59,7 @@ class Trainer(object):
             logging.info("%s: %s" % (arg, value))
 
     def _init_parameter(self):
-        """initialize mxnet, optimizer, model parameter and kv store for training"""
+        """initialize mxnet, optimizer, model, data parameter and kv store for training"""
         assert isinstance(self._mxnet_para, RecordType)
         assert isinstance(self._optimizer_para, RecordType)
         assert isinstance(self._model_para, RecordType)

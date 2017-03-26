@@ -26,7 +26,7 @@ class Word2vec(object):
         self.vocab_size = vocab_size
 
     def network_symbol(self):
-        """word2vec network stmbol for training"""
+        """word2vec network symbol for training"""
         input_num = 2 * self.window_size
         data = mx.sym.Variable('data')
         label = mx.sym.Variable('label')

@@ -317,5 +317,5 @@ if __name__ == "__main__":
         s = Seq2seqDataStream(args.encoder_train_data_path,
                               args.decoder_train_data_path, vocab,
                               vocab, [(3, 10), (3, 20), (5, 20), (7, 30)], args.batch_size)
-        a = Seq2seqDataVentilator(s)
+        a = Seq2seqDataVentilator(s, port=args.port)
         a.produce()
