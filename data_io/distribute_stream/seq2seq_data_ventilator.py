@@ -30,6 +30,6 @@ class Seq2seqDataVentilator(object):
 if __name__ == '__main__':
     vocab = load_pickle_object('../../data/vocabulary/vocab.pkl')
     s = Seq2seqDataStream('../../data/query2vec/train_corpus/small.enc', '../../data/query2vec/train_corpus/small.dec', vocab,
-                          vocab, [(3, 10), (3, 20), (5, 20), (7, 30)], 3)
+                          vocab, [(3, 10), (3, 20), (5, 20), (7, 30)], 2)
     a = Seq2seqDataVentilator(s)
     a.produce()

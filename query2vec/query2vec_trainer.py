@@ -11,6 +11,7 @@ from base.trainer import Trainer
 from data_io.distribute_stream.seq2seq_data_receiver import Seq2seqDataReceiver
 from data_io.data_stream.seq2seq_data_stream import Seq2seqDataStream
 from data_io.seq2seq_bucket_io_iter import Seq2seqMaskedBucketIoIter
+from masked_bucket_io import MaskedBucketSentenceIter
 from metric.seq2seq_metric import MetricManage
 from metric.speedometer import Speedometer
 from network.seq2seq.seq2seq_model import Seq2seqModel
@@ -205,6 +206,9 @@ class Query2vecTrainer(Trainer):
         data_loader = Seq2seqMaskedBucketIoIter(data_stream,
                                                 encoder_init_states, decoder_init_states, max(self.buckets),
                                                 self.batch_size)
+        #data_loader = MaskedBucketSentenceIter(self.encoder_train_data_path, self.decoder_train_data_path,
+        #                                       self.vocab,self.vocab,self.buckets, self.batch_size,encoder_init_states, decoder_init_states,
+        #                                       max_sentence_num=self.train_max_samples)
         return data_loader
 
     @property
@@ -239,7 +243,7 @@ class Query2vecTrainer(Trainer):
         sym, arg_params, aux_params = self._load_model_with_pretrain_word2vec('share_embed_weight')
 
         # save model callback
-        checkpoint = save_model_callback(self.model_path_prefix, self.kv.rank, self.save_checkpoint_freq)
+        checkpoint = save_model_callback(self.model_path_prefix, rank, self.save_checkpoint_freq)
 
         devices = self.ctx_devices
 

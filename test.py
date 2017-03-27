@@ -271,13 +271,13 @@ if __name__ == "__main__":
     #c = encode(word_tokenize("thank you"), model_buckets, vocab).asnumpy()
     #print(cosSimilar(b, c))
     a = encode(word_tokenize("women nike shoe"), model_buckets, vocab).asnumpy()
-    b = encode(word_tokenize("mobile phone"), model_buckets, vocab).asnumpy()
+    b = encode(word_tokenize("iphone"), model_buckets, vocab).asnumpy()
     print(cosSimilar(a, b))
     c = encode(word_tokenize("iphone6"), model_buckets, vocab).asnumpy()
     print(cosSimilar(b, c))
 
     target_ndarray = mx.nd.zeros((1,), ctx=mx.cpu())
-    en = reponse(15, word_tokenize("iphone"), model_buckets, vocab, vocab,
+    en = reponse(15, word_tokenize("iphone6"), model_buckets, vocab, vocab,
                        revert_vocab,
                        target_ndarray)
     en = ' '.join(en)

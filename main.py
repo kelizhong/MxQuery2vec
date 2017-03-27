@@ -71,7 +71,7 @@ def parse_args():
     q2v_trainer_parser.add_argument('-ne', '--num-epoch', dest='num_epoch', help='end epoch of query2vec training',
                                     default=100000, type=int)
 
-    q2v_trainer_parser.add_argument('-bs', '--batch-size', default=3, type=int,
+    q2v_trainer_parser.add_argument('-bs', '--batch-size', default=2, type=int,
                                     help='batch size for each databatch')
 
     # optimizer parameter
@@ -89,7 +89,7 @@ def parse_args():
     q2v_trainer_parser.add_argument('-lf', '--log-freq', default=1000, type=int,
                                     help='the frequency to printout the training verbose information')
 
-    q2v_trainer_parser.add_argument('-scf', '--save-checkpoint-freq', default=100, type=int,
+    q2v_trainer_parser.add_argument('-scf', '--save-checkpoint-freq', default=1, type=int,
                                     help='the frequency to save checkpoint')
     q2v_trainer_parser.add_argument('--save_checkpoint-x-batch',
                                     help='save checkpoint for every x batches',

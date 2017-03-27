@@ -56,7 +56,6 @@ class Seq2seqDataStream(object):
     def _init_queue(self):
         for bucket_key in self.buckets:
             self.bucket_queue.setdefault(bucket_key, deque())
-        self.curr_queue = self.bucket_queue.get(self.buckets[0])
 
     def data_generator(self):
         with codecs.open(self.encoder_path) as encoder, codecs.open(self.decoder_path) as decoder:
@@ -113,11 +112,16 @@ class Seq2seqDataStream(object):
         ignore_label = self.ignore_label
         dtype = self.dtype
         assert len(queue) >= batch_size, "size of {} queue less than batch size {}".format(bucket, batch_size)
-        encoder_data = np.full((batch_size, bucket[0]), ignore_label, dtype=dtype)
-        encoder_mask_data = np.full((batch_size, bucket[0]), ignore_label, dtype=dtype)
-        decoder_data = np.full((batch_size, bucket[1]), ignore_label, dtype=dtype)
-        decoder_mask_data = np.full((batch_size, bucket[1]), ignore_label, dtype=dtype)
-        label_data = np.full((batch_size, bucket[1]), ignore_label, dtype=dtype)
+        #encoder_data = np.full((batch_size, bucket[0]), ignore_label)
+        #encoder_mask_data = np.full((batch_size, bucket[0]), ignore_label)
+        #decoder_data = np.full((batch_size, bucket[1]), ignore_label)
+        #decoder_mask_data = np.full((batch_size, bucket[1]), ignore_label)
+        #label_data = np.full((batch_size, bucket[1]), ignore_label, dtype=dtype)
+        encoder_data = np.zeros((batch_size, bucket[0]))
+        encoder_mask_data = np.zeros((batch_size, bucket[0]))
+        decoder_data = np.zeros((batch_size, bucket[1]))
+        decoder_mask_data = np.zeros((batch_size, bucket[1]))
+        label_data = np.zeros((batch_size, bucket[1]))
         for i in xrange(batch_size):
             encoder_sentence_id, decoder_sentence_id, label_id = queue.popleft()
             encoder_data[i, :len(encoder_sentence_id)] = encoder_sentence_id
