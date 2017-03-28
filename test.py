@@ -222,7 +222,7 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 11
+    args.load_epoch = 34
 
     # load vocabulary
     vocab = load_pickle_object(args.vocabulary_path)
@@ -271,13 +271,13 @@ if __name__ == "__main__":
     #c = encode(word_tokenize("thank you"), model_buckets, vocab).asnumpy()
     #print(cosSimilar(b, c))
     a = encode(word_tokenize("women nike shoe"), model_buckets, vocab).asnumpy()
-    b = encode(word_tokenize("iphone"), model_buckets, vocab).asnumpy()
+    b = encode(word_tokenize("android"), model_buckets, vocab).asnumpy()
     print(cosSimilar(a, b))
-    c = encode(word_tokenize("iphone6"), model_buckets, vocab).asnumpy()
+    c = encode(word_tokenize("iphone"), model_buckets, vocab).asnumpy()
     print(cosSimilar(b, c))
 
     target_ndarray = mx.nd.zeros((1,), ctx=mx.cpu())
-    en = reponse(15, word_tokenize("iphone6"), model_buckets, vocab, vocab,
+    en = reponse(15, word_tokenize("iphone"), model_buckets, vocab, vocab,
                        revert_vocab,
                        target_ndarray)
     en = ' '.join(en)

@@ -30,9 +30,13 @@ def read_data(encoder_path, decoder_path, max_line_num=sys.maxsize):
 
 
 def words_gen(filename, bos=None, eos=None):
+    num = 1
     """Return each word in a line."""
     with codecs.open(filename, encoding='utf-8', errors='ignore') as f:
         for line in f:
+            num += 1
+            if num % 10000 == 0:
+                print(num)
             tokens = word_tokenize(line)
             tokens = [bos] + tokens if bos is not None else tokens
             tokens = tokens + [eos] if eos is not None else tokens
@@ -41,6 +45,14 @@ def words_gen(filename, bos=None, eos=None):
                 if len(w):
                     yield w
 
+
+def sentence_gen(filename):
+    """Return each sentence in a line."""
+    with codecs.open(filename, encoding='utf-8', errors='ignore') as f:
+        for line in f:
+            line = line.strip().lower()
+            if len(line):
+                yield line
 
 def load_pickle_object(path):
     """
