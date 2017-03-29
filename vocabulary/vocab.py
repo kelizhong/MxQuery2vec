@@ -4,7 +4,9 @@ import os
 from collections import Counter
 import time
 from utils.pickle_util import save_obj_pickle
-from utils.data_util import words_gen
+from vocabulary.ventilator import VentilatorProcess
+from vocabulary.worker import WorkerProcess
+from vocabulary.collector import CollectorProcess
 
 
 class Vocab(object):
@@ -32,12 +34,16 @@ class Vocab(object):
     overwrite: bool
         whether to overwrite the existed vocabulary
     """
-    def __init__(self, corpus_files, vocab_file, special_words=dict(), top_words=40000,
+
+    def __init__(self, corpus_files, vocab_save_path, ip='127.0.0.1', ventilator_port='5555', collector_port='5556',
+                 special_words=dict(),
                  log_level=logging.INFO,
                  log_path='./', overwrite=True):
         self.corpus_files = corpus_files
-        self.vocab_file = vocab_file
-        self.top_words = top_words
+        self.vocab_save_path = vocab_save_path
+        self.ip = ip
+        self.ventilator_port = ventilator_port
+        self.collector_port = collector_port
         self.special_words = special_words
         self.overwrite = overwrite
         self.log_path = log_path
@@ -51,19 +57,21 @@ class Vocab(object):
         logging.root.addHandler(file_handler)
 
     def create_dictionary(self):
-        """Start execution of word-frequency."""
-        global_counter = Counter()
-        for filename in self.corpus_files:
-            logging.info("Counting words in %s" % filename)
-            counter = Counter(words_gen(filename))
-            logging.info("%d unique words in %s with a total of %d words."
-                         % (len(counter), filename, sum(counter.values())))
-            global_counter.update(counter)
-
+        process_pool = []
+        v = VentilatorProcess(self.corpus_files, self.ip, self.ventilator_port)
+        v.start()
+        process_pool.append(v)
+        for i in xrange(6):
+            w = WorkerProcess(self.ip, self.ventilator_port, self.collector_port, name='WorkerProcess_{}'.format(i))
+            w.start()
+            process_pool.append(w)
+        c = CollectorProcess(self.ip, self.collector_port)
+        counter = Counter(c.collect())
+        self._terminate_process(process_pool)
         logging.info("Finish counting. %d unique words, a total of %d words in all files."
-                     % (len(global_counter), sum(counter.values())))
+                     % (len(counter), sum(counter.values())))
 
-        words_num = len(global_counter)
+        words_num = len(counter)
         special_words_num = len(self.special_words)
 
         assert words_num > len(
@@ -72,7 +80,7 @@ class Vocab(object):
         assert self.top_words > len(
             self.special_words), "the value of most_commond_words_num must be larger than the size of special_words"
 
-        vocab_count = global_counter.most_common(self.top_words - special_words_num)
+        vocab_count = counter.most_common(self.top_words - special_words_num)
         vocab = {}
         idx = special_words_num + 1
         for word, _ in vocab_count:
@@ -81,4 +89,9 @@ class Vocab(object):
                 idx += 1
         vocab.update(self.special_words)
         logging.info("store vocabulary with most_common_words file, vocabulary size: " + str(len(vocab)))
-        save_obj_pickle(vocab, self.vocab_file, self.overwrite)
+        save_obj_pickle(vocab, self.vocab_save_path, self.overwrite)
+
+    def _terminate_process(self, pool):
+        for p in pool:
+            p.terminate()
+            logging.info('terminated process {}'.format(p.name))

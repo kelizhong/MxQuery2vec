@@ -2,7 +2,7 @@ import zmq
 
 
 class Seq2seqDataReceiver(object):
-    def __init__(self, ip_addr, port=5555, send_stop_freq=-1):
+    def __init__(self, ip_addr, port=5556, send_stop_freq=-1):
         context = zmq.Context()
         self.receiver = context.socket(zmq.PULL)
         self.receiver.connect("tcp://{}:{}".format(ip_addr, port))

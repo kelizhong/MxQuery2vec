@@ -32,6 +32,8 @@ def parse_args():
     w2v_dumper_parser.set_defaults(action='dump_word2vec')
     q2v_ventiliator_parser = subparsers.add_parser("q2v_ventiliator")
     q2v_ventiliator_parser.set_defaults(action='q2v_ventiliator')
+    q2v_aksis_ventiliator_parser = subparsers.add_parser("q2v_aksis_ventiliator")
+    q2v_aksis_ventiliator_parser.set_defaults(action='q2v_aksis_ventiliator')
 
     # model parameter
     q2v_trainer_parser.add_argument('-sln', '--encoder-layer-num', default=1, type=int,
@@ -236,6 +238,19 @@ def parse_args():
     q2v_ventiliator_parser.add_argument('--port', type=str, help='zmq port')
     q2v_ventiliator_parser.add_argument('-bs', '--batch-size', default=128, type=int,
                                     help='batch size for each databatch')
+
+    q2v_aksis_ventiliator_parser.add_argument('data_dir', type=str,
+                                    help='the file name of the encoder input for training')
+    q2v_aksis_ventiliator_parser.add_argument('vocabulary_path',
+                                    default=os.path.join(os.getcwd(), 'data', 'vocabulary', 'vocab.pkl'),
+                                    type=str,
+                                    help='vocabulary with he most common words')
+    q2v_aksis_ventiliator_parser.add_argument('-ap', '--action-patterns', nargs=1, action=AppendTupleWithoutDefault, type=str,
+                                    default=['*add', '*search', '*click', '*purchase'])
+    q2v_aksis_ventiliator_parser.add_argument('--ip-addr', type=str, help='ip address')
+    q2v_aksis_ventiliator_parser.add_argument('--port', type=str, help='zmq port')
+    q2v_aksis_ventiliator_parser.add_argument('-bs', '--batch-size', default=128, type=int,
+                                    help='batch size for each databatch')
     return parser.parse_args()
 
 
@@ -276,7 +291,7 @@ if __name__ == "__main__":
             mxnet_para=mxnet_para, optimizer_para=optimizer_para, model_para=model_para, data_para=data_para)
         trainer.train()
     elif args.action == 'query2vec_vocab':
-        from vocabulary.vocabulary import Vocab
+        from vocabulary.vocab import Vocab
 
         vocab = Vocab(args.files, args.vocab_file, top_words=args.top_words,
                       special_words=special_words,
@@ -319,3 +334,8 @@ if __name__ == "__main__":
                               vocab, [(3, 10), (3, 20), (5, 20), (7, 30)], args.batch_size)
         a = Seq2seqDataVentilator(s, port=args.port)
         a.produce()
+    elif args.action == 'q2v_aksis_ventiliator':
+        from data_io.distribute_stream.seq2seq_data_manager import Seq2seqDataManager
+        m = Seq2seqDataManager(args.data_dir, args.vocabulary_path, args.action_patterns, args.batch_size, [(3, 10), (3, 20), (5, 20), (7, 30)])
+        m.start_all()
+

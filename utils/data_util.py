@@ -6,6 +6,7 @@ import codecs
 from common import constant as config
 from nltk.tokenize import word_tokenize
 import itertools
+from common.constant import bos_word, eos_word
 
 
 def read_data(encoder_path, decoder_path, max_line_num=sys.maxsize):
@@ -53,6 +54,7 @@ def sentence_gen(filename):
             line = line.strip().lower()
             if len(line):
                 yield line
+
 
 def load_pickle_object(path):
     """

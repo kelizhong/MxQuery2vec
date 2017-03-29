@@ -1,27 +1,7 @@
 import zmq
-from nltk.tokenize import word_tokenize
-from collections import Counter
-from multiprocessing import Process
 import time
 from appmetrics import metrics
 import logging
-
-class Collector(object):
-    def __init__(self, port='5556'):
-        context = zmq.Context()
-        self.receiver = context.socket(zmq.PULL)
-        self.receiver.bind("tcp://{}:{}".format("127.0.0.1", port))
-
-    def collect(self):
-        num = 0
-        while True:
-            num += 1
-            if num % 10000 == 0:
-                print(num)
-            sentence = self.receiver.recv_pyobj()
-            for word in sentence:
-                if len(word):
-                    yield word
 
 
 class CollectorProcess(object):
@@ -30,18 +10,18 @@ class CollectorProcess(object):
         self.worker_port = worker_port
         context = zmq.Context()
         self.receiver = context.socket(zmq.PULL)
-        self.receiver.bind("tcp://{}:{}".format("127.0.0.1", self.worker_port))
+        self.receiver.bind("tcp://{}:{}".format(self.ip, self.worker_port))
         self.waiting_time = waiting_time
         self.threshold = threshold
 
     def collect(self):
         num = 0
         retry = 0
-        meter = metrics.new_meter("meter_test")
+        meter = metrics.new_meter("meter_speed")
 
         while True:
             num += 1
-            if num % 10000 == 0:
+            if num % 100000 == 0:
                 print(meter.get())
             try:
                 words = self.receiver.recv_pyobj(zmq.NOBLOCK)
@@ -58,10 +38,3 @@ class CollectorProcess(object):
                 if len(word):
                     yield word
 
-
-
-if __name__ == '__main__':
-    c = Collector()
-    global_counter = Counter()
-    counter = Counter(c.collect())
-    print(len(counter))
