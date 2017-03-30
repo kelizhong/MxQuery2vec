@@ -123,6 +123,8 @@ def parse_args():
                                     help='vocabulary with he most common words')
     q2v_trainer_parser.add_argument('--ip-addr', type=str, help='ip address')
     q2v_trainer_parser.add_argument('--port', type=str, help='zmq port')
+    q2v_trainer_parser.add_argument('--top-words', default=40000, type=int,
+                                    help='the max sample num for training')
 
     # vocabulary parameter
 
@@ -251,6 +253,8 @@ def parse_args():
                                     help='batch size for each databatch')
     q2v_aksis_ventiliator_parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,
                                     default=[(3, 10), (3, 20), (5, 20), (7, 30)])
+    q2v_aksis_ventiliator_parser.add_argument('--top-words', default=40000, type=int,
+                                    help='the max sample num for training')
     return parser.parse_args()
 
 
@@ -285,7 +289,7 @@ if __name__ == "__main__":
         data_para = data_parameter(encoder_train_data_path=args.encoder_train_data_path,
                                    decoder_train_data_path=args.decoder_train_data_path,
                                    vocabulary_path=args.vocabulary_path, ip_addr=args.ip_addr, port=args.port,
-                                   word2vec_path=args.word2vec_path)
+                                   word2vec_path=args.word2vec_path, top_words=args.top_words)
 
         trainer = Query2vecTrainer(
             mxnet_para=mxnet_para, optimizer_para=optimizer_para, model_para=model_para, data_para=data_para)
@@ -335,6 +339,6 @@ if __name__ == "__main__":
         a.produce()
     elif args.action == 'q2v_aksis_ventiliator':
         from data_io.distribute_stream.seq2seq_data_manager import Seq2seqDataManager
-        m = Seq2seqDataManager(args.data_dir, args.vocabulary_path, args.action_patterns, args.batch_size, args.buckets)
+        m = Seq2seqDataManager(args.data_dir, args.vocabulary_path, args.top_words, args.action_patterns, args.batch_size, args.buckets)
         m.start_all()
 
