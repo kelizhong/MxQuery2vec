@@ -7,7 +7,7 @@ import time
 
 class WorkerProcess(Process):
     def __init__(self, ip, ventilator_port, port, waiting_time=0.1, threshold=10, name='WorkerProcess'):
-        Process.__init__(self, name)
+        Process.__init__(self)
         self.ip = ip
         self.ventilator_port = ventilator_port
         self.port = port

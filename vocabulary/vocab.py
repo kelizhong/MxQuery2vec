@@ -35,16 +35,15 @@ class Vocab(object):
         whether to overwrite the existed vocabulary
     """
 
-    def __init__(self, corpus_files, vocab_save_path, ip='127.0.0.1', ventilator_port='5555', collector_port='5556',
-                 special_words=dict(),
+    def __init__(self, corpus_files, vocab_save_path, process_num=10, ip='127.0.0.1', ventilator_port='5555', collector_port='5556',
                  log_level=logging.INFO,
                  log_path='./', overwrite=True):
         self.corpus_files = corpus_files
         self.vocab_save_path = vocab_save_path
+        self.process_num = process_num
         self.ip = ip
         self.ventilator_port = ventilator_port
         self.collector_port = collector_port
-        self.special_words = special_words
         self.overwrite = overwrite
         self.log_path = log_path
         self._init_log(log_level)
@@ -61,7 +60,7 @@ class Vocab(object):
         v = VentilatorProcess(self.corpus_files, self.ip, self.ventilator_port)
         v.start()
         process_pool.append(v)
-        for i in xrange(6):
+        for i in xrange(self.process_num):
             w = WorkerProcess(self.ip, self.ventilator_port, self.collector_port, name='WorkerProcess_{}'.format(i))
             w.start()
             process_pool.append(w)
@@ -71,15 +70,16 @@ class Vocab(object):
         logging.info("Finish counting. %d unique words, a total of %d words in all files."
                      % (len(counter), sum(counter.values())))
 
-        words_num = len(counter)
-        special_words_num = len(self.special_words)
+        #words_num = len(counter)
+        #special_words_num = len(self.special_words)
 
-        assert words_num > len(
-            self.special_words), "the size of total words must be larger than the size of special_words"
+        #assert words_num > len(
+        #    self.special_words), "the size of total words must be larger than the size of special_words"
 
-        assert self.top_words > len(
-            self.special_words), "the value of most_commond_words_num must be larger than the size of special_words"
+        #assert self.top_words > len(
+        #    self.special_words), "the value of most_commond_words_num must be larger than the size of special_words"
 
+        """
         vocab_count = counter.most_common(self.top_words - special_words_num)
         vocab = {}
         idx = special_words_num + 1
@@ -89,7 +89,8 @@ class Vocab(object):
                 idx += 1
         vocab.update(self.special_words)
         logging.info("store vocabulary with most_common_words file, vocabulary size: " + str(len(vocab)))
-        save_obj_pickle(vocab, self.vocab_save_path, self.overwrite)
+        """
+        save_obj_pickle(counter, self.vocab_save_path, self.overwrite)
 
     def _terminate_process(self, pool):
         for p in pool:

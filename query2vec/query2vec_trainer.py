@@ -15,10 +15,11 @@ from masked_bucket_io import MaskedBucketSentenceIter
 from metric.seq2seq_metric import MetricManage
 from metric.speedometer import Speedometer
 from network.seq2seq.seq2seq_model import Seq2seqModel
-from utils.data_util import load_pickle_object
+from utils.data_util import load_pickle_object, load_vocabulary_from_pickle
 from utils.decorator_util import memoized
 from utils.model_util import load_model, save_model_callback
 from utils.record_util import RecordType
+from common.constant import special_words
 
 """mxnet parameter
 Parameter:
@@ -68,7 +69,7 @@ mxnet_parameter = RecordType('mxnet_parameter', [('kv_store', 'local'), ('hosts_
 
 data_parameter = RecordType('data_parameter',
                             [('encoder_train_data_path', None), ('decoder_train_data_path', None),
-                             ('vocabulary_path', ''),
+                             ('vocabulary_path', ''), ('top_words', 40000)
                              ('word2vec_path', None), ('ip_addr', None), ('port', None)])
 """optimizer parameter
 Parameter:
@@ -148,7 +149,7 @@ class Query2vecTrainer(Trainer):
     @memoized
     def vocab(self):
         """load vocabulary"""
-        vocab = load_pickle_object(self.vocabulary_path)
+        vocab = load_vocabulary_from_pickle(self.vocabulary_path, top_words=self.top_words, special_words=special_words)
         return vocab
 
     @property

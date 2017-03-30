@@ -5,7 +5,7 @@ import logging
 
 
 class CollectorProcess(object):
-    def __init__(self, ip, worker_port, waiting_time=0.1, threshold=10):
+    def __init__(self, ip, worker_port, waiting_time=0.3, threshold=10):
         self.ip = ip
         self.worker_port = worker_port
         context = zmq.Context()

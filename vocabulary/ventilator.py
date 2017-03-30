@@ -9,7 +9,7 @@ from utils.data_util import sentence_gen
 
 class VentilatorProcess(Process):
     def __init__(self, corpus_files, ip, port, name='VentilatorProcess'):
-        Process.__init__(self, name)
+        Process.__init__(self)
         self.ip = ip
         self.port = port
         self.corpus_files = [corpus_files] if not isinstance(corpus_files, list) else corpus_files

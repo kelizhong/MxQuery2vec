@@ -6,7 +6,6 @@ import codecs
 from common import constant as config
 from nltk.tokenize import word_tokenize
 import itertools
-from common.constant import bos_word, eos_word
 
 
 def read_data(encoder_path, decoder_path, max_line_num=sys.maxsize):
@@ -70,6 +69,29 @@ def load_pickle_object(path):
         obj = pickle.load(f)
 
     return obj
+
+
+def load_vocabulary_from_pickle(path, top_words=40000, special_words=dict()):
+    vocab = load_pickle_object(path)
+    words_num = len(vocab)
+    special_words_num = len(special_words)
+
+    assert words_num > len(
+       special_words), "the size of total words must be larger than the size of special_words"
+
+    assert top_words > len(
+       special_words), "the value of most_commond_words_num must be larger than the size of special_words"
+
+    vocab_count = vocab.most_common(top_words - special_words_num)
+    vocab = {}
+    idx = special_words_num + 1
+    for word, _ in vocab_count:
+        if word not in special_words:
+            vocab[word] = idx
+            idx += 1
+    vocab.update(special_words)
+
+    return vocab
 
 
 def sentence2id(sentence, the_vocab):

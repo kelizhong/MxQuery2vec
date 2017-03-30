@@ -57,8 +57,10 @@ class Seq2seqDataVentilatorProcess(Process):
                 zmq_socket.send_pyobj(data)
             self.num_epoch -= 1
             self.reset()
+        print ("sdfsdfsdfsdf---------------------------------------------------------------------------------")
 
     def reset(self):
+        print ("---------------------------------------------------------------------------------")
         self.data_stream.reset()
 
     @property

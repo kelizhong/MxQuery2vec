@@ -245,8 +245,8 @@ def parse_args():
                                     default=os.path.join(os.getcwd(), 'data', 'vocabulary', 'vocab.pkl'),
                                     type=str,
                                     help='vocabulary with he most common words')
-    q2v_aksis_ventiliator_parser.add_argument('-ap', '--action-patterns', nargs=1, action=AppendTupleWithoutDefault, type=str,
-                                    default=['*add', '*search', '*click', '*purchase'])
+    q2v_aksis_ventiliator_parser.add_argument('-ap', '--action-patterns', nargs=2, action=AppendTupleWithoutDefault,
+                                    default=[('*add', -1), ('*search', 0.5), ('*click', 0.4), ('*purchase', -1)])
     q2v_aksis_ventiliator_parser.add_argument('--ip-addr', type=str, help='ip address')
     q2v_aksis_ventiliator_parser.add_argument('--port', type=str, help='zmq port')
     q2v_aksis_ventiliator_parser.add_argument('-bs', '--batch-size', default=128, type=int,
@@ -293,8 +293,7 @@ if __name__ == "__main__":
     elif args.action == 'query2vec_vocab':
         from vocabulary.vocab import Vocab
 
-        vocab = Vocab(args.files, args.vocab_file, top_words=args.top_words,
-                      special_words=special_words,
+        vocab = Vocab(args.files, args.vocab_file,
                       log_path=args.log_path, log_level=args.log_level, overwrite=args.overwrite)
         vocab.create_dictionary()
     elif args.action == 'train_word2vec':
