@@ -18,9 +18,9 @@ class Seq2seqDataManager(object):
         self.buckets = buckets
 
     def start_data_stream_process(self):
-        for action_pattern, floor in self.action_patterns:
+        for action_pattern, sample_floor in self.action_patterns:
             p = Seq2seqDataVentilatorProcess(action_pattern, self.data_dir, self.vocabulary_path, self.top_words, self.batch_size,
-                                             self.buckets, floor=floor,
+                                             self.buckets, sample_floor=sample_floor,
                                              num_epoch=self.num_epoch, ip=self.ip, port=self.pull_port,
                                              name='VentilatorProcess')
             p.start()
