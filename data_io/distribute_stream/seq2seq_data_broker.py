@@ -17,7 +17,7 @@ class Seq2seqDataBroker(Process):
         receiver.bind("tcp://{}:{}".format(self.ip, self.pull_port))
         sender = context.socket(zmq.PUSH)
         sender.bind("tcp://{}:{}".format(self.ip, self.push_port))
-        logging.info("start {}, ip:{}, pull port:{}, push port:{}".format(self.ip, self.pull_port, self.push_port))
+        logging.info("start {}, ip:{}, pull port:{}, push port:{}".format(self.name, self.ip, self.pull_port, self.push_port))
         while True:
             data = receiver.recv_pyobj()
             sender.send_pyobj(data)
