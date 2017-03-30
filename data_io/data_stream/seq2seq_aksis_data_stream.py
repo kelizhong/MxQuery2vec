@@ -34,11 +34,11 @@ class Seq2seqAksisDataStream(BaseSeq2seqDataStream):
         The vocabulary is from all the corpus including encoder corpus(search query) adn decoder corpus(asin information)
     """
 
-    def __init__(self, data_files, encoder_vocab, decoder_vocab, buckets, batch_size, ignore_label=0, floor=-1,
+    def __init__(self, data_files, encoder_vocab, decoder_vocab, buckets, batch_size, ignore_label=0, sample_floor=-1,
                  dtype='float32'):
         super(Seq2seqAksisDataStream, self).__init__(encoder_vocab, decoder_vocab, buckets, batch_size, ignore_label, dtype)
         self.data_files = data_files
-        self.floor = floor
+        self.sample_floor = sample_floor
 
     def data_generator(self):
         for filename in self.data_files:
@@ -56,4 +56,4 @@ class Seq2seqAksisDataStream(BaseSeq2seqDataStream):
 
     def is_hit(self, score):
         """sample function to decide whether the data should be trained, not sample if floor less than 0"""
-        return self.floor < 0 or float(score) > random.uniform(self.floor, 1)
+        return self.sample_floor < 0 or float(score) > random.uniform(self.sample_floor, 1)
