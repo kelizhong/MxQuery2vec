@@ -4,6 +4,7 @@ import codecs
 import re
 from nltk.tokenize import word_tokenize
 import random
+import logging
 
 
 class Seq2seqAksisDataStream(BaseSeq2seqDataStream):
@@ -42,6 +43,7 @@ class Seq2seqAksisDataStream(BaseSeq2seqDataStream):
 
     def data_generator(self):
         for filename in self.data_files:
+            logging.info("Reading file {}".format(filename))
             with codecs.open(filename, encoding='utf-8', errors='ignore') as f:
                 for line in f:
                     try:

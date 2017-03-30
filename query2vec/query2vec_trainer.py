@@ -69,7 +69,7 @@ mxnet_parameter = RecordType('mxnet_parameter', [('kv_store', 'local'), ('hosts_
 
 data_parameter = RecordType('data_parameter',
                             [('encoder_train_data_path', None), ('decoder_train_data_path', None),
-                             ('vocabulary_path', ''), ('top_words', 40000)
+                             ('vocabulary_path', ''), ('top_words', 40000),
                              ('word2vec_path', None), ('ip_addr', None), ('port', None)])
 """optimizer parameter
 Parameter:
