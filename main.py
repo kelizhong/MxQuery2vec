@@ -249,6 +249,8 @@ def parse_args():
     q2v_aksis_ventiliator_parser.add_argument('--port', type=str, help='zmq port')
     q2v_aksis_ventiliator_parser.add_argument('-bs', '--batch-size', default=128, type=int,
                                     help='batch size for each databatch')
+    q2v_aksis_ventiliator_parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,
+                                    default=[(3, 10), (3, 20), (5, 20), (7, 30)])
     return parser.parse_args()
 
 
@@ -333,6 +335,6 @@ if __name__ == "__main__":
         a.produce()
     elif args.action == 'q2v_aksis_ventiliator':
         from data_io.distribute_stream.seq2seq_data_manager import Seq2seqDataManager
-        m = Seq2seqDataManager(args.data_dir, args.vocabulary_path, args.action_patterns, args.batch_size, [(3, 10), (3, 20), (5, 20), (7, 30)])
+        m = Seq2seqDataManager(args.data_dir, args.vocabulary_path, args.action_patterns, args.batch_size, args.buckets)
         m.start_all()
 
