@@ -5,15 +5,15 @@ import re
 from nltk.tokenize import word_tokenize
 import random
 
+
 class Seq2seqAksisDataStream(BaseSeq2seqDataStream):
-    """masked bucketing iterator for seq2seq model. This class is only used for test
+    """Data stream for aksis data for seq2seq model. This class is for distributed training
 
     Parameters
     ----------
-    encoder_path : str
-        encoder corpus path
-    decoder_path: str
-        decoder corpus path
+    data_files : list
+        data files for training, the format of every line in these files is:
+        MarketplaceId\tAsin\tKeyword\tScore\t ActionType\tDate\tasin_title
     encoder_vocab: dict
         vocabulary from encoder corpus.
     decoder_vocab: dict
@@ -26,8 +26,8 @@ class Seq2seqAksisDataStream(BaseSeq2seqDataStream):
         key for ignore label, the label value will be ignored during backward in softmax. Recommend to set 0
     dtype : str, default 'float32'
         data type
-    max_sentence_num: int
-        the max size of sentence to read
+    floor: float
+        this value is used to generate random value between [floor, 1]
     Notes
     -----
     - For query2vec, the vocabulary in encoder is the same with the vocabulary in decoder.
@@ -55,4 +55,5 @@ class Seq2seqAksisDataStream(BaseSeq2seqDataStream):
                         pass
 
     def is_hit(self, score):
-        return self.floor < -1 or float(score) > random.uniform(self.floor, 1)
+        """sample function to decide whether the data should be trained, not sample if floor less than 0"""
+        return self.floor < 0 or float(score) > random.uniform(self.floor, 1)

@@ -125,17 +125,15 @@ def parse_args():
     q2v_trainer_parser.add_argument('--port', type=str, help='zmq port')
 
     # vocabulary parameter
-    q2v_vocab_parser.add_argument('-tw', '--top-words', default=40000, type=int,
-                                  help='the words with the top frequency to retain in the vocabulary')
 
     q2v_vocab_parser.add_argument('--overwrite', action='store_true', help='overwrite earlier created files, also forces the\
                         program not to reuse count files')
-    q2v_vocab_parser.add_argument('files', nargs='+',
-                                  help='the corpus input files')
     q2v_vocab_parser.add_argument('-vf', '--vocab-file',
                                   type=FileType,
                                   default=os.path.join(os.path.dirname(__file__), 'data', 'vocabulary', 'vocab.pkl'),
                                   help='the file with the words which are the most command words in the corpus')
+    q2v_vocab_parser.add_argument('files', nargs='+',
+                                  help='the corpus input files')
 
     # word2vec parameter
 

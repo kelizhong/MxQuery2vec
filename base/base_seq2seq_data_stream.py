@@ -48,6 +48,14 @@ class BaseSeq2seqDataStream(object):
 
     @abc.abstractmethod
     def data_generator(self):
+        """generate the data for seq2seq model, including two parts(encoder_words, decoder_words)
+           encoder_words, decoder_words is a list object which has been segmented .e.g.
+           encoder line(maybe query/post): mens running shoes
+           decoder line(maybe title/response): Nike Men's Shox NZ SE Black/White/Paramount Blue Running Shoe 10.5 Men U
+           then
+           encoder_words: [mens, running, shoes]
+           decoder_words: [Nike, Men's, Shox, NZ, SE, Black, /, White, /, Paramount, Blue, Running, Shoe, 10.5, Men, U]
+        """
         raise NotImplementedError
 
     def __iter__(self):
@@ -56,13 +64,20 @@ class BaseSeq2seqDataStream(object):
     def next(self):
 
         while True:
+            # get data from generator
             encoder_words, decoder_words = self.data_gen.next()
-            # print(encoder_words, decoder_words)
-            bucket, queue = self.add_to_queue(encoder_words, decoder_words)
+            # add the data include corresponding queue, return the bucket
+            # and queue if size of the queue reach the batch size
+            bucket, queue = self.add_to_bucket_queue(encoder_words, decoder_words)
+            # if the returned queue is not None, return the batch size data to zmq ventiliator(for distributed version)
+            # or just return data to mxnet iter interface(this is usually for test)
             if queue:
                 return self.get_batch_data_from_queue(bucket, queue)
 
-    def add_to_queue(self, encoder_words, decoder_words):
+    def add_to_bucket_queue(self, encoder_words, decoder_words):
+        """add the data into the bucket queue, return the bucket and queue if the queue reach the batch size
+            else return None,None
+        """
         encoder_sentence_id, decoder_sentence_id, label_id = self.convert_data_to_id(encoder_words, decoder_words)
         if len(encoder_sentence_id) == 0 or len(decoder_sentence_id) == 0:
             pass
@@ -76,6 +91,7 @@ class BaseSeq2seqDataStream(object):
         return None, None
 
     def convert_data_to_id(self, encoder_words, decoder_words):
+        """convert the data into id which represent the index for word in vocabulary"""
         encoder = encoder_words
         decoder = [bos_word] + decoder_words
         label = decoder_words + [eos_word]
@@ -85,20 +101,21 @@ class BaseSeq2seqDataStream(object):
         return encoder_sentence_id, decoder_sentence_id, label_id
 
     def get_batch_data_from_queue(self, bucket, queue):
+        """get the batch data from bucket queue and convert the data into numpy format"""
         batch_size = self.batch_size
         ignore_label = self.ignore_label
         dtype = self.dtype
         assert len(queue) >= batch_size, "size of {} queue less than batch size {}".format(bucket, batch_size)
-        # encoder_data = np.full((batch_size, bucket[0]), ignore_label)
-        # encoder_mask_data = np.full((batch_size, bucket[0]), ignore_label)
-        # decoder_data = np.full((batch_size, bucket[1]), ignore_label)
-        # decoder_mask_data = np.full((batch_size, bucket[1]), ignore_label)
-        # label_data = np.full((batch_size, bucket[1]), ignore_label, dtype=dtype)
-        encoder_data = np.zeros((batch_size, bucket[0]))
-        encoder_mask_data = np.zeros((batch_size, bucket[0]))
-        decoder_data = np.zeros((batch_size, bucket[1]))
-        decoder_mask_data = np.zeros((batch_size, bucket[1]))
-        label_data = np.zeros((batch_size, bucket[1]))
+        encoder_data = np.full((batch_size, bucket[0]), ignore_label, dtype=dtype)
+        encoder_mask_data = np.full((batch_size, bucket[0]), ignore_label, dtype=dtype)
+        decoder_data = np.full((batch_size, bucket[1]), ignore_label, dtype=dtype)
+        decoder_mask_data = np.full((batch_size, bucket[1]), ignore_label, dtype=dtype)
+        label_data = np.full((batch_size, bucket[1]), ignore_label, dtype=dtype)
+        # encoder_data = np.zeros((batch_size, bucket[0]))
+        # encoder_mask_data = np.zeros((batch_size, bucket[0]))
+        # decoder_data = np.zeros((batch_size, bucket[1]))
+        # decoder_mask_data = np.zeros((batch_size, bucket[1]))
+        # label_data = np.zeros((batch_size, bucket[1]))
         for i in xrange(batch_size):
             encoder_sentence_id, decoder_sentence_id, label_id = queue.popleft()
             encoder_data[i, :len(encoder_sentence_id)] = encoder_sentence_id
@@ -115,4 +132,5 @@ class BaseSeq2seqDataStream(object):
         return None
 
     def reset(self):
+        """reset the data generator for reading the data cyclicly"""
         self.data_gen = self.data_generator()
