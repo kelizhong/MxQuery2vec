@@ -7,14 +7,10 @@ import numpy as np
 
 
 class BaseSeq2seqDataStream(object):
-    """masked bucketing iterator for seq2seq model. This class is only used for test
+    """Data stream base class for seq2seq model.
 
     Parameters
     ----------
-    encoder_path : str
-        encoder corpus path
-    decoder_path: str
-        decoder corpus path
     encoder_vocab: dict
         vocabulary from encoder corpus.
     decoder_vocab: dict
@@ -27,8 +23,6 @@ class BaseSeq2seqDataStream(object):
         key for ignore label, the label value will be ignored during backward in softmax. Recommend to set 0
     dtype : str, default 'float32'
         data type
-    max_sentence_num: int
-        the max size of sentence to read
     Notes
     -----
     - For query2vec, the vocabulary in encoder is the same with the vocabulary in decoder.
@@ -48,6 +42,7 @@ class BaseSeq2seqDataStream(object):
         self._init_queue()
 
     def _init_queue(self):
+        """initialize the queue for each bucket to store tuple(encoder_sentence_id, decoder_sentence_id, label_id)"""
         for bucket_key in self.buckets:
             self.bucket_queue.setdefault(bucket_key, deque())
 
@@ -94,11 +89,11 @@ class BaseSeq2seqDataStream(object):
         ignore_label = self.ignore_label
         dtype = self.dtype
         assert len(queue) >= batch_size, "size of {} queue less than batch size {}".format(bucket, batch_size)
-        #encoder_data = np.full((batch_size, bucket[0]), ignore_label)
-        #encoder_mask_data = np.full((batch_size, bucket[0]), ignore_label)
-        #decoder_data = np.full((batch_size, bucket[1]), ignore_label)
-        #decoder_mask_data = np.full((batch_size, bucket[1]), ignore_label)
-        #label_data = np.full((batch_size, bucket[1]), ignore_label, dtype=dtype)
+        # encoder_data = np.full((batch_size, bucket[0]), ignore_label)
+        # encoder_mask_data = np.full((batch_size, bucket[0]), ignore_label)
+        # decoder_data = np.full((batch_size, bucket[1]), ignore_label)
+        # decoder_mask_data = np.full((batch_size, bucket[1]), ignore_label)
+        # label_data = np.full((batch_size, bucket[1]), ignore_label, dtype=dtype)
         encoder_data = np.zeros((batch_size, bucket[0]))
         encoder_mask_data = np.zeros((batch_size, bucket[0]))
         decoder_data = np.zeros((batch_size, bucket[1]))
@@ -121,4 +116,3 @@ class BaseSeq2seqDataStream(object):
 
     def reset(self):
         self.data_gen = self.data_generator()
-
