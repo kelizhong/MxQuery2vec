@@ -6,7 +6,7 @@ import codecs
 from common import constant as config
 from nltk.tokenize import word_tokenize
 import itertools
-from collections import Counter
+from collections import Counter, OrderedDict
 
 
 def read_data(encoder_path, decoder_path, max_line_num=sys.maxsize):
@@ -89,13 +89,9 @@ def load_pickle_object(path):
 
 
 def load_vocabulary_from_pickle(path, top_words=40000, special_words=dict()):
-    vocab = load_pickle_object(path)
-    if isinstance(vocab, list):
-        vocab = Counter(vocab)
+    vocab_pickle = load_pickle_object(path)
 
-    assert isinstance(vocab, Counter), "the type of vocabulary should be Counter"
-
-    words_num = len(vocab)
+    words_num = len(vocab_pickle)
     special_words_num = len(special_words)
 
     assert words_num > len(
@@ -104,11 +100,9 @@ def load_vocabulary_from_pickle(path, top_words=40000, special_words=dict()):
     assert top_words > len(
        special_words), "the value of most_commond_words_num must be larger than the size of special_words"
 
-    vocab_count = vocab.most_common(top_words - special_words_num)
-
-    vocab = {}
+    vocab = dict()
     idx = special_words_num + 1
-    for word, _ in vocab_count:
+    for word, _ in vocab_pickle:
         if word not in special_words:
             vocab[word] = idx
             idx += 1

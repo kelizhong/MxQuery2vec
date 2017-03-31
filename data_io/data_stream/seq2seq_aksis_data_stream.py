@@ -49,7 +49,6 @@ class Seq2seqAksisDataStream(BaseSeq2seqDataStream):
                     try:
                         line = line.strip().lower()
                         items = re.split(r'\t+', line)
-                        print(items[2])
                         if len(items) == 7 and len(items[2]) and len(items[6]) and self.is_hit(items[3]):
                             query = word_tokenize(items[2])
                             title = word_tokenize(items[6])
