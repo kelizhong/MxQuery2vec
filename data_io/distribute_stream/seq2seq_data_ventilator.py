@@ -49,7 +49,6 @@ class Seq2seqDataVentilatorProcess(Process):
         self.num_epoch = num_epoch
         self.ip = ip
         self.port = port
-        self.data_stream = self.get_data_stream()
         self.name = name
 
     def run(self):
@@ -57,15 +56,12 @@ class Seq2seqDataVentilatorProcess(Process):
         zmq_socket = context.socket(zmq.PUSH)
         zmq_socket.connect("tcp://{}:{}".format(self.ip, self.port))
         logging.info("porcess {} connect {}:{} and start produce data".format(self.name, self.ip, self.port))
-
+        data_stream = self.get_data_stream()
         while self.num_epoch > 0:
-            for data in self.data_stream:
+            for data in data_stream:
                 zmq_socket.send_pyobj(data)
             self.num_epoch -= 1
-            self.reset()
-
-    def reset(self):
-        self.data_stream.reset()
+            data_stream.reset()
 
     @property
     @memoized

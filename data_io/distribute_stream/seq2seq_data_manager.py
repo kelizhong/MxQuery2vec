@@ -2,6 +2,7 @@ from data_io.distribute_stream.seq2seq_data_ventilator import Seq2seqDataVentila
 from data_io.distribute_stream.seq2seq_data_broker import Seq2seqDataBroker
 
 
+
 class Seq2seqDataManager(object):
     def __init__(self, data_dir, vocabulary_path, top_words, action_patterns, batch_size, buckets, ip='127.0.0.1',
                  pull_port='5555', push_port='5556',

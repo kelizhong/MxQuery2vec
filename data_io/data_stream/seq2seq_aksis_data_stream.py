@@ -39,7 +39,7 @@ class Seq2seqAksisDataStream(BaseSeq2seqDataStream):
                  dtype='float32'):
         super(Seq2seqAksisDataStream, self).__init__(encoder_vocab, decoder_vocab, buckets, batch_size, ignore_label, dtype)
         self.data_files = data_files
-        self.sample_floor = sample_floor
+        self.sample_floor = float(sample_floor)
 
     def data_generator(self):
         for filename in self.data_files:
@@ -49,11 +49,13 @@ class Seq2seqAksisDataStream(BaseSeq2seqDataStream):
                     try:
                         line = line.strip().lower()
                         items = re.split(r'\t+', line)
+                        print(items[2])
                         if len(items) == 7 and len(items[2]) and len(items[6]) and self.is_hit(items[3]):
                             query = word_tokenize(items[2])
                             title = word_tokenize(items[6])
                             yield query, title
-                    except:
+                    except Exception as e:
+                        print(e)
                         pass
 
     def is_hit(self, score):
