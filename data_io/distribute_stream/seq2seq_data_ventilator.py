@@ -1,4 +1,4 @@
-import socket
+
 import zmq
 from data_io.data_stream.seq2seq_aksis_data_stream import Seq2seqAksisDataStream
 import os
@@ -8,20 +8,17 @@ from utils.decorator_util import memoized
 from utils.data_util import load_pickle_object, load_vocabulary_from_pickle
 from common.constant import special_words
 import logging
-
-
-def local_ip():
-    return socket.gethostbyname(socket.gethostname())
+from utils.network_util import local_ip
 
 
 class Seq2seqDataVentilator(object):
-    def __init__(self, data_stream, num_epoch=65535, ip_addr=None, port='5555'):
+    def __init__(self, data_stream, num_epoch=65535, ip=None, port='5555'):
         self.data_stream = data_stream
         self.num_epoch = num_epoch
-        # self.ip_addr = local_ip() if ip_addr is None else ip_addr
+        self.ip = ip or local_ip()
         context = zmq.Context()
         self.zmq_socket = context.socket(zmq.PUSH)
-        self.zmq_socket.bind("tcp://{}:{}".format("127.0.0.1", port))
+        self.zmq_socket.bind("tcp://{}:{}".format(self.ip, port))
 
     def produce(self):
         while self.num_epoch > 0:
