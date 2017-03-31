@@ -247,6 +247,7 @@ class Query2vecTrainer(Trainer):
         checkpoint = save_model_callback(self.model_path_prefix, rank, self.save_checkpoint_freq)
 
         devices = self.ctx_devices
+        logging.info("Worker {} using devices {}".format(rank, devices))
 
         # set monitor
         monitor = mx.mon.Monitor(self.monitor_interval,
