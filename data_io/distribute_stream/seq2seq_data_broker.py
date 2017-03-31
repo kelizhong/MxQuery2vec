@@ -1,6 +1,7 @@
 import zmq
 from multiprocessing import Process
 import logging
+from appmetrics import metrics
 
 
 class Seq2seqDataBroker(Process):
@@ -18,7 +19,13 @@ class Seq2seqDataBroker(Process):
         sender = context.socket(zmq.PUSH)
         sender.bind("tcp://{}:{}".format(self.ip, self.push_port))
         logging.info("start {}, ip:{}, pull port:{}, push port:{}".format(self.name, self.ip, self.pull_port, self.push_port))
+        num = 0
+        meter = metrics.new_meter("meter_speed")
         while True:
+            num += 1
+            if num % 10000 == 0:
+                print(meter.get())
             data = receiver.recv_pyobj()
             sender.send_pyobj(data)
+            meter.notify(1)
 

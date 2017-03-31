@@ -69,7 +69,7 @@ def extract_query_title_from_aksis_data(sentence):
     if len(items) == 7 and len(items[2]) and len(items[6]):
         return items[2] + " " + items[6]
     else:
-        return ''
+        return str()
 
 
 def load_pickle_object(path):
