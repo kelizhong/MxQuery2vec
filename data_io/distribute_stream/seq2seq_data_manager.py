@@ -1,6 +1,7 @@
 from data_io.distribute_stream.seq2seq_data_ventilator import Seq2seqDataVentilatorProcess
 from data_io.distribute_stream.seq2seq_data_broker import Seq2seqDataBroker
-
+from utils.log_util import install_mp_handler
+import logging
 
 
 class Seq2seqDataManager(object):
@@ -17,6 +18,16 @@ class Seq2seqDataManager(object):
         self.batch_size = batch_size
         self.num_epoch = num_epoch
         self.buckets = buckets
+        self._init_log()
+
+    def _init_log(self):
+        logger = logging.getLogger()
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s %(levelname)s:%(name)s:%(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        logger.setLevel(logging.DEBUG)
+        install_mp_handler()
 
     def start_data_stream_process(self):
         for i, (action_pattern, sample_floor) in enumerate(self.action_patterns):

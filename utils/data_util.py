@@ -94,19 +94,17 @@ def load_vocabulary_from_pickle(path, top_words=40000, special_words=dict()):
     words_num = len(vocab_pickle)
     special_words_num = len(special_words)
 
-    assert words_num > len(
-       special_words), "the size of total words must be larger than the size of special_words"
+    assert words_num > special_words_num, "the size of total words must be larger than the size of special_words"
 
-    assert top_words > len(
-       special_words), "the value of most_commond_words_num must be larger than the size of special_words"
+    assert top_words > special_words_num, "the value of most_commond_words_num must be larger than the size of special_words"
 
     vocab = dict()
-    idx = special_words_num + 1
-    for word, _ in vocab_pickle:
-        if word not in special_words:
-            vocab[word] = idx
-            idx += 1
     vocab.update(special_words)
+    for word, _ in vocab_pickle:
+        if len(vocab) + 1 >= top_words:
+            break
+        if word not in special_words:
+            vocab[word] = len(vocab) + 1
 
     return vocab
 
