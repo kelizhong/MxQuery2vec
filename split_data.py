@@ -59,7 +59,6 @@ class AksisData(object):
                 except UnicodeDecodeError:
                     pass
 
-
     def read_data(self):
         files = glob.glob(self.pattern)
         meter = metrics.new_meter("meter_speed")

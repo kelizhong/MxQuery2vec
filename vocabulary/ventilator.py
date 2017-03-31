@@ -8,22 +8,23 @@ from utils.data_util import sentence_gen
 
 
 class VentilatorProcess(Process):
-    def __init__(self, corpus_files, ip, port, name='VentilatorProcess'):
+    def __init__(self, corpus_files, ip, port, sentence_gen=sentence_gen, name='VentilatorProcess'):
         Process.__init__(self)
         self.ip = ip
         self.port = port
         self.corpus_files = [corpus_files] if not isinstance(corpus_files, list) else corpus_files
+        self.sentence_gen = sentence_gen
 
     def run(self):
         data_context = zmq.Context()
-        self.data_socket = data_context.socket(zmq.PUSH)
-        self.data_socket.bind("tcp://{}:{}".format(self.ip, self.port))
+        data_socket = data_context.socket(zmq.PUSH)
+        data_socket.bind("tcp://{}:{}".format(self.ip, self.port))
 
         logging.info("start sentence producer")
         for filename in self.corpus_files:
             logging.info("Counting words in %s" % filename)
-            for sentence in sentence_gen(filename):
-                self.data_socket.send_string(sentence)
+            for sentence in self.sentence_gen(filename):
+                data_socket.send_string(sentence)
 
 
 if __name__ == '__main__':

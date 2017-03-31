@@ -6,6 +6,7 @@ import codecs
 from common import constant as config
 from nltk.tokenize import word_tokenize
 import itertools
+from collections import Counter
 
 
 def read_data(encoder_path, decoder_path, max_line_num=sys.maxsize):
@@ -55,6 +56,20 @@ def sentence_gen(filename):
                 yield line
 
 
+def aksis_sentence_gen(filename):
+    for line in sentence_gen(filename):
+        line = extract_query_title_from_aksis_data(line)
+        if len(line):
+            yield line
+
+
+def extract_query_title_from_aksis_data(sentence):
+    sentence = sentence.strip().lower()
+    items = re.split(r'\t+', sentence)
+    if len(items) == 7 and len(items[2]) and len(items[6]):
+        return items[2] + " " + items[6]
+
+
 def load_pickle_object(path):
     """
     Load vocab from file, the 0, 1, 2, 3 should be reserved for pad, <unk>, <s>, </s>
@@ -73,6 +88,11 @@ def load_pickle_object(path):
 
 def load_vocabulary_from_pickle(path, top_words=40000, special_words=dict()):
     vocab = load_pickle_object(path)
+    if isinstance(vocab, list):
+        vocab = Counter(vocab)
+
+    assert isinstance(vocab, Counter), "the type of vocabulary should be Counter"
+
     words_num = len(vocab)
     special_words_num = len(special_words)
 
@@ -83,6 +103,7 @@ def load_vocabulary_from_pickle(path, top_words=40000, special_words=dict()):
        special_words), "the value of most_commond_words_num must be larger than the size of special_words"
 
     vocab_count = vocab.most_common(top_words - special_words_num)
+
     vocab = {}
     idx = special_words_num + 1
     for word, _ in vocab_count:

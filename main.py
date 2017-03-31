@@ -10,6 +10,7 @@ from conf.customArgAction import AppendTupleWithoutDefault
 import argparse
 from common.constant import special_words
 from setting import project_dir
+from utils.data_util import aksis_sentence_gen
 
 
 def parse_args():
@@ -297,7 +298,7 @@ if __name__ == "__main__":
     elif args.action == 'query2vec_vocab':
         from vocabulary.vocab import Vocab
 
-        vocab = Vocab(args.files, args.vocab_file,
+        vocab = Vocab(args.files, args.vocab_file, sentence_gen=aksis_sentence_gen,
                       log_path=args.log_path, log_level=args.log_level, overwrite=args.overwrite)
         vocab.create_dictionary()
     elif args.action == 'train_word2vec':
