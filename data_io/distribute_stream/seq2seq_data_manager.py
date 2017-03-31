@@ -2,16 +2,17 @@ from data_io.distribute_stream.seq2seq_data_ventilator import Seq2seqDataVentila
 from data_io.distribute_stream.seq2seq_data_broker import Seq2seqDataBroker
 from utils.log_util import install_mp_handler
 import logging
+from utils.network_util import local_ip
 
 
 class Seq2seqDataManager(object):
-    def __init__(self, data_dir, vocabulary_path, top_words, action_patterns, batch_size, buckets, ip='127.0.0.1',
+    def __init__(self, data_dir, vocabulary_path, top_words, action_patterns, batch_size, buckets, ip=None,
                  pull_port='5555', push_port='5556',
                  num_epoch=65535):
         self.data_dir = data_dir
         self.vocabulary_path = vocabulary_path
         self.top_words = top_words
-        self.ip = ip
+        self.ip = ip or local_ip()
         self.pull_port = pull_port
         self.push_port = push_port
         self.action_patterns = action_patterns
