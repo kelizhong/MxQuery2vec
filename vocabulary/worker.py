@@ -13,6 +13,7 @@ class WorkerProcess(Process):
         self.port = port
         self.waiting_time = waiting_time
         self.threshold = threshold
+        self.name = name
 
     def run(self):
         context = zmq.Context()
@@ -31,7 +32,7 @@ class WorkerProcess(Process):
                 if retry > self.threshold:
                     break
                 retry += 1
-                logging.info("working is waiting, has retried {} times".format(retry))
+                logging.info("worker {} is waiting, has retried {} times".format(self.name, retry))
                 time.sleep(self.waiting_time)
                 continue
             tokens = tokenize(sentence)

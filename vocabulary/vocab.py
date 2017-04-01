@@ -34,13 +34,13 @@ class Vocab(object):
         whether to overwrite the existed vocabulary
     """
 
-    def __init__(self, corpus_files, vocab_save_path, sentence_gen=sentence_gen, process_num=10, top_words=100000,
+    def __init__(self, corpus_files, vocab_save_path, sentence_gen=sentence_gen, workers_num=10, top_words=100000,
                  ip='127.0.0.1', ventilator_port='5555', collector_port='5556',
                   overwrite=True):
         self.corpus_files = corpus_files
         self.vocab_save_path = vocab_save_path
         self.sentence_gen = sentence_gen
-        self.process_num = process_num
+        self.workers_num = workers_num
         self.top_words = top_words
         self.ip = ip
         self.ventilator_port = ventilator_port
@@ -52,7 +52,7 @@ class Vocab(object):
         v = VentilatorProcess(self.corpus_files, self.ip, self.ventilator_port, sentence_gen=self.sentence_gen)
         v.start()
         process_pool.append(v)
-        for i in xrange(self.process_num):
+        for i in xrange(self.workers_num):
             w = WorkerProcess(self.ip, self.ventilator_port, self.collector_port, name='WorkerProcess_{}'.format(i))
             w.start()
             process_pool.append(w)

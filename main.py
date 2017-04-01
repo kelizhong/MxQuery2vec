@@ -135,6 +135,10 @@ def parse_args():
                                   type=FileType,
                                   default=os.path.join(os.path.dirname(__file__), 'data', 'vocabulary', 'vocab.pkl'),
                                   help='the file with the words which are the most command words in the corpus')
+    q2v_vocab_parser.add_argument('-p', '--workers-num',
+                                  type=int,
+                                  default=10,
+                                  help='the file with the words which are the most command words in the corpus')
     q2v_vocab_parser.add_argument('files', nargs='+',
                                   help='the corpus input files')
 
@@ -299,7 +303,7 @@ if __name__ == "__main__":
     elif args.action == 'query2vec_vocab':
         from vocabulary.vocab import Vocab
 
-        vocab = Vocab(args.files, args.vocab_file, sentence_gen=aksis_sentence_gen,
+        vocab = Vocab(args.files, args.vocab_file, workers_num=args.workers_num, sentence_gen=aksis_sentence_gen,
              overwrite=args.overwrite)
         vocab.create_dictionary()
     elif args.action == 'train_word2vec':
