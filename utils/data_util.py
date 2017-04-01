@@ -4,9 +4,8 @@ import re
 import codecs
 from common import constant as config
 import string
-from nltk.tokenize import StanfordTokenizer
+from nltk import word_tokenize
 from nltk.stem import WordNetLemmatizer
-word_tokenize = StanfordTokenizer('./resources/tokenizer/stanford-postagger.jar')
 wn_lemmatizer = WordNetLemmatizer()
 
 """
@@ -66,15 +65,12 @@ def aksis_sentence_gen(filename):
 
 
 def stem_tokens(tokens, lemmatizer):
-    stemmed = []
-    for item in tokens:
-        stemmed.append(lemmatizer.lemmatize(item))
-    return stemmed
+    return [lemmatizer.lemmatize(token) for token in tokens]
 
 
-def tokenize(text, tokenizer=word_tokenize, lemmatizer=wn_lemmatizer):
+def tokenize(text, lemmatizer=wn_lemmatizer):
     text = clean_html(text)
-    tokens = tokenizer.tokenize(text)
+    tokens = word_tokenize(text)
     tokens = [i for i in tokens if i not in string.punctuation]
     stems = stem_tokens(tokens, lemmatizer)
     return stems
@@ -170,7 +166,3 @@ def clean_html(html):
     cleaned = re.sub(r"  ", " ", cleaned)
     cleaned = re.sub(r"  ", " ", cleaned)
     return cleaned.strip()
-if __name__ == '__main__':
-    word_tokenize = StanfordTokenizer('/Users/keliz/Downloads/stanford-postagger.jar')
-    wn_stemmer = WordNetLemmatizer()
-    print(tokenize("<s>apples, boy</s>"))
