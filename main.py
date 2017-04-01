@@ -299,7 +299,7 @@ if __name__ == "__main__":
     elif args.action == 'query2vec_vocab':
         from vocabulary.vocab import Vocab
 
-        vocab = Vocab(args.files, args.vocab_file, sentence_gen=sentence_gen,
+        vocab = Vocab(args.files, args.vocab_file, sentence_gen=aksis_sentence_gen,
              overwrite=args.overwrite)
         vocab.create_dictionary()
     elif args.action == 'train_word2vec':
