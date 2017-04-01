@@ -135,7 +135,7 @@ def parse_args():
                                   type=FileType,
                                   default=os.path.join(os.path.dirname(__file__), 'data', 'vocabulary', 'vocab.pkl'),
                                   help='the file with the words which are the most command words in the corpus')
-    q2v_vocab_parser.add_argument('-p', '--workers-num',
+    q2v_vocab_parser.add_argument('-w', '--workers-num',
                                   type=int,
                                   default=10,
                                   help='the file with the words which are the most command words in the corpus')

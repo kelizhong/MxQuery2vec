@@ -48,13 +48,16 @@ def words_gen(filename, bos=None, eos=None):
                     yield w
 
 
-def sentence_gen(filename):
+def sentence_gen(files):
     """Return each sentence in a line."""
-    with codecs.open(filename, encoding='utf-8', errors='ignore') as f:
-        for line in f:
-            line = line.strip().lower()
-            if len(line):
-                yield line
+    if not isinstance(files, list):
+        files = [files]
+    for filename in files:
+        with codecs.open(filename, encoding='utf-8', errors='ignore') as f:
+            for line in f:
+                line = line.strip().lower()
+                if len(line):
+                    yield line
 
 
 def aksis_sentence_gen(filename):
@@ -92,6 +95,13 @@ def extract_query_title_score_from_aksis_data(sentence):
         return tokenize(items[2]), tokenize(items[6]), items[3]
     else:
         return None, None, None
+
+
+def query_title_score_generator_from_aksis_data(files):
+    for line in sentence_gen(files):
+        query_words, title_words, score = extract_query_title_score_from_aksis_data(line)
+        if query_words and title_words and score:
+            yield query_words, title_words, score
 
 
 def load_pickle_object(path):

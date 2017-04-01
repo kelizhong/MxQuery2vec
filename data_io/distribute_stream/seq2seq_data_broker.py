@@ -5,7 +5,7 @@ from utils.appmetric_util import AppMetric
 
 
 class Seq2seqDataBroker(Process):
-    def __init__(self, ip, pull_port=5555, push_port=5556, name="Seq2seqDataBrokerProcess"):
+    def __init__(self, ip, pull_port=5555, push_port=5556, name="Seq2seqDataRawSentenceBrokerProcess"):
         Process.__init__(self)
         self.ip = ip
         self.pull_port = pull_port
