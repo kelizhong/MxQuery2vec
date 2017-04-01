@@ -11,7 +11,6 @@ from base.trainer import Trainer
 from data_io.distribute_stream.seq2seq_data_receiver import Seq2seqDataReceiver
 from data_io.data_stream.seq2seq_data_stream import Seq2seqDataStream
 from data_io.seq2seq_bucket_io_iter import Seq2seqMaskedBucketIoIter
-from masked_bucket_io import MaskedBucketSentenceIter
 from metric.seq2seq_metric import MetricManage
 from metric.speedometer import Speedometer
 from network.seq2seq.seq2seq_model import Seq2seqModel
@@ -59,8 +58,6 @@ Parameter:
 mxnet_parameter = RecordType('mxnet_parameter', [('kv_store', 'local'), ('hosts_num', 1), ('workers_num', 1),
                                                  ('device_mode', 'cpu'), ('devices', '0'), ('num_epoch', 65535),
                                                  ('disp_batches', 1), ('monitor_interval', -1),
-                                                 ('log_qualname', 'query2vec'),
-                                                 ('log_conf_path', "./configure/logger.conf"),
                                                  ('save_checkpoint_freq', 1),
                                                  ('model_path_prefix', 'query2vec'), ('enable_evaluation', False),
                                                  ('ignore_label', 0),

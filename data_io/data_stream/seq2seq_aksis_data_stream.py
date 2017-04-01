@@ -1,10 +1,9 @@
 # coding=utf-8
 from base.base_seq2seq_data_stream import BaseSeq2seqDataStream
 import codecs
-import re
-from nltk.tokenize import word_tokenize
 import random
 import logging
+from utils.data_util import extract_query_title_score_from_aksis_data
 
 
 class Seq2seqAksisDataStream(BaseSeq2seqDataStream):
@@ -47,15 +46,11 @@ class Seq2seqAksisDataStream(BaseSeq2seqDataStream):
             with codecs.open(filename, encoding='utf-8', errors='ignore') as f:
                 for line in f:
                     try:
-                        line = line.strip().lower()
-                        items = re.split(r'\t+', line)
-                        if len(items) == 7 and len(items[2]) and len(items[6]) and self.is_hit(items[3]):
-                            query = word_tokenize(items[2])
-                            title = word_tokenize(items[6])
-                            yield query, title
+                        tokenized_query, tokenized_title, score = extract_query_title_score_from_aksis_data(line)
+                        if tokenized_query and tokenized_title and score and self.is_hit(score):
+                            yield tokenized_query, tokenized_title
                     except Exception as e:
-                        print(e)
-                        pass
+                        logging.error(e)
 
     def is_hit(self, score):
         """sample function to decide whether the data should be trained, not sample if floor less than 0"""

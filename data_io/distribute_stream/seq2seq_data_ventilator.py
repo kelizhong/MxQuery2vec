@@ -9,6 +9,7 @@ from utils.data_util import load_pickle_object, load_vocabulary_from_pickle
 from common.constant import special_words
 import logging
 from utils.network_util import local_ip
+from utils.appmetric_util import AppMetric
 
 
 class Seq2seqDataVentilator(object):
@@ -21,9 +22,10 @@ class Seq2seqDataVentilator(object):
         self.zmq_socket.bind("tcp://{}:{}".format(self.ip, port))
 
     def produce(self):
+        metric = AppMetric()
         while self.num_epoch > 0:
             for data in self.data_stream:
-                print data
+                metric.notify(1)
                 self.zmq_socket.send_pyobj(data)
             self.num_epoch -= 1
             self.reset()

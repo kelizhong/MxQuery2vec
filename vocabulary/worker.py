@@ -1,8 +1,8 @@
 import zmq
 import logging
-from nltk.tokenize import word_tokenize
 from multiprocessing import Process
 import time
+from utils.data_util import tokenize
 
 
 class WorkerProcess(Process):
@@ -34,6 +34,6 @@ class WorkerProcess(Process):
                 logging.info("working is waiting, has retried {} times".format(retry))
                 time.sleep(self.waiting_time)
                 continue
-            tokens = word_tokenize(sentence)
+            tokens = tokenize(sentence)
             tokens_words_producer.send_pyobj(tokens)
 

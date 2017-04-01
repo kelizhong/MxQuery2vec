@@ -1,13 +1,15 @@
 # coding=utf-8
 import pickle
 import re
-import sys
 import codecs
 from common import constant as config
-from nltk.tokenize import word_tokenize
-import itertools
+import string
+from nltk.tokenize import StanfordTokenizer
+from nltk.stem import WordNetLemmatizer
+word_tokenize = StanfordTokenizer('./resources/tokenizer/stanford-postagger.jar')
+wn_lemmatizer = WordNetLemmatizer()
 
-
+"""
 def read_data(encoder_path, decoder_path, max_line_num=sys.maxsize):
     encoder_data = []
     decoder_data = []
@@ -18,8 +20,8 @@ def read_data(encoder_path, decoder_path, max_line_num=sys.maxsize):
                 # dcoder the line from utf-8 to unicode. assume all the data file is utf-8 format
                 encoder_line = encoder_line.decode('utf8').strip().lower()
                 decoder_line = decoder_line.decode('utf8').strip().lower()
-                encoder_line = word_tokenize(encoder_line)
-                decoder_line = word_tokenize(decoder_line)
+                encoder_line = tokenize(encoder_line)
+                decoder_line = tokenize(decoder_line)
             except Exception:
                 # ignore the error line
                 continue
@@ -27,6 +29,7 @@ def read_data(encoder_path, decoder_path, max_line_num=sys.maxsize):
                 encoder_data.append(encoder_line)
                 decoder_data.append(decoder_line)
     return encoder_data, decoder_data
+"""
 
 
 def words_gen(filename, bos=None, eos=None):
@@ -37,7 +40,7 @@ def words_gen(filename, bos=None, eos=None):
             num += 1
             if num % 10000 == 0:
                 print(num)
-            tokens = word_tokenize(line)
+            tokens = tokenize(line)
             tokens = [bos] + tokens if bos is not None else tokens
             tokens = tokens + [eos] if eos is not None else tokens
             for w in tokens:
@@ -62,6 +65,21 @@ def aksis_sentence_gen(filename):
             yield line
 
 
+def stem_tokens(tokens, lemmatizer):
+    stemmed = []
+    for item in tokens:
+        stemmed.append(lemmatizer.lemmatize(item))
+    return stemmed
+
+
+def tokenize(text, tokenizer=word_tokenize, lemmatizer=wn_lemmatizer):
+    text = clean_html(text)
+    tokens = tokenizer.tokenize(text)
+    tokens = [i for i in tokens if i not in string.punctuation]
+    stems = stem_tokens(tokens, lemmatizer)
+    return stems
+
+
 def extract_query_title_from_aksis_data(sentence):
     sentence = sentence.strip().lower()
     items = re.split(r'\t+', sentence)
@@ -69,6 +87,15 @@ def extract_query_title_from_aksis_data(sentence):
         return items[2] + " " + items[6]
     else:
         return str()
+
+
+def extract_query_title_score_from_aksis_data(sentence):
+    sentence = sentence.strip().lower()
+    items = re.split(r'\t+', sentence)
+    if len(items) == 7 and len(items[2]) and len(items[3]) and len(items[6]):
+        return tokenize(items[2]), tokenize(items[6]), items[3]
+    else:
+        return None, None, None
 
 
 def load_pickle_object(path):
@@ -143,3 +170,7 @@ def clean_html(html):
     cleaned = re.sub(r"  ", " ", cleaned)
     cleaned = re.sub(r"  ", " ", cleaned)
     return cleaned.strip()
+if __name__ == '__main__':
+    word_tokenize = StanfordTokenizer('/Users/keliz/Downloads/stanford-postagger.jar')
+    wn_stemmer = WordNetLemmatizer()
+    print(tokenize("<s>apples, boy</s>"))

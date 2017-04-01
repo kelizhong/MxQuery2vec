@@ -1,14 +1,11 @@
 # coding=utf-8
 import logging
-import os
 from collections import Counter
-import time
 from utils.pickle_util import save_obj_pickle
 from vocabulary.ventilator import VentilatorProcess
 from vocabulary.worker import WorkerProcess
 from vocabulary.collector import CollectorProcess
 from utils.data_util import sentence_gen
-from utils.log_util import set_up_logger_handler_with_file
 
 
 class Vocab(object):
@@ -39,7 +36,7 @@ class Vocab(object):
 
     def __init__(self, corpus_files, vocab_save_path, sentence_gen=sentence_gen, process_num=10, top_words=100000,
                  ip='127.0.0.1', ventilator_port='5555', collector_port='5556',
-                 log_conf_path="./configure/logger.conf", log_qualname="root", overwrite=True):
+                  overwrite=True):
         self.corpus_files = corpus_files
         self.vocab_save_path = vocab_save_path
         self.sentence_gen = sentence_gen
@@ -49,12 +46,6 @@ class Vocab(object):
         self.ventilator_port = ventilator_port
         self.collector_port = collector_port
         self.overwrite = overwrite
-        self.log_conf_path = log_conf_path
-        self.log_qualname = log_qualname
-        self._init_log()
-
-    def _init_log(self):
-        set_up_logger_handler_with_file(self.log_conf_path, self.log_qualname)
 
     def create_dictionary(self):
         process_pool = []

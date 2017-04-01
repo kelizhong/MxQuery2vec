@@ -2,11 +2,10 @@
 import codecs
 import itertools
 import sys
-
-from nltk.tokenize import word_tokenize
-
+from utils.data_util import tokenize
 from base.base_seq2seq_data_stream import BaseSeq2seqDataStream
 from utils.data_util import load_pickle_object
+import logging
 
 
 class Seq2seqDataStream(BaseSeq2seqDataStream):
@@ -55,11 +54,12 @@ class Seq2seqDataStream(BaseSeq2seqDataStream):
                     encoder_line = encoder_line.decode('utf-8')
                     decoder_line = decoder_line.decode('utf-8')
                     if len(encoder_line) and len(decoder_line):
-                        encoder_words = word_tokenize(encoder_line)
-                        decoder_words = word_tokenize(decoder_line)
-                    yield encoder_words, decoder_words
-                except Exception, e:
-                    pass
+                        encoder_words = tokenize(encoder_line)
+                        decoder_words = tokenize(decoder_line)
+                    if encoder_words and decoder_words:
+                        yield encoder_words, decoder_words
+                except Exception as e:
+                    logging.error(e)
 
 
 if __name__ == '__main__':

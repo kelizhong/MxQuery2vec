@@ -11,6 +11,7 @@ import argparse
 from common.constant import special_words
 from setting import project_dir
 from utils.data_util import aksis_sentence_gen, sentence_gen
+from utils.log_util import set_up_logger_handler_with_file
 
 
 def parse_args():
@@ -261,6 +262,7 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
+    set_up_logger_handler_with_file(args.log_conf_path, args.log_qualname)
     print project_dir
     print(args)
     if args.action == 'train_query2vec':
@@ -270,7 +272,6 @@ if __name__ == "__main__":
         mxnet_para = mxnet_parameter(kv_store=args.kv_store, hosts_num=args.hosts_num, workers_num=args.workers_num,
                                      device_mode=args.device_mode, devices=args.devices,
                                      disp_batches=args.disp_batches, monitor_interval=args.monitor_interval,
-                                     log_conf_path=args.log_conf_path, log_qualname=args.log_qualname,
                                      save_checkpoint_freq=args.save_checkpoint_freq,
                                      model_path_prefix=os.path.join(args.model_path, args.model_prefix),
                                      enable_evaluation=args.enable_evaluation, ignore_label=args.ignore_label,
@@ -299,7 +300,7 @@ if __name__ == "__main__":
         from vocabulary.vocab import Vocab
 
         vocab = Vocab(args.files, args.vocab_file, sentence_gen=sentence_gen,
-            log_conf_path=args.log_conf_path, log_qualname=args.log_qualname, overwrite=args.overwrite)
+             overwrite=args.overwrite)
         vocab.create_dictionary()
     elif args.action == 'train_word2vec':
         from word2vec.word2vec_trainer import Word2vecTrainer, mxnet_parameter, optimizer_parameter, model_parameter
@@ -342,6 +343,5 @@ if __name__ == "__main__":
         from data_io.distribute_stream.seq2seq_data_manager import Seq2seqDataManager
 
         m = Seq2seqDataManager(args.data_dir, args.vocabulary_path, args.top_words, args.action_patterns,
-                               args.batch_size, args.buckets, log_conf_path=args.log_conf_path,
-                               log_qualname=args.log_qualname)
+                               args.batch_size, args.buckets)
         m.start_all()

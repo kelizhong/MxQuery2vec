@@ -6,7 +6,7 @@ from utils.network_util import local_ip
 
 class Seq2seqDataManager(object):
     def __init__(self, data_dir, vocabulary_path, top_words, action_patterns, batch_size, buckets,
-                 log_conf_path="./configure/logger.conf", log_qualname="seq2seq_data_zmq", ip=None,
+                  ip=None,
                  pull_port='5555', push_port='5556',
                  num_epoch=65535):
         self.data_dir = data_dir
@@ -19,12 +19,6 @@ class Seq2seqDataManager(object):
         self.batch_size = batch_size
         self.num_epoch = num_epoch
         self.buckets = buckets
-        self.log_conf_path = log_conf_path
-        self.log_qualname = log_qualname
-        self._init_log()
-
-    def _init_log(self):
-        set_up_logger_handler_with_file(self.log_conf_path, self.log_qualname)
 
     def start_data_stream_process(self):
         for i, (action_pattern, sample_floor) in enumerate(self.action_patterns):

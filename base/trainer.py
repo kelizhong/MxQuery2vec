@@ -6,7 +6,6 @@ import logging
 from utils.record_util import RecordType
 from itertools import chain
 import mxnet as mx
-from utils.log_util import set_up_logger_handler_with_file
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -19,7 +18,6 @@ class Trainer(object):
         self._model_para = model_para
         self._data_para = data_para
         self._init_parameter()
-        self._init_log()
         # print the variable before training
         if self.kv.rank == 0:
             self.print_all_variable()
@@ -87,10 +85,4 @@ class Trainer(object):
         if self.optimizer_params.get('rescale_grad') < 0:
             # if rescale_grad has not been set, reset rescale_grad
             self.optimizer_params['rescale_grad'] = 1.0 / (self.batch_size * kv.num_workers)
-
-    def _init_log(self):
-        """set up logger"""
-        set_up_logger_handler_with_file(self.log_conf_path, self.log_qualname)
-
-
 
