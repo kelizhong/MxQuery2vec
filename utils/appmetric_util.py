@@ -4,7 +4,7 @@ import logging
 
 
 class AppMetric(object):
-    def __init__(self, name='metric', interval=1):
+    def __init__(self, name='metric', interval=10):
         self.meter = metrics.new_meter(name)
         self.interval = interval
         self.log_metric()
