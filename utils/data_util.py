@@ -6,7 +6,6 @@ import codecs
 from common import constant as config
 from nltk.tokenize import word_tokenize
 import itertools
-from collections import Counter, OrderedDict
 
 
 def read_data(encoder_path, decoder_path, max_line_num=sys.maxsize):
@@ -101,10 +100,10 @@ def load_vocabulary_from_pickle(path, top_words=40000, special_words=dict()):
     vocab = dict()
     vocab.update(special_words)
     for word, _ in vocab_pickle:
-        if len(vocab) + 1 >= top_words:
+        if len(vocab) >= top_words:
             break
         if word not in special_words:
-            vocab[word] = len(vocab) + 1
+            vocab[word] = len(vocab)
 
     return vocab
 

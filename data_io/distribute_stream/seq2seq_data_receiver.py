@@ -29,5 +29,5 @@ class Seq2seqDataReceiver(object):
 
 
 if __name__ == '__main__':
-    c = Seq2seqDataReceiver()
+    c = Seq2seqDataReceiver('10.66.98.92', port=5555)
     c.consume()

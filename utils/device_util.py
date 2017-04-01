@@ -67,4 +67,4 @@ def get_devices(devices, device_mode='cpu', rank=0, hosts_num=1, workers_num=1):
         devs = [mx.gpu(int(i)) for i in xrange(start_index, start_index + gpus_num_per_work)]
     return devs
 
-print(get_devices(None, 'gpu_auto', 7, 2, 8))
+#print(get_devices(None, 'gpu_auto', 7, 2, 8))

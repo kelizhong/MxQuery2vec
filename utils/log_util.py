@@ -3,31 +3,20 @@
 from __future__ import absolute_import, division, unicode_literals
 
 import logging
+import logging.config
 import multiprocessing
 import sys
 import threading
 import traceback
-from utils.file_util import ensure_dir_exists
-import os
-import time
-
-__version__ = '0.2.4'
 
 
-def setup_file_log(log_level, log_path):
-    """set up logger"""
-    head = '%(asctime)s %(levelname)s:%(name)s:%(message)s'
-    logging.basicConfig(format=head,
-                        level=log_level,
-                        datefmt='%H:%M:%S')
-    if log_level is not None and log_path is not None:
-        ensure_dir_exists(log_path)
-        file_handler = logging.FileHandler(os.path.join(log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
-        file_handler.setFormatter(logging.Formatter(head))
-        logging.root.addHandler(file_handler)
+def set_up_logger_handler_with_file(logger_conf_path, qualname):
+    logging.config.fileConfig(logger_conf_path)
+    logger = logging.getLogger(qualname)
+    set_up_logger_handler(logger)
 
 
-def install_mp_handler(logger=None):
+def set_up_logger_handler(logger=None):
     """Wraps the handlers in the given Logger with an MultiProcessingHandler.
     :param logger: whose handlers to wrap. By default, the root logger.
     """

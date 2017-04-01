@@ -10,17 +10,16 @@ from conf.customArgAction import AppendTupleWithoutDefault
 import argparse
 from common.constant import special_words
 from setting import project_dir
-from utils.data_util import aksis_sentence_gen
+from utils.data_util import aksis_sentence_gen, sentence_gen
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train Seq2seq query2vec for query2vec')
-
-    parser.add_argument('-lp', '--log-path', default=os.path.join(os.getcwd(), 'data', 'logs'),
+    parser.add_argument('-lp', '--log-conf-path', default=os.path.join(os.getcwd(), 'configure', 'logger.conf'),
                         type=DirectoryType, help='Log directory (default: __DEFAULT__).')
-    parser.add_argument('-ll', '--log-level', choices=['debug', 'info', 'warn', 'error'], default='info',
-                        type=LoggerLevelType,
-                        help='Log level on console (default: __DEFAULT__).')
+    parser.add_argument('-ll', '--log-qualname', choices=['root', 'query2vec', 'logger_seq2seq_data_zmq'],
+                        default='root',
+                        help='Log qualname on console (default: __DEFAULT__).')
     subparsers = parser.add_subparsers(help='train vocabulary')
 
     q2v_trainer_parser = subparsers.add_parser("train_query2vec", help='train query2vec', add_help=False)
@@ -96,7 +95,7 @@ def parse_args():
                                     help='the frequency to save checkpoint')
     q2v_trainer_parser.add_argument('--save_checkpoint-x-batch',
                                     help='save checkpoint for every x batches',
-                                    default=1000, type=int)
+                                    default=100, type=int)
 
     q2v_trainer_parser.add_argument('-kv', '--kv-store', dest='kv_store', help='the kv-store type',
                                     default='local', type=str)
@@ -228,34 +227,35 @@ def parse_args():
                                    help='the file name of the corpus')
 
     q2v_ventiliator_parser.add_argument('encoder_train_data_path', type=str,
-                                    help='the file name of the encoder input for training')
+                                        help='the file name of the encoder input for training')
     q2v_ventiliator_parser.add_argument('decoder_train_data_path', type=str,
-                                    help='the file name of the decoder input for training')
+                                        help='the file name of the decoder input for training')
     q2v_ventiliator_parser.add_argument('vocabulary_path',
-                                    default=os.path.join(os.getcwd(), 'data', 'vocabulary', 'vocab.pkl'),
-                                    type=str,
-                                    help='vocabulary with he most common words')
+                                        default=os.path.join(os.getcwd(), 'data', 'vocabulary', 'vocab.pkl'),
+                                        type=str,
+                                        help='vocabulary with he most common words')
     q2v_ventiliator_parser.add_argument('--ip-addr', type=str, help='ip address')
     q2v_ventiliator_parser.add_argument('--port', type=str, help='zmq port')
     q2v_ventiliator_parser.add_argument('-bs', '--batch-size', default=128, type=int,
-                                    help='batch size for each databatch')
+                                        help='batch size for each databatch')
 
     q2v_aksis_ventiliator_parser.add_argument('data_dir', type=str,
-                                    help='the file name of the encoder input for training')
+                                              help='the file name of the encoder input for training')
     q2v_aksis_ventiliator_parser.add_argument('vocabulary_path',
-                                    default=os.path.join(os.getcwd(), 'data', 'vocabulary', 'vocab.pkl'),
-                                    type=str,
-                                    help='vocabulary with he most common words')
+                                              default=os.path.join(os.getcwd(), 'data', 'vocabulary', 'vocab.pkl'),
+                                              type=str,
+                                              help='vocabulary with he most common words')
     q2v_aksis_ventiliator_parser.add_argument('-ap', '--action-patterns', nargs=2, action=AppendTupleWithoutDefault,
-                                    default=[('*add', -1), ('*search', 0.5), ('*click', 0.4), ('*purchase', -1)])
+                                              default=[('*add', -1), ('*search', 0.5), ('*click', 0.4),
+                                                       ('*purchase', -1)])
     q2v_aksis_ventiliator_parser.add_argument('--ip-addr', type=str, help='ip address')
     q2v_aksis_ventiliator_parser.add_argument('--port', type=str, help='zmq port')
     q2v_aksis_ventiliator_parser.add_argument('-bs', '--batch-size', default=128, type=int,
-                                    help='batch size for each databatch')
+                                              help='batch size for each databatch')
     q2v_aksis_ventiliator_parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,
-                                    default=[(3, 10), (3, 20), (5, 20), (7, 30)])
+                                              default=[(3, 10), (3, 20), (5, 20), (7, 30)])
     q2v_aksis_ventiliator_parser.add_argument('--top-words', default=40000, type=int,
-                                    help='the max sample num for training')
+                                              help='the max sample num for training')
     return parser.parse_args()
 
 
@@ -270,7 +270,7 @@ if __name__ == "__main__":
         mxnet_para = mxnet_parameter(kv_store=args.kv_store, hosts_num=args.hosts_num, workers_num=args.workers_num,
                                      device_mode=args.device_mode, devices=args.devices,
                                      disp_batches=args.disp_batches, monitor_interval=args.monitor_interval,
-                                     log_level=args.log_level, log_path=args.log_path,
+                                     log_conf_path=args.log_conf_path, log_qualname=args.log_qualname,
                                      save_checkpoint_freq=args.save_checkpoint_freq,
                                      model_path_prefix=os.path.join(args.model_path, args.model_prefix),
                                      enable_evaluation=args.enable_evaluation, ignore_label=args.ignore_label,
@@ -298,8 +298,8 @@ if __name__ == "__main__":
     elif args.action == 'query2vec_vocab':
         from vocabulary.vocab import Vocab
 
-        vocab = Vocab(args.files, args.vocab_file, sentence_gen=aksis_sentence_gen,
-                      log_path=args.log_path, log_level=args.log_level, overwrite=args.overwrite)
+        vocab = Vocab(args.files, args.vocab_file, sentence_gen=sentence_gen,
+            log_conf_path=args.log_conf_path, log_qualname=args.log_qualname, overwrite=args.overwrite)
         vocab.create_dictionary()
     elif args.action == 'train_word2vec':
         from word2vec.word2vec_trainer import Word2vecTrainer, mxnet_parameter, optimizer_parameter, model_parameter
@@ -330,9 +330,9 @@ if __name__ == "__main__":
     elif args.action == 'q2v_ventiliator':
         from data_io.distribute_stream.seq2seq_data_ventilator import Seq2seqDataVentilator
         from data_io.data_stream.seq2seq_data_stream import Seq2seqDataStream
-        from utils.data_util import load_pickle_object
+        from utils.data_util import load_vocabulary_from_pickle
 
-        vocab = load_pickle_object(args.vocabulary_path)
+        vocab = load_vocabulary_from_pickle(args.vocabulary_path, special_words=special_words)
         s = Seq2seqDataStream(args.encoder_train_data_path,
                               args.decoder_train_data_path, vocab,
                               vocab, [(3, 10), (3, 20), (5, 20), (7, 30)], args.batch_size)
@@ -340,6 +340,8 @@ if __name__ == "__main__":
         a.produce()
     elif args.action == 'q2v_aksis_ventiliator':
         from data_io.distribute_stream.seq2seq_data_manager import Seq2seqDataManager
-        m = Seq2seqDataManager(args.data_dir, args.vocabulary_path, args.top_words, args.action_patterns, args.batch_size, args.buckets)
-        m.start_all()
 
+        m = Seq2seqDataManager(args.data_dir, args.vocabulary_path, args.top_words, args.action_patterns,
+                               args.batch_size, args.buckets, log_conf_path=args.log_conf_path,
+                               log_qualname=args.log_qualname)
+        m.start_all()

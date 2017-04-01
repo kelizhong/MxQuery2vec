@@ -1,6 +1,4 @@
 import six
-import os
-import time
 import abc
 from utils.device_util import get_devices
 from utils.decorator_util import memoized
@@ -8,7 +6,7 @@ import logging
 from utils.record_util import RecordType
 from itertools import chain
 import mxnet as mx
-from utils.file_util import ensure_dir_exists
+from utils.log_util import set_up_logger_handler_with_file
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -21,7 +19,7 @@ class Trainer(object):
         self._model_para = model_para
         self._data_para = data_para
         self._init_parameter()
-        self._init_log(self.log_level, self.log_path)
+        self._init_log()
         # print the variable before training
         if self.kv.rank == 0:
             self.print_all_variable()
@@ -90,17 +88,9 @@ class Trainer(object):
             # if rescale_grad has not been set, reset rescale_grad
             self.optimizer_params['rescale_grad'] = 1.0 / (self.batch_size * kv.num_workers)
 
-    def _init_log(self, log_level, log_path):
+    def _init_log(self):
         """set up logger"""
-        head = '%(asctime)s %(levelname)s:%(name)s:%(message)s'
-        logging.basicConfig(format=head,
-                            level=log_level,
-                            datefmt='%H:%M:%S')
-        if log_level is not None and log_path is not None:
-            ensure_dir_exists(log_path)
-            file_handler = logging.FileHandler(os.path.join(log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
-            file_handler.setFormatter(logging.Formatter(head))
-            logging.root.addHandler(file_handler)
+        set_up_logger_handler_with_file(self.log_conf_path, self.log_qualname)
 
 
 

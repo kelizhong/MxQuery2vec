@@ -8,6 +8,7 @@ from vocabulary.ventilator import VentilatorProcess
 from vocabulary.worker import WorkerProcess
 from vocabulary.collector import CollectorProcess
 from utils.data_util import sentence_gen
+from utils.log_util import set_up_logger_handler_with_file
 
 
 class Vocab(object):
@@ -36,9 +37,9 @@ class Vocab(object):
         whether to overwrite the existed vocabulary
     """
 
-    def __init__(self, corpus_files, vocab_save_path, sentence_gen=sentence_gen, process_num=10, top_words=100000, ip='127.0.0.1', ventilator_port='5555', collector_port='5556',
-                 log_level=logging.INFO,
-                 log_path='./', overwrite=True):
+    def __init__(self, corpus_files, vocab_save_path, sentence_gen=sentence_gen, process_num=10, top_words=100000,
+                 ip='127.0.0.1', ventilator_port='5555', collector_port='5556',
+                 log_conf_path="./configure/logger.conf", log_qualname="root", overwrite=True):
         self.corpus_files = corpus_files
         self.vocab_save_path = vocab_save_path
         self.sentence_gen = sentence_gen
@@ -48,15 +49,12 @@ class Vocab(object):
         self.ventilator_port = ventilator_port
         self.collector_port = collector_port
         self.overwrite = overwrite
-        self.log_path = log_path
-        self._init_log(log_level)
+        self.log_conf_path = log_conf_path
+        self.log_qualname = log_qualname
+        self._init_log()
 
-    def _init_log(self, log_level):
-        logging.basicConfig(format='%(asctime)s %(levelname)s:%(name)s:%(message)s', level=log_level,
-                            datefmt='%H:%M:%S')
-        file_handler = logging.FileHandler(os.path.join(self.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
-        file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
-        logging.root.addHandler(file_handler)
+    def _init_log(self):
+        set_up_logger_handler_with_file(self.log_conf_path, self.log_qualname)
 
     def create_dictionary(self):
         process_pool = []

@@ -59,7 +59,8 @@ Parameter:
 mxnet_parameter = RecordType('mxnet_parameter', [('kv_store', 'local'), ('hosts_num', 1), ('workers_num', 1),
                                                  ('device_mode', 'cpu'), ('devices', '0'), ('num_epoch', 65535),
                                                  ('disp_batches', 1), ('monitor_interval', -1),
-                                                 ('log_level', logging.ERROR), ('log_path', './logs'),
+                                                 ('log_qualname', 'query2vec'),
+                                                 ('log_conf_path', "./configure/logger.conf"),
                                                  ('save_checkpoint_freq', 1),
                                                  ('model_path_prefix', 'query2vec'), ('enable_evaluation', False),
                                                  ('ignore_label', 0),
@@ -163,7 +164,7 @@ class Query2vecTrainer(Trainer):
     @memoized
     def vocab_size(self):
         """return vocabulary size"""
-        return len(self.vocab) + 1
+        return len(self.vocab)
 
     @property
     @memoized
@@ -207,7 +208,7 @@ class Query2vecTrainer(Trainer):
         data_loader = Seq2seqMaskedBucketIoIter(data_stream,
                                                 encoder_init_states, decoder_init_states, max(self.buckets),
                                                 self.batch_size)
-        #data_loader = MaskedBucketSentenceIter(self.encoder_train_data_path, self.decoder_train_data_path,
+        # data_loader = MaskedBucketSentenceIter(self.encoder_train_data_path, self.decoder_train_data_path,
         #                                       self.vocab,self.vocab,self.buckets, self.batch_size,encoder_init_states, decoder_init_states,
         #                                       max_sentence_num=self.train_max_samples)
         return data_loader

@@ -2,7 +2,7 @@ import mxnet as mx
 import numpy as np
 import argparse
 from collections import OrderedDict
-from utils.data_util import load_pickle_object, sentence2id, word2id
+from utils.data_util import load_vocabulary_from_pickle, sentence2id, word2id
 from inference.inference_model import  BiSeq2seqInferenceModel
 import logging
 import os
@@ -13,6 +13,7 @@ from nltk.tokenize import word_tokenize
 from common import constant
 from numpy import linalg as la
 import pickle
+from common.constant import special_words
 
 def euclidSimilar(inA,inB):
     return 1.0/(1.0+la.norm(inA-inB))
@@ -55,14 +56,14 @@ def parse_args():
     # model parameter
     parser.add_argument('-sln', '--source-layer-num', default=1, type=int,
                         help='number of layers for the source LSTM recurrent neural network')
-    parser.add_argument('-shun', '--source-hidden-unit-num', default=256, type=int,
+    parser.add_argument('-shun', '--source-hidden-unit-num', default=5, type=int,
                         help='number of hidden units in the neural network for encoder')
-    parser.add_argument('-es', '--embed-size', default=128, type=int,
+    parser.add_argument('-es', '--embed-size', default=5, type=int,
                         help='embedding size ')
 
     parser.add_argument('-tln', '--target-layer-num', default=1, type=int,
                         help='number of layers for the target LSTM recurrent neural network')
-    parser.add_argument('-thun', '--target-hidden-unit-num', default=256, type=int,
+    parser.add_argument('-thun', '--target-hidden-unit-num', default=5, type=int,
                         help='number of hidden units in the neural network for decoder')
 
     parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,
@@ -222,13 +223,13 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 34
+    args.load_epoch = 6
 
     # load vocabulary
-    vocab = load_pickle_object(args.vocabulary_path)
+    vocab = load_vocabulary_from_pickle(args.vocabulary_path, special_words=special_words)
     # load model from check-point
     _, arg_params, __ = mx.model.load_checkpoint(os.path.join(args.model_path, args.model_prefix), args.load_epoch)
-    vocab_size = len(vocab) + 1
+    vocab_size = len(vocab)
     logging.info('vocab size: {0}'.format(vocab_size))
     revert_vocab = MakeRevertVocab(vocab)
     buckets = args.buckets
@@ -271,13 +272,17 @@ if __name__ == "__main__":
     #c = encode(word_tokenize("thank you"), model_buckets, vocab).asnumpy()
     #print(cosSimilar(b, c))
     a = encode(word_tokenize("women nike shoe"), model_buckets, vocab).asnumpy()
-    b = encode(word_tokenize("android"), model_buckets, vocab).asnumpy()
+    b = encode(word_tokenize("mobile phone"), model_buckets, vocab).asnumpy()
     print(cosSimilar(a, b))
     c = encode(word_tokenize("iphone"), model_buckets, vocab).asnumpy()
     print(cosSimilar(b, c))
+    d = encode(word_tokenize("men nike shoe"), model_buckets, vocab).asnumpy()
+    print(cosSimilar(a, d))
+    e = encode(word_tokenize("iphone6"), model_buckets, vocab).asnumpy()
+    print(cosSimilar(e, c))
 
     target_ndarray = mx.nd.zeros((1,), ctx=mx.cpu())
-    en = reponse(15, word_tokenize("iphone"), model_buckets, vocab, vocab,
+    en = reponse(15, word_tokenize("how are you"), model_buckets, vocab, vocab,
                        revert_vocab,
                        target_ndarray)
     en = ' '.join(en)
