@@ -6,7 +6,7 @@ Sequence 2 sequence for Query2Vec
 
 import os
 import sys
-from conf.customArgType import LoggerLevelType, DirectoryType, FileType
+from conf.customArgType import DirectoryType, FileType
 from conf.customArgAction import AppendTupleWithoutDefault
 import argparse
 from common.constant import special_words
@@ -15,6 +15,7 @@ from utils.data_util import aksis_sentence_gen, sentence_gen
 from utils.log_util import set_up_logger_handler_with_file
 import logging
 import signal
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train Seq2seq query2vec for query2vec')
