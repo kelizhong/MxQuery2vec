@@ -5,6 +5,7 @@ Sequence 2 sequence for Query2Vec
 """
 
 import os
+import sys
 from conf.customArgType import LoggerLevelType, DirectoryType, FileType
 from conf.customArgAction import AppendTupleWithoutDefault
 import argparse
@@ -12,7 +13,8 @@ from common.constant import special_words
 from setting import project_dir
 from utils.data_util import aksis_sentence_gen, sentence_gen
 from utils.log_util import set_up_logger_handler_with_file
-
+import logging
+import signal
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train Seq2seq query2vec for query2vec')
@@ -264,11 +266,16 @@ def parse_args():
     return parser.parse_args()
 
 
+def signal_handler(signal, frame):
+    logging.info('Stop!!!')
+    sys.exit(0)
+
 if __name__ == "__main__":
     args = parse_args()
     set_up_logger_handler_with_file(args.log_conf_path, args.log_qualname)
     print project_dir
     print(args)
+    signal.signal(signal.SIGINT, signal_handler)
     if args.action == 'train_query2vec':
         from query2vec.query2vec_trainer import Query2vecTrainer, mxnet_parameter, optimizer_parameter, model_parameter, \
             data_parameter
@@ -344,8 +351,8 @@ if __name__ == "__main__":
         a = Seq2seqDataVentilator(s, port=args.port)
         a.produce()
     elif args.action == 'q2v_aksis_ventiliator':
-        from data_io.distribute_stream.seq2seq_data_manager import Seq2seqDataManager
+        from data_io.distribute_stream.aksis_data_pipeline import AksisDataPipeline
 
-        m = Seq2seqDataManager(args.data_dir, args.vocabulary_path, args.top_words, args.action_patterns,
+        p = AksisDataPipeline(args.data_dir, args.vocabulary_path, args.top_words, args.action_patterns,
                                args.batch_size, args.buckets)
-        m.start_all()
+        p.start_all()

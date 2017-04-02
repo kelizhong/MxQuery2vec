@@ -1,7 +1,7 @@
 import zmq
+from utils.network_util import local_ip
 
-
-class Seq2seqDataReceiver(object):
+class AksisDataReceiver(object):
     def __init__(self, ip_addr, port=5556, send_stop_freq=-1):
         context = zmq.Context()
         self.receiver = context.socket(zmq.PULL)
@@ -29,5 +29,5 @@ class Seq2seqDataReceiver(object):
 
 
 if __name__ == '__main__':
-    c = Seq2seqDataReceiver('10.66.98.92', port=5555)
+    c = Seq2seqDataAksisDataReceiverReceiver(local_ip(), port=5558)
     c.consume()

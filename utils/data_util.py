@@ -6,6 +6,7 @@ from common import constant as config
 import string
 from nltk import word_tokenize
 from nltk.stem import WordNetLemmatizer
+from common.constant import bos_word, eos_word
 wn_lemmatizer = WordNetLemmatizer()
 
 """
@@ -97,11 +98,20 @@ def extract_query_title_score_from_aksis_data(sentence):
         return None, None, None
 
 
+def extract_raw_query_title_score_from_aksis_data(sentence):
+    sentence = sentence.strip().lower()
+    items = re.split(r'\t+', sentence)
+    if len(items) == 7 and len(items[2]) and len(items[3]) and len(items[6]):
+        return items[2], items[6], items[3]
+    else:
+        return None, None, None
+
+
 def query_title_score_generator_from_aksis_data(files):
     for line in sentence_gen(files):
-        query_words, title_words, score = extract_query_title_score_from_aksis_data(line)
-        if query_words and title_words and score:
-            yield query_words, title_words, score
+        query, title, score = extract_raw_query_title_score_from_aksis_data(line)
+        if query and title and score:
+            yield query, title, score
 
 
 def load_pickle_object(path):
@@ -150,6 +160,17 @@ def sentence2id(sentence, the_vocab):
 def word2id(word, the_vocab):
     word = word.strip().lower()
     return the_vocab[word] if word in the_vocab else the_vocab[config.unk_word]
+
+
+def convert_data_to_id(encoder_words, decoder_words, encoder_vocab, decoder_vocab):
+    """convert the data into id which represent the index for word in vocabulary"""
+    encoder = encoder_words
+    decoder = [bos_word] + decoder_words
+    label = decoder_words + [eos_word]
+    encoder_sentence_id = sentence2id(encoder, encoder_vocab)
+    decoder_sentence_id = sentence2id(decoder, decoder_vocab)
+    label_id = sentence2id(label, decoder_vocab)
+    return encoder_sentence_id, decoder_sentence_id, label_id
 
 
 def clean_html(html):

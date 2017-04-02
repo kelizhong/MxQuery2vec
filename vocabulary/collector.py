@@ -25,6 +25,7 @@ class CollectorProcess(object):
                 retry = 0
             except zmq.ZMQError:
                 if retry > self.threshold:
+                    metric.stop()
                     break
                 retry += 1
                 time.sleep(self.waiting_time)

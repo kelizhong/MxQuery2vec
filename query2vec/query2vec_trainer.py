@@ -8,7 +8,7 @@ import numpy as np
 
 from base.model import encoder_parameter, decoder_parameter
 from base.trainer import Trainer
-from data_io.distribute_stream.seq2seq_data_receiver import Seq2seqDataReceiver
+from data_io.distribute_stream.aksis_data_receiver import AksisDataReceiver
 from data_io.data_stream.seq2seq_data_stream import Seq2seqDataStream
 from data_io.seq2seq_bucket_io_iter import Seq2seqMaskedBucketIoIter
 from metric.seq2seq_metric import MetricManage
@@ -189,7 +189,7 @@ class Query2vecTrainer(Trainer):
 
     @property
     def data_stream_from_zmq(self):
-        data_stream = Seq2seqDataReceiver(self.ip_addr, self.port, self.save_checkpoint_x_batch)
+        data_stream = AksisDataReceiver(self.ip_addr, self.port, self.save_checkpoint_x_batch)
         return data_stream
 
     @property
