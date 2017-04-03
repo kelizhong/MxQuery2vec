@@ -10,7 +10,7 @@ import threading
 import traceback
 
 
-def set_up_logger_handler_with_file(logger_conf_path, qualname):
+def set_up_logger_handler_with_file(logger_conf_path, qualname=''):
     logging.config.fileConfig(logger_conf_path)
     logger = logging.getLogger(qualname)
     set_up_logger_handler(logger)

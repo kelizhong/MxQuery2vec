@@ -11,41 +11,9 @@ from zmq.eventloop.zmqstream import ZMQStream
 import pickle
 
 
-class AksisParserWorker1(Process):
-    def __init__(self, ip, vocabulary_path, top_words, frontend_port=5556, backend_port=5557, name="AksisWorkerProcess"):
-        Process.__init__(self)
-        self.ip = ip
-        self.vocabulary_path = vocabulary_path
-        self.top_words = top_words
-        self.frontend_port = frontend_port
-        self.backend_port = backend_port
-        self.name = name
-
-    def run(self):
-        context = zmq.Context()
-        receiver = context.socket(zmq.PULL)
-        receiver.connect("tcp://{}:{}".format(self.ip, self.frontend_port))
-        sender = context.socket(zmq.PUSH)
-        sender.connect("tcp://{}:{}".format(self.ip, self.backend_port))
-        logging.info("process {} connect {}:{} and start parse data".format(self.name, self.ip, self.frontend_port))
-        while True:
-            query, title = receiver.recv_pyobj()
-            query_words = tokenize(query)
-            title_words = tokenize(title)
-            data_id = convert_data_to_id(query_words, title_words,
-                                         self.vocabulary, self.vocabulary)
-            sender.send_pyobj(data_id)
-
-    @property
-    @memoized
-    def vocabulary(self):
-        logging.info("loading vocabulary for process {}".format(self.name))
-        vocab = load_vocabulary_from_pickle(self.vocabulary_path, top_words=self.top_words, special_words=special_words)
-        return vocab
-
-
 class AksisParserWorker(Process):
-    def __init__(self, ip, vocabulary_path, top_words, frontend_port=5556, backend_port=5557, name="AksisWorkerProcess"):
+    def __init__(self, ip, vocabulary_path, top_words, frontend_port=5556, backend_port=5557,
+                 name="AksisWorkerProcess"):
         Process.__init__(self)
         self.ip = ip
         self.vocabulary_path = vocabulary_path
@@ -82,4 +50,3 @@ class AksisParserWorker(Process):
         logging.info("loading vocabulary for process {}".format(self.name))
         vocab = load_vocabulary_from_pickle(self.vocabulary_path, top_words=self.top_words, special_words=special_words)
         return vocab
-

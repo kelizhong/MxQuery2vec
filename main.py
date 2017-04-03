@@ -10,20 +10,22 @@ from conf.customArgType import DirectoryType, FileType
 from conf.customArgAction import AppendTupleWithoutDefault
 import argparse
 from common.constant import special_words
-from setting import project_dir
 from utils.data_util import aksis_sentence_gen, sentence_gen
 from utils.log_util import set_up_logger_handler_with_file
 import logging
 import signal
-
+import pycounters
+from pycounters import report_value, counters, register_counter
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train Seq2seq query2vec for query2vec')
-    parser.add_argument('-lp', '--log-conf-path', default=os.path.join(os.getcwd(), 'configure', 'logger.conf'),
+    parser.add_argument('--log-conf-path', default=os.path.join(os.getcwd(), 'configure', 'logger.conf'),
                         type=DirectoryType, help='Log directory (default: __DEFAULT__).')
-    parser.add_argument('-ll', '--log-qualname', choices=['root', 'query2vec', 'logger_seq2seq_data_zmq'],
+    parser.add_argument('--log-qualname', choices=['root', 'query2vec', 'seq2seq_data_zmq'],
                         default='root',
                         help='Log qualname on console (default: __DEFAULT__).')
+    parser.add_argument('--metric-interval', default=6, type=int,
+                        help='metric reporting frequency is set by seconds param')
     subparsers = parser.add_subparsers(help='train vocabulary')
 
     q2v_trainer_parser = subparsers.add_parser("train_query2vec", help='train query2vec', add_help=False)
@@ -34,8 +36,6 @@ def parse_args():
     w2v_trainer_parser.set_defaults(action='train_word2vec')
     w2v_dumper_parser = subparsers.add_parser("dump_word2vec")
     w2v_dumper_parser.set_defaults(action='dump_word2vec')
-    q2v_ventiliator_parser = subparsers.add_parser("q2v_ventiliator")
-    q2v_ventiliator_parser.set_defaults(action='q2v_ventiliator')
     q2v_aksis_ventiliator_parser = subparsers.add_parser("q2v_aksis_ventiliator")
     q2v_aksis_ventiliator_parser.set_defaults(action='q2v_aksis_ventiliator')
 
@@ -234,19 +234,6 @@ def parse_args():
     w2v_dumper_parser.add_argument('w2v_save_path', type=str,
                                    help='the file name of the corpus')
 
-    q2v_ventiliator_parser.add_argument('encoder_train_data_path', type=str,
-                                        help='the file name of the encoder input for training')
-    q2v_ventiliator_parser.add_argument('decoder_train_data_path', type=str,
-                                        help='the file name of the decoder input for training')
-    q2v_ventiliator_parser.add_argument('vocabulary_path',
-                                        default=os.path.join(os.getcwd(), 'data', 'vocabulary', 'vocab.pkl'),
-                                        type=str,
-                                        help='vocabulary with he most common words')
-    q2v_ventiliator_parser.add_argument('--ip-addr', type=str, help='ip address')
-    q2v_ventiliator_parser.add_argument('--port', type=str, help='zmq port')
-    q2v_ventiliator_parser.add_argument('-bs', '--batch-size', default=128, type=int,
-                                        help='batch size for each databatch')
-
     q2v_aksis_ventiliator_parser.add_argument('data_dir', type=str,
                                               help='the file name of the encoder input for training')
     q2v_aksis_ventiliator_parser.add_argument('vocabulary_path',
@@ -271,10 +258,14 @@ def signal_handler(signal, frame):
     logging.info('Stop!!!')
     sys.exit(0)
 
+
+def set_up_logger():
+    set_up_logger_handler_with_file(args.log_conf_path, args.log_qualname)
+
+
 if __name__ == "__main__":
     args = parse_args()
-    set_up_logger_handler_with_file(args.log_conf_path, args.log_qualname)
-    print project_dir
+    set_up_logger()
     print(args)
     signal.signal(signal.SIGINT, signal_handler)
     if args.action == 'train_query2vec':
@@ -312,7 +303,7 @@ if __name__ == "__main__":
         from vocabulary.vocab import Vocab
 
         vocab = Vocab(args.files, args.vocab_file, workers_num=args.workers_num, sentence_gen=aksis_sentence_gen,
-             overwrite=args.overwrite)
+                      overwrite=args.overwrite)
         vocab.create_dictionary()
     elif args.action == 'train_word2vec':
         from word2vec.word2vec_trainer import Word2vecTrainer, mxnet_parameter, optimizer_parameter, model_parameter
@@ -340,20 +331,9 @@ if __name__ == "__main__":
 
         W2vDumper(w2v_model_path=os.path.join(args.model_path, args.model_prefix), vocab_path=args.w2v_vocabulary_path,
                   w2v_save_path=args.w2v_save_path, rank=args.rank, load_epoch=args.load_epoch).dumper()
-    elif args.action == 'q2v_ventiliator':
-        from data_io.distribute_stream.seq2seq_data_ventilator import Seq2seqDataVentilator
-        from data_io.data_stream.seq2seq_data_stream import Seq2seqDataStream
-        from utils.data_util import load_vocabulary_from_pickle
-
-        vocab = load_vocabulary_from_pickle(args.vocabulary_path, special_words=special_words)
-        s = Seq2seqDataStream(args.encoder_train_data_path,
-                              args.decoder_train_data_path, vocab,
-                              vocab, [(3, 10), (3, 20), (5, 20), (7, 30)], args.batch_size)
-        a = Seq2seqDataVentilator(s, port=args.port)
-        a.produce()
     elif args.action == 'q2v_aksis_ventiliator':
         from data_io.distribute_stream.aksis_data_pipeline import AksisDataPipeline
 
         p = AksisDataPipeline(args.data_dir, args.vocabulary_path, args.top_words, args.action_patterns,
-                               args.batch_size, args.buckets)
+                              args.batch_size, args.buckets)
         p.start_all()

@@ -1,8 +1,8 @@
 import zmq
-import logging
 from multiprocessing import Process
-import time
 from utils.data_util import tokenize
+from utils.appmetric_util import with_meter
+from utils.retry_util import retry
 
 
 class WorkerProcess(Process):
@@ -15,6 +15,12 @@ class WorkerProcess(Process):
         self.threshold = threshold
         self.name = name
 
+    @retry(10, zmq.ZMQError, timeout=0.5, name='worker_parser')
+    @with_meter('worker_parser', interval=30)
+    def _recv_pyboj(self, receiver):
+        sentence = receiver.recv_pyobj(zmq.NOBLOCK)
+        return sentence
+
     def run(self):
         context = zmq.Context()
         receiver = context.socket(zmq.PULL)
@@ -22,19 +28,11 @@ class WorkerProcess(Process):
 
         tokens_words_producer = context.socket(zmq.PUSH)
         tokens_words_producer.connect("tcp://{}:{}".format(self.ip, self.port))
-
-        retry = 0
         while True:
             try:
-                sentence = receiver.recv_string(zmq.NOBLOCK)
-                retry = 0
+                sentence = self._recv_pyboj(receiver)
             except zmq.ZMQError:
-                if retry > self.threshold:
-                    break
-                retry += 1
-                logging.info("worker {} is waiting, has retried {} times".format(self.name, retry))
-                time.sleep(self.waiting_time)
-                continue
+                break
             tokens = tokenize(sentence)
             tokens_words_producer.send_pyobj(tokens)
 

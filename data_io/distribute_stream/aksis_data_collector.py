@@ -9,13 +9,15 @@ import pickle
 
 
 class AksisDataCollector(Process):
-    def __init__(self, ip, buckets, batch_size, frontend_port=5557, backend_port=5558, name="AksisDataCollectorProcess"):
+    def __init__(self, ip, buckets, batch_size, frontend_port=5557, backend_port=5558, metric_interval=30,
+                 name="AksisDataCollectorProcess"):
         Process.__init__(self)
         self.ip = ip
         self.buckets = buckets
         self.batch_size = batch_size
         self.frontend_port = frontend_port
         self.backend_port = backend_port
+        self.metric_interval = metric_interval
         self.name = name
 
     def run(self):
@@ -25,8 +27,11 @@ class AksisDataCollector(Process):
         sender = context.socket(zmq.PUSH)
         sender.bind("tcp://{}:{}".format(self.ip, self.backend_port))
         queue = Seq2seqDataBcuketQueue(self.buckets, self.batch_size)
-        metric = AppMetric(name=self.name)
-        logging.info("process {} connect {}:{} and start parse data".format(self.name, self.ip, self.frontend_port))
+        metric = AppMetric(name=self.name, interval=self.metric_interval)
+        logging.info(
+            "start collector {}, ip:{}, frontend port:{}, backend port:{}".format(self.name, self.ip,
+                                                                                  self.frontend_port,
+                                                                                  self.backend_port))
         ioloop.install()
         loop = ioloop.IOLoop.instance()
         pull_stream = ZMQStream(receiver)
@@ -37,8 +42,7 @@ class AksisDataCollector(Process):
             if data:
                 sender.send_pyobj(data)
                 metric.notify(self.batch_size)
+
         pull_stream.on_recv(_on_recv)
 
         loop.start()
-        metric.stop()
-

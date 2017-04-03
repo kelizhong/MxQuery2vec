@@ -1,22 +1,48 @@
 from appmetrics import metrics
-import threading
 import logging
-from utils.app_scheduler_util import RepeatedTimer
+from appmetrics import reporter
+import functools
+
+
+def with_meter(name, value=1, interval=-1):
+    """
+    Call-counting decorator: each time the wrapped function is called
+    the named meter is incremented by one.
+    metric_args and metric_kwargs are passed to new_meter()
+    """
+
+    try:
+        mmetric = AppMetric(name=name, interval=interval)
+
+    except metrics.DuplicateMetricError as e:
+        mmetric = AppMetric(metric=metrics.metric(name), interval=interval)
+
+    def wrapper(f):
+
+        @functools.wraps(f)
+        def fun(*args, **kwargs):
+            res = f(*args, **kwargs)
+
+            mmetric.notify(value)
+            return res
+
+        return fun
+
+    return wrapper
 
 
 class AppMetric(object):
-    def __init__(self, name='metric', interval=10):
-        self.meter = metrics.new_meter(name)
-        self.interval = interval
-        self.name = name
-        self.rt = RepeatedTimer(interval, self.log_metric)
+    def __init__(self, metric=None, name='metric', interval=-1):
+        self.metric = metric or metrics.new_meter(name)
 
-    def log_metric(self):
-        logging.info("{}:{}".format(self.name, self.meter.get()))
+        self.interval = interval
+        if interval > 0:
+            reporter.register(self.log_report, reporter.fixed_interval_scheduler(interval))
+
+    @staticmethod
+    def log_report(metrics):
+        logging.info(metrics)
 
     def notify(self, value):
-        self.meter.notify(value)
-
-    def stop(self):
-        self.rt.stop()
+        self.metric.notify(value)
 
