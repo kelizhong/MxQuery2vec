@@ -12,7 +12,7 @@ class CollectorProcess(object):
 
     @retry(10, zmq.ZMQError, timeout=0.5, name="vocabulary_collector")
     @with_meter('vocabulary_collector', interval=30)
-    def _recv_pyboj(self, receiver):
+    def _on_recv(self, receiver):
         words = receiver.recv_pyobj(zmq.NOBLOCK)
         return words
 
@@ -22,7 +22,7 @@ class CollectorProcess(object):
         receiver.bind("tcp://{}:{}".format(self.ip, self.worker_port))
         while True:
             try:
-                words = self._recv_pyboj(receiver)
+                words = self._on_recv(receiver)
             except zmq.ZMQError:
                 break
             for word in words:

@@ -17,8 +17,8 @@ class WorkerProcess(Process):
 
     @retry(10, zmq.ZMQError, timeout=0.5, name='worker_parser')
     @with_meter('worker_parser', interval=30)
-    def _recv_pyboj(self, receiver):
-        sentence = receiver.recv_pyobj(zmq.NOBLOCK)
+    def _on_recv(self, receiver):
+        sentence = receiver.recv_string(zmq.NOBLOCK)
         return sentence
 
     def run(self):
@@ -30,7 +30,7 @@ class WorkerProcess(Process):
         tokens_words_producer.connect("tcp://{}:{}".format(self.ip, self.port))
         while True:
             try:
-                sentence = self._recv_pyboj(receiver)
+                sentence = self._on_recv(receiver)
             except zmq.ZMQError:
                 break
             tokens = tokenize(sentence)

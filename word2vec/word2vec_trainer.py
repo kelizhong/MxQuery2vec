@@ -77,6 +77,8 @@ Parameter:
 """
 model_parameter = RecordType('model_parameter', [('embed_size', 128), ('batch_size', 128), ('window_size', 2)])
 
+data_parameter = RecordType('data_parameter', [])
+
 
 class Word2vecTrainer(Trainer):
     """Train the word2vec, in this project, this word2vec is used for initializing the embedding weight of query2vec.
@@ -95,10 +97,11 @@ class Word2vecTrainer(Trainer):
     model_para: RecordType
         model parameter
     """
+
     def __init__(self, data_path, vocabulary_save_path, mxnet_para=mxnet_parameter, optimizer_para=optimizer_parameter,
-                 model_para=model_parameter):
+                 model_para=model_parameter, data_para=data_parameter):
         super(Word2vecTrainer, self).__init__(mxnet_para=mxnet_para, optimizer_para=optimizer_para,
-                                               model_para=model_para)
+                                              model_para=model_para, data_para=data_para)
         self.data_path = data_path  # ./data/word2vec/train.dec
         self.vocabulary_save_path = vocabulary_save_path
 

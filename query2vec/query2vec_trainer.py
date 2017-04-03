@@ -193,6 +193,16 @@ class Query2vecTrainer(Trainer):
         return data_stream
 
     @property
+    def data_stream(self):
+        if self.encoder_train_data_path and self.decoder_train_data_path:
+            data_stream = self.data_stream_from_file
+        elif self.ip_addr and self.port:
+            data_stream = self.data_stream_from_zmq
+        else:
+            raise RuntimeError("fail to get data stream")
+        return data_stream
+
+    @property
     @memoized
     def train_data_loader(self):
         # get states shapes
@@ -201,13 +211,11 @@ class Query2vecTrainer(Trainer):
         # data_stream = Seq2seqDataStream(self.encoder_train_data_path, self.decoder_train_data_path, self.vocab,
         #                                self.vocab, self.buckets, self.batch_size,
         #                                max_sentence_num=self.train_max_samples)
-        data_stream = self.data_stream_from_zmq
+        data_stream = self.data_stream
         data_loader = Seq2seqMaskedBucketIoIter(data_stream,
                                                 encoder_init_states, decoder_init_states, max(self.buckets),
                                                 self.batch_size)
-        # data_loader = MaskedBucketSentenceIter(self.encoder_train_data_path, self.decoder_train_data_path,
-        #                                       self.vocab,self.vocab,self.buckets, self.batch_size,encoder_init_states, decoder_init_states,
-        #                                       max_sentence_num=self.train_max_samples)
+
         return data_loader
 
     @property

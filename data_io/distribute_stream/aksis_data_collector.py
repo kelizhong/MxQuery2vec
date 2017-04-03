@@ -1,11 +1,13 @@
-import zmq
-from multiprocessing import Process
-from data_io.data_stream.seq2seq_data_bucket_queue import Seq2seqDataBcuketQueue
-from utils.appmetric_util import AppMetric
 import logging
+import pickle
+from multiprocessing import Process
+
+import zmq
 from zmq.eventloop import ioloop
 from zmq.eventloop.zmqstream import ZMQStream
-import pickle
+
+from data_io.seq2seq_data_bucket_queue import Seq2seqDataBcuketQueue
+from utils.appmetric_util import AppMetric
 
 
 class AksisDataCollector(Process):

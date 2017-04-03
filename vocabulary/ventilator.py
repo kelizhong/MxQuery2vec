@@ -24,6 +24,8 @@ class VentilatorProcess(Process):
         for filename in self.corpus_files:
             logging.info("Counting words in %s" % filename)
             for sentence in self.sentence_gen(filename):
+                print("------------------------------------------------------------------------------")
+                print(sentence)
                 data_socket.send_string(sentence)
 
 

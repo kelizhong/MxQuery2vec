@@ -3,12 +3,13 @@ import codecs
 import itertools
 import sys
 from utils.data_util import tokenize
-from base.base_seq2seq_data_stream import BaseSeq2seqDataStream
-from utils.data_util import load_pickle_object
 import logging
+from data_io.seq2seq_data_bucket_queue import Seq2seqDataBcuketQueue
+from utils.data_util import convert_data_to_id
 
 
-class Seq2seqDataStream(BaseSeq2seqDataStream):
+class Seq2seqDataStream(object):
+
     """masked bucketing iterator for seq2seq model. This class is only used for test
 
     Parameters
@@ -39,12 +40,33 @@ class Seq2seqDataStream(BaseSeq2seqDataStream):
 
     def __init__(self, encoder_path, decoder_path, encoder_vocab, decoder_vocab, buckets, batch_size, ignore_label=0,
                  dtype='float32', max_sentence_num=sys.maxsize):
-        super(Seq2seqDataStream, self).__init__(encoder_vocab, decoder_vocab, buckets, batch_size, ignore_label, dtype)
         self.encoder_path = encoder_path
         self.decoder_path = decoder_path
         self.max_sentence_num = max_sentence_num
+        self.buckets = buckets
+        self.encoder_vocab = encoder_vocab
+        self.decoder_vocab = decoder_vocab
+        self.data_gen = self.data_generator()
+        self.batch_size = batch_size
+        self.ignore_label = ignore_label
+        self.dtype = dtype
+        self.bucket_queue = dict()
+        self.queue = self._init_queue()
+
+    def _init_queue(self):
+        """initialize the queue for each bucket to store tuple(encoder_sentence_id, decoder_sentence_id, label_id)"""
+        queue = Seq2seqDataBcuketQueue(self.buckets, self.batch_size)
+        return queue
 
     def data_generator(self):
+        """generate the data for seq2seq model, including two parts(encoder_words, decoder_words)
+           encoder_words, decoder_words is a list object which has been segmented .e.g.
+           encoder line(maybe query/post): mens running shoes
+           decoder line(maybe title/response): Nike Men's Shox NZ SE Black/White/Paramount Blue Running Shoe 10.5 Men U
+           then
+           encoder_words: [mens, running, shoes]
+           decoder_words: [Nike, Men's, Shox, NZ, SE, Black, /, White, /, Paramount, Blue, Running, Shoe, 10.5, Men, U]
+        """
         with codecs.open(self.encoder_path) as encoder, codecs.open(self.decoder_path) as decoder:
             for encoder_line, decoder_line in itertools.izip(itertools.islice(encoder, self.max_sentence_num),
                                                              itertools.islice(decoder, self.max_sentence_num)):
@@ -61,10 +83,21 @@ class Seq2seqDataStream(BaseSeq2seqDataStream):
                 except Exception as e:
                     logging.error(e)
 
+    def __iter__(self):
+        return self
 
-if __name__ == '__main__':
-    vocab = load_pickle_object('../data/vocabulary/vocab.pkl')
-    s = Seq2seqDataStream('../data/query2vec/train_corpus/small.enc', '../data/query2vec/train_corpus/small.dec', vocab,
-                          vocab, [(3, 10), (3, 20), (5, 20), (7, 30)], 3)
-    for encoder_data, encoder_mask_data, decoder_data, decoder_mask_data, label_data, bucket in s:
-        print(encoder_data, decoder_data)
+    def next(self):
+
+        while True:
+            # get data from generator
+            encoder_words, decoder_words = self.data_gen.next()
+            encoder_sentence_id, decoder_sentence_id, label_id = convert_data_to_id(encoder_words, decoder_words,
+                                         self.encoder_vocab, self.decoder_vocab)
+
+            data = self.queue.put(encoder_sentence_id, decoder_sentence_id, label_id)
+            if data:
+                return data
+
+    def reset(self):
+        """reset the data generator for reading the data cyclicly"""
+        self.data_gen = self.data_generator()
