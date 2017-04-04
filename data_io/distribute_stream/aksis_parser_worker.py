@@ -13,6 +13,21 @@ from zmq.decorators import socket
 
 
 class AksisParserWorker(Process):
+    """Parser worker to tokenzie the aksis data and convert them to id
+
+    Parameters
+    ----------
+    vocabulary_path: str
+        Path for vocabulary from aksis corpus data
+    top_words: int
+        Only use the top_words in vocabulary
+    ip : str
+        The ip address string without the port to pass to ``Socket.bind()``.
+    frontend_port: int
+        Port for the incoming traffic
+    backend_port: int
+        Port for the outbound traffic
+    """
     def __init__(self, ip, vocabulary_path, top_words, frontend_port=5556, backend_port=5557,
                  name="AksisWorkerProcess"):
         Process.__init__(self)

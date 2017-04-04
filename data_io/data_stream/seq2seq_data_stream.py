@@ -9,7 +9,6 @@ from utils.data_util import convert_data_to_id
 
 
 class Seq2seqDataStream(object):
-
     """masked bucketing iterator for seq2seq model. This class is only used for test
 
     Parameters

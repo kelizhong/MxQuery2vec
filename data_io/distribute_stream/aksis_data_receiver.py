@@ -5,6 +5,18 @@ from utils.log_util import set_up_logger_handler_with_file
 
 
 class AksisDataReceiver(object):
+    """Receiver the data from collector
+
+    Parameters
+    ----------
+    ip : str
+        The ip address string without the port to pass to ``Socket.bind()``.
+    port: int
+        Port to receive the data from collector
+    stop_freq: int
+        Frequency to raise the StopIteration error. If the trainer iter receive the StopIteration,
+        the trainer will save the checkpoint. If stop_freq < 0, will not raise the StopIteration error
+    """
     def __init__(self, ip, port=5556, stop_freq=-1):
         context = zmq.Context()
         self.receiver = context.socket(zmq.PULL)

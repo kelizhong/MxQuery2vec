@@ -6,6 +6,7 @@ from utils.retry_util import retry
 from zmq.decorators import socket
 import logging
 
+
 class WorkerProcess(Process):
     def __init__(self, ip, ventilator_port, port, waiting_time=0.1, threshold=10, name='WorkerProcess'):
         Process.__init__(self)

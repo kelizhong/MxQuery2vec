@@ -8,10 +8,6 @@ class Seq2seqDataBcuketQueue(object):
 
     Parameters
     ----------
-    encoder_vocab: dict
-        vocabulary from encoder corpus.
-    decoder_vocab: dict
-        vocabulary from decoder corpus.
     buckets : list of int
         size of data buckets.
     batch_size : int

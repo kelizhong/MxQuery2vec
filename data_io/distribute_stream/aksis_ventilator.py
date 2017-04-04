@@ -9,10 +9,28 @@ from zmq.decorators import socket
 
 
 class AksisDataVentilatorProcess(Process):
-    def __init__(self, action_pattern, data_dir,
+    """Process to read the corpus data
+    Parameters
+    ----------
+    data_dir : str
+        Data_dir for the aksis corpus data
+    file_pattern: tuple
+        File pattern use to distinguish different corpus, every file pattern will start a ventilitor process.
+        File pattern is tuple type(file pattern, dropout). Dropout is the probability to ignore the data.
+        If dropout < 0, all the data will be accepted to be trained
+    ip : str
+        The ip address string without the port to pass to ``Socket.bind()``.
+    port: int
+        Port to produce the raw data
+    num_epoch: int
+        end epoch of producing the data
+    name: str
+        process name
+    """
+    def __init__(self, file_pattern, data_dir,
                  num_epoch=65535, dropout=-1, ip='127.0.0.1', port='5555', name='VentilatorProcess'):
         Process.__init__(self)
-        self.action_pattern = action_pattern
+        self.file_pattern = file_pattern
         self.data_dir = data_dir
         self.num_epoch = num_epoch
         self.dropout = float(dropout)
@@ -33,8 +51,8 @@ class AksisDataVentilatorProcess(Process):
             data_stream = self.get_data_stream()
 
     def get_data_stream(self):
-        data_files = fnmatch.filter(os.listdir(self.data_dir), self.action_pattern)
-        assert len(data_files) > 0, "no files are found for action pattern {} in {}".format(self.action_pattern,
+        data_files = fnmatch.filter(os.listdir(self.data_dir), self.file_pattern)
+        assert len(data_files) > 0, "no files are found for action pattern {} in {}".format(self.file_pattern,
                                                                                             self.data_dir)
         action_add_files = [os.path.join(self.data_dir, filename) for filename in data_files]
 
@@ -43,6 +61,6 @@ class AksisDataVentilatorProcess(Process):
                 yield query, title
 
     def is_hit(self, score):
-        """sample function to decide whether the data should be trained, not sample if floor less than 0"""
+        """sample function to decide whether the data should be trained, not sample if dropout less than 0"""
         return self.dropout < 0 or float(score) > random.uniform(self.dropout, 1)
 
