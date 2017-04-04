@@ -6,8 +6,8 @@ Runner for Query2Vec
 
 import os
 import sys
-from conf.customArgType import DirectoryType, FileType
-from conf.customArgAction import AppendTupleWithoutDefault
+from argparser.customArgType import DirectoryType, FileType
+from argparser.customArgAction import AppendTupleWithoutDefault
 import argparse
 from utils.data_util import aksis_sentence_gen
 from utils.log_util import set_up_logger_handler_with_file

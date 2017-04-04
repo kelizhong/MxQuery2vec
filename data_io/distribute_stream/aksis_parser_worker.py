@@ -9,6 +9,7 @@ from utils.data_util import tokenize
 from zmq.eventloop import ioloop
 from zmq.eventloop.zmqstream import ZMQStream
 import pickle
+from zmq.decorators import socket
 
 
 class AksisParserWorker(Process):
@@ -22,11 +23,10 @@ class AksisParserWorker(Process):
         self.backend_port = backend_port
         self.name = name
 
-    def run(self):
-        context = zmq.Context()
-        receiver = context.socket(zmq.PULL)
+    @socket(zmq.PULL)
+    @socket(zmq.PUSH)
+    def run(self, receiver, sender):
         receiver.connect("tcp://{}:{}".format(self.ip, self.frontend_port))
-        sender = context.socket(zmq.PUSH)
         sender.connect("tcp://{}:{}".format(self.ip, self.backend_port))
         logging.info("process {} connect {}:{} and start parse data".format(self.name, self.ip, self.frontend_port))
         ioloop.install()

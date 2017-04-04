@@ -3,17 +3,18 @@ import numpy as np
 import argparse
 from collections import OrderedDict
 from utils.data_util import load_vocabulary_from_pickle, sentence2id, word2id
-from inference.inference_model import  BiSeq2seqInferenceModel
+from inference.inference_model import BiSeq2seqInferenceModel
 import logging
 import os
 import time
-from conf.customArgType import LoggerLevelType, DirectoryType
-from conf.customArgAction import AppendTupleWithoutDefault
-from nltk.tokenize import word_tokenize
+from argparser.customArgType import LoggerLevelType, DirectoryType
+from argparser.customArgAction import AppendTupleWithoutDefault
+#from nltk.tokenize import word_tokenize
 from common import constant
 from numpy import linalg as la
 import pickle
 from common.constant import special_words
+from utils.data_util import tokenize as word_tokenize
 
 def euclidSimilar(inA,inB):
     return 1.0/(1.0+la.norm(inA-inB))
@@ -46,7 +47,7 @@ def parse_args():
                         help='vocabulary with he most common words')
     parser.add_argument('-le', '--load-epoch', dest='load_epoch', help='epoch of pretrained model',
                         type=int)
-    parser.add_argument('-mp', '--model-prefix', default='query2vec',
+    parser.add_argument('-mp', '--model-prefix', default='query2vec-7',
                         type=str,
                         help='the experiment name, this is also the prefix for the parameters file')
     parser.add_argument('-pd', '--model-path', default=os.path.join(os.getcwd(), 'data', 'query2vec/model'),
@@ -56,14 +57,14 @@ def parse_args():
     # model parameter
     parser.add_argument('-sln', '--source-layer-num', default=1, type=int,
                         help='number of layers for the source LSTM recurrent neural network')
-    parser.add_argument('-shun', '--source-hidden-unit-num', default=5, type=int,
+    parser.add_argument('-shun', '--source-hidden-unit-num', default=256, type=int,
                         help='number of hidden units in the neural network for encoder')
-    parser.add_argument('-es', '--embed-size', default=5, type=int,
+    parser.add_argument('-es', '--embed-size', default=128, type=int,
                         help='embedding size ')
 
     parser.add_argument('-tln', '--target-layer-num', default=1, type=int,
                         help='number of layers for the target LSTM recurrent neural network')
-    parser.add_argument('-thun', '--target-hidden-unit-num', default=5, type=int,
+    parser.add_argument('-thun', '--target-hidden-unit-num', default=256, type=int,
                         help='number of hidden units in the neural network for decoder')
 
     parser.add_argument('-b', '--buckets', nargs=2, action=AppendTupleWithoutDefault, type=int,
@@ -223,10 +224,10 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 6
+    args.load_epoch = 19
 
     # load vocabulary
-    vocab = load_vocabulary_from_pickle(args.vocabulary_path, special_words=special_words)
+    vocab = load_vocabulary_from_pickle(args.vocabulary_path, top_words=45000, special_words=special_words)
     # load model from check-point
     _, arg_params, __ = mx.model.load_checkpoint(os.path.join(args.model_path, args.model_prefix), args.load_epoch)
     vocab_size = len(vocab)
@@ -281,8 +282,10 @@ if __name__ == "__main__":
     e = encode(word_tokenize("iphone6"), model_buckets, vocab).asnumpy()
     print(cosSimilar(e, c))
 
+    print(cosSimilar(a, c))
+
     target_ndarray = mx.nd.zeros((1,), ctx=mx.cpu())
-    en = reponse(15, word_tokenize("how are you"), model_buckets, vocab, vocab,
+    en = reponse(15, word_tokenize("iphone6"), model_buckets, vocab, vocab,
                        revert_vocab,
                        target_ndarray)
     en = ' '.join(en)

@@ -5,6 +5,7 @@ from worker import WorkerProcess
 from collector import CollectorProcess
 from collections import Counter
 from utils.data_util import sentence_gen
+from zmq.decorators import socket
 
 
 class VentilatorProcess(Process):
@@ -15,18 +16,15 @@ class VentilatorProcess(Process):
         self.corpus_files = [corpus_files] if not isinstance(corpus_files, list) else corpus_files
         self.sentence_gen = sentence_gen
 
-    def run(self):
-        data_context = zmq.Context()
-        data_socket = data_context.socket(zmq.PUSH)
-        data_socket.bind("tcp://{}:{}".format(self.ip, self.port))
+    @socket(zmq.PUSH)
+    def run(self, sender):
+        sender.bind("tcp://{}:{}".format(self.ip, self.port))
 
         logging.info("start sentence producer")
         for filename in self.corpus_files:
             logging.info("Counting words in %s" % filename)
             for sentence in self.sentence_gen(filename):
-                print("------------------------------------------------------------------------------")
-                print(sentence)
-                data_socket.send_string(sentence)
+                sender.send_string(sentence)
 
 
 if __name__ == '__main__':

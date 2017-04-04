@@ -44,7 +44,7 @@ Parameter:
 mxnet_parameter = RecordType('mxnet_parameter',
                              [('kv_store', 'local'), ('hosts_num', 1), ('workers_num', 1), ('device_mode', 'cpu'),
                               ('devices', '0'), ('num_epoch', 65535), ('disp_batches', 1), ('monitor_interval', 2),
-                              ('log_level', logging.ERROR), ('log_path', './logs'), ('save_checkpoint_freq', 1),
+                              ('save_checkpoint_freq', 1),
                               ('model_path_prefix', 'word2vec'), ('enable_evaluation', False), ('load_epoch', 1)])
 """optimizer parameter
 Parameter:
@@ -107,7 +107,7 @@ class Word2vecTrainer(Trainer):
 
     @property
     def model(self):
-        m = Word2vec(self.batch_size, self.data_loader.vocab_size, self.embed_size, self.window_size)
+        m = Word2vec(self.batch_size, self.train_data_loader.vocab_size, self.embed_size, self.window_size)
         return m
 
     @property

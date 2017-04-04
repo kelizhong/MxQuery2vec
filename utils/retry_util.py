@@ -1,21 +1,43 @@
-import decorator
 import time
-import logging
+from functools import wraps
+import types
 
 
-def retry(times, *exception_types, **kwargs):
-    timeout = kwargs.get('timeout', 0.0)  # seconds
-    name = kwargs.get('name')  # name
+def retry(tries, delay=1, backoff=1, exception=Exception, name=None, report=lambda *args: None):
+    """
+    A retry decorator with exponential backoff,
+    Retries a function or method if Exception occurred
 
-    @decorator.decorator
-    def retrying(func, *func_args, **func_kwargs):
+    Args:
+        tries: number of times to retry, set to 0 to disable retry
+        delay: initial delay in seconds(can be float, eg 0.01 as 10ms),
+            if the first run failed, it would sleep 'delay' second and try again
+        backoff: must be greater than 1,
+            further failure would sleep delay *= backoff second
+    """
+
+    def retrying(func):
         func_name = name or func.__name__
-        for i in xrange(times):
-            try:
-                logging.warn("{} is waiting, has retried {} times".format(func_name, i))
-                return func(*func_args, **func_kwargs)
-            except exception_types:
-                if timeout is not None:
-                    time.sleep(timeout)
-        raise exception_types
+
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            _tries = tries(self) if isinstance(tries, types.LambdaType) else tries
+            _delay = delay(self) if isinstance(delay, types.LambdaType) else delay
+            for i in xrange(_tries):
+                try:
+                    ret = func(self, *args, **kwargs)
+                    return ret
+                except exception as e:
+                    # retried enough and still fail? raise orignal exception
+                    if i == _tries - 1:
+                        report("{} failed to retry definitely: {}".format(func_name, e))
+                        raise
+                    else:
+                        report("{} retry {} time, Exception: {}".format(func_name, i, e))
+                        time.sleep(_delay)
+                        # wait longer after each failure
+                        _delay *= backoff
+
+        return wrapper
+
     return retrying

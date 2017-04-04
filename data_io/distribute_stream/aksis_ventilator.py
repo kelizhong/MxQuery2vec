@@ -5,6 +5,7 @@ from multiprocessing import Process
 import logging
 from utils.data_util import query_title_score_generator_from_aksis_data
 import random
+from zmq.decorators import socket
 
 
 class AksisDataVentilatorProcess(Process):
@@ -19,16 +20,15 @@ class AksisDataVentilatorProcess(Process):
         self.port = port
         self.name = name
 
-    def run(self):
-        context = zmq.Context()
-        zmq_socket = context.socket(zmq.PUSH)
-        zmq_socket.connect("tcp://{}:{}".format(self.ip, self.port))
+    @socket(zmq.PUSH)
+    def run(self, sender):
+        sender.connect("tcp://{}:{}".format(self.ip, self.port))
         logging.info("process {} connect {}:{} and start produce data".format(self.name, self.ip, self.port))
 
         data_stream = self.get_data_stream()
         while self.num_epoch > 0:
             for data in data_stream:
-                zmq_socket.send_pyobj(data)
+                sender.send_pyobj(data)
             self.num_epoch -= 1
             data_stream = self.get_data_stream()
 

@@ -8,6 +8,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 
 from data_io.seq2seq_data_bucket_queue import Seq2seqDataBcuketQueue
 from utils.appmetric_util import AppMetric
+from zmq.decorators import socket
 
 
 class AksisDataCollector(Process):
@@ -22,11 +23,10 @@ class AksisDataCollector(Process):
         self.metric_interval = metric_interval
         self.name = name
 
-    def run(self):
-        context = zmq.Context()
-        receiver = context.socket(zmq.PULL)
+    @socket(zmq.PULL)
+    @socket(zmq.PUSH)
+    def run(self, receiver, sender):
         receiver.bind("tcp://{}:{}".format(self.ip, self.frontend_port))
-        sender = context.socket(zmq.PUSH)
         sender.bind("tcp://{}:{}".format(self.ip, self.backend_port))
         queue = Seq2seqDataBcuketQueue(self.buckets, self.batch_size)
         metric = AppMetric(name=self.name, interval=self.metric_interval)
@@ -36,7 +36,7 @@ class AksisDataCollector(Process):
                                                                                   self.backend_port))
         ioloop.install()
         loop = ioloop.IOLoop.instance()
-        pull_stream = ZMQStream(receiver)
+        pull_stream = ZMQStream(receiver, loop)
 
         def _on_recv(msg):
             encoder_sentence_id, decoder_sentence_id, label_id = pickle.loads(msg[0])

@@ -34,7 +34,7 @@ class Vocab(object):
         whether to overwrite the existed vocabulary
     """
 
-    def __init__(self, corpus_files, vocab_save_path, sentence_gen=sentence_gen, workers_num=10, top_words=100000,
+    def __init__(self, corpus_files, vocab_save_path, sentence_gen=sentence_gen, workers_num=1, top_words=100000,
                  ip='127.0.0.1', ventilator_port='5555', collector_port='5556',
                   overwrite=True):
         self.corpus_files = corpus_files

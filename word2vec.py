@@ -6,7 +6,7 @@ Sequence 2 sequence for Query2Vec
 
 import os
 import sys
-from conf.customArgType import DirectoryType
+from argparser.customArgType import DirectoryType
 import argparse
 from utils.log_util import set_up_logger_handler_with_file
 import logging
@@ -138,7 +138,6 @@ if __name__ == "__main__":
         mxnet_para = mxnet_parameter(kv_store=args.kv_store, hosts_num=args.hosts_num, workers_num=args.workers_num,
                                      device_mode=args.device_mode, devices=args.devices,
                                      disp_batches=args.disp_batches, monitor_interval=args.monitor_interval,
-                                     log_level=args.log_level, log_path=args.log_path,
                                      save_checkpoint_freq=args.save_checkpoint_freq,
                                      model_path_prefix=os.path.join(args.model_path, args.model_prefix),
                                      enable_evaluation=args.enable_evaluation,

@@ -6,8 +6,8 @@ Sequence 2 sequence for Query2Vec
 
 import os
 import sys
-from conf.customArgType import DirectoryType
-from conf.customArgAction import AppendTupleWithoutDefault
+from argparser.customArgType import DirectoryType
+from argparser.customArgAction import AppendTupleWithoutDefault
 import argparse
 from utils.log_util import set_up_logger_handler_with_file
 import logging
