@@ -6,7 +6,7 @@ import zmq
 from zmq.eventloop import ioloop
 from zmq.eventloop.zmqstream import ZMQStream
 
-from data_io.seq2seq_data_bucket_queue import Seq2seqDataBcuketQueue
+from data_io.seq2seq_data_bucket_queue import Seq2seqDataBucketQueue
 from utils.appmetric_util import AppMetric
 from zmq.decorators import socket
 
@@ -50,7 +50,7 @@ class AksisDataCollector(Process):
         receiver.bind("tcp://{}:{}".format(self.ip, self.frontend_port))
         sender.bind("tcp://{}:{}".format(self.ip, self.backend_port))
         # set up bucket queue
-        queue = Seq2seqDataBcuketQueue(self.buckets, self.batch_size)
+        queue = Seq2seqDataBucketQueue(self.buckets, self.batch_size)
         metric = AppMetric(name=self.name, interval=self.metric_interval)
         logging.info(
             "start collector {}, ip:{}, frontend port:{}, backend port:{}".format(self.name, self.ip,

@@ -3,7 +3,7 @@ from collections import deque
 import numpy as np
 
 
-class Seq2seqDataBcuketQueue(object):
+class Seq2seqDataBucketQueue(object):
     """Data stream base class for seq2seq model.
 
     Parameters
@@ -22,8 +22,7 @@ class Seq2seqDataBcuketQueue(object):
         The vocabulary is from all the corpus including encoder corpus(search query) adn decoder corpus(asin information)
     """
 
-    def __init__(self, buckets, batch_size, ignore_label=0,
-                 dtype='float32'):
+    def __init__(self, buckets, batch_size, ignore_label=0, dtype='float32'):
         self.buckets = buckets
         self.batch_size = batch_size
         self.ignore_label = ignore_label
@@ -38,7 +37,7 @@ class Seq2seqDataBcuketQueue(object):
 
     def put(self, encoder_sentence_id, decoder_sentence_id, label_id):
         """add the data into the bucket queue, return the bucket and queue if the queue reach the batch size
-            else return None,None
+            else return None
         """
         if len(encoder_sentence_id) == 0 or len(decoder_sentence_id) == 0 or len(label_id) == 0:
             return None

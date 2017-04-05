@@ -6,6 +6,7 @@ import logging
 from utils.data_util import query_title_score_generator_from_aksis_data
 import random
 from zmq.decorators import socket
+from utils.appmetric_util import AppMetric
 
 
 class AksisDataVentilatorProcess(Process):
@@ -28,7 +29,7 @@ class AksisDataVentilatorProcess(Process):
         process name
     """
     def __init__(self, file_pattern, data_dir,
-                 num_epoch=65535, dropout=-1, ip='127.0.0.1', port='5555', name='VentilatorProcess'):
+                 num_epoch=65535, dropout=-1, ip='127.0.0.1', port='5555', metric_interval=30, name='VentilatorProcess'):
         Process.__init__(self)
         self.file_pattern = file_pattern
         self.data_dir = data_dir
@@ -36,19 +37,21 @@ class AksisDataVentilatorProcess(Process):
         self.dropout = float(dropout)
         self.ip = ip
         self.port = port
+        self.metric_interval = metric_interval
         self.name = name
 
     @socket(zmq.PUSH)
     def run(self, sender):
         sender.connect("tcp://{}:{}".format(self.ip, self.port))
         logging.info("process {} connect {}:{} and start produce data".format(self.name, self.ip, self.port))
-
+        metric = AppMetric(name=self.name, interval=self.metric_interval)
         data_stream = self.get_data_stream()
-        while self.num_epoch > 0:
+        for i in xrange(self.num_epoch):
             for data in data_stream:
                 sender.send_pyobj(data)
-            self.num_epoch -= 1
+                metric.notify(1)
             data_stream = self.get_data_stream()
+            logging.info("process {} finish {} epoch".format(self.name, i))
 
     def get_data_stream(self):
         data_files = fnmatch.filter(os.listdir(self.data_dir), self.file_pattern)

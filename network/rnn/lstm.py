@@ -7,7 +7,7 @@ LSTMParam = namedtuple("LSTMParam", ["i2h_weight", "i2h_bias",
                                      "h2h_weight", "h2h_bias"])
 
 
-def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0.):
+def lstm(num_hidden, indata, prev_state, param, seqid, layerid, dropout=0.):
     """Long-Short Term Memory (LSTM) network cell
     Parameters
     ----------
@@ -19,7 +19,7 @@ def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0.):
         state from previous step
     param: LSTMParam
         namedtuple for weight sharing between cells.
-    seqidx: int
+    seqid: int
         sequence id
     layerid:
         layer id
@@ -37,15 +37,15 @@ def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0.):
                                 weight=param.i2h_weight,
                                 bias=param.i2h_bias,
                                 num_hidden=num_hidden * 4,
-                                name="t%d_l%d_i2h" % (seqidx, layeridx))
+                                name="t%d_l%d_i2h" % (seqid, layerid))
     h2h = mx.sym.FullyConnected(data=prev_state.h,
                                 weight=param.h2h_weight,
                                 bias=param.h2h_bias,
                                 num_hidden=num_hidden * 4,
-                                name="t%d_l%d_h2h" % (seqidx, layeridx))
+                                name="t%d_l%d_h2h" % (seqid, layerid))
     gates = i2h + h2h
     slice_gates = mx.sym.SliceChannel(gates, num_outputs=4,
-                                      name="t%d_l%d_slice" % (seqidx, layeridx))
+                                      name="t%d_l%d_slice" % (seqid, layerid))
     in_gate = mx.sym.Activation(slice_gates[0], act_type="sigmoid")
     in_transform = mx.sym.Activation(slice_gates[1], act_type="tanh")
     forget_gate = mx.sym.Activation(slice_gates[2], act_type="sigmoid")

@@ -4,7 +4,7 @@ import itertools
 import sys
 from utils.data_util import tokenize
 import logging
-from data_io.seq2seq_data_bucket_queue import Seq2seqDataBcuketQueue
+from data_io.seq2seq_data_bucket_queue import Seq2seqDataBucketQueue
 from utils.data_util import convert_data_to_id
 
 
@@ -54,7 +54,7 @@ class Seq2seqDataStream(object):
 
     def _init_queue(self):
         """initialize the queue for each bucket to store tuple(encoder_sentence_id, decoder_sentence_id, label_id)"""
-        queue = Seq2seqDataBcuketQueue(self.buckets, self.batch_size)
+        queue = Seq2seqDataBucketQueue(self.buckets, self.batch_size)
         return queue
 
     def data_generator(self):

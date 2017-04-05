@@ -27,6 +27,9 @@ class DataBatch(object):
 class Seq2seqMaskedBucketIoIter(mx.io.DataIter):
     """DataIter to given number of batches per epoch for seq2seq model.
        Every batch contains encoder, decoder data, mask data and bucket key.
+
+        Parameters
+        ----------
        data_stream: object with iterator
             data stream to generator which generate data(encoder_data, encoder_mask_data,
             decoder_data, decoder_mask_data, label, bucket)
@@ -48,6 +51,9 @@ class Seq2seqMaskedBucketIoIter(mx.io.DataIter):
             masked data name for decoder
         label_name : str
             name of label
+        Notes
+        -----
+        More detail: http://mxnet.io/tutorials/python/data.html
     """
 
     def __init__(self, data_stream, encoder_init_states, decoder_init_states, default_bucket_key, batch_size,
