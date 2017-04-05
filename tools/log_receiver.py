@@ -6,6 +6,8 @@ import SocketServer
 import argparse
 import os
 
+"""This is file is for fetching the log from socket resources"""
+
 
 class LogRecordStreamHandler(SocketServer.StreamRequestHandler):
     def handle(self):

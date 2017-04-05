@@ -8,14 +8,14 @@ class Seq2seqDataBucketQueue(object):
 
     Parameters
     ----------
-    buckets : list of int
-        size of data buckets.
-    batch_size : int
-        batch_size of data
-    ignore_label : int
-        key for ignore label, the label value will be ignored during backward in softmax. Recommend to set 0
-    dtype : str, default 'float32'
-        data type
+        buckets : list of int
+            size of data buckets.
+        batch_size : int
+            batch_size of data
+        ignore_label : int
+            key for ignore label, the label value will be ignored during backward in softmax. Recommend to set 0
+        dtype : str, default 'float32'
+            data type
     Notes
     -----
     - For query2vec, the vocabulary in encoder is the same with the vocabulary in decoder.

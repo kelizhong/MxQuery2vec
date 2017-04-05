@@ -5,10 +5,20 @@ import logging
 
 
 class CollectorProcess(object):
-    def __init__(self, ip, worker_port, waiting_time=0.3, tries=20):
+    """collect the tokenized sentence from worker
+    Parameters
+    ----------
+        ip : str
+            The ip address string without the port to pass to ``Socket.bind()``.
+        port:
+            The port to receive the tokenized sentence from worker
+        tries: int
+            Number of times to retry, set to 0 to disable retry
+    """
+
+    def __init__(self, ip, port, tries=20):
         self.ip = ip
-        self.worker_port = worker_port
-        self.waiting_time = waiting_time
+        self.port = port
         self.tries = tries
 
     @retry(lambda x: x.tries, exception=zmq.ZMQError, name="vocabulary_collector", report=logging.error)
@@ -18,9 +28,10 @@ class CollectorProcess(object):
         return words
 
     def collect(self):
+        """Generator that receive the tokenized sentence from worker and produce the words"""
         context = zmq.Context()
         receiver = context.socket(zmq.PULL)
-        receiver.bind("tcp://{}:{}".format(self.ip, self.worker_port))
+        receiver.bind("tcp://{}:{}".format(self.ip, self.port))
         while True:
             try:
                 words = self._on_recv(receiver)

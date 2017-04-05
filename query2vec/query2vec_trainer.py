@@ -38,12 +38,11 @@ Parameter:
     disp_batches: int
         show progress for every n batches
     monitor_interval: int
-        Number of batches between printing.
-    log_level: log level
-    log_path: str
-        path to store log
+        number of batches between printing.
     save_checkpoint_freq: int
         the frequency to save checkpoint
+    model_path_prefix: str
+        the prefix for the parameters file
     enable_evaluation: boolean
         whether to enable evaluation
     ignore_label: int
@@ -51,7 +50,16 @@ Parameter:
     load_epoch: int
         epoch of pretrained model
     train_max_sample: int
-        the max sample num for training
+        the max sample num for training, only use it for file data stream
+    monitor_pattern: str
+        a regular expression specifying which tensors to monitor.
+        Only tensors with names that match name_pattern will be included.
+        For example, '.*weight|.*output' will print all weights and outputs;
+        '.*backward.*' will print all gradients.
+    metric: str
+        the performance measure which defined in seq2seq_metric.py used to display during training.
+    save_checkpoint_x_batch: int
+        save checkpoint every x batch, only available in zmq data stream
 
 """
 
@@ -59,12 +67,32 @@ mxnet_parameter = RecordType('mxnet_parameter', [('kv_store', 'local'), ('hosts_
                                                  ('device_mode', 'cpu'), ('devices', '0'), ('num_epoch', 65535),
                                                  ('disp_batches', 1), ('monitor_interval', -1),
                                                  ('save_checkpoint_freq', 1),
-                                                 ('model_path_prefix', 'query2vec'), ('enable_evaluation', False),
+                                                 ('model_path_prefix', './data/query2vec/model/query2vec'),
+                                                 ('enable_evaluation', False),
                                                  ('ignore_label', 0),
                                                  ('load_epoch', -1), ('train_max_samples', sys.maxsize),
                                                  ('monitor_pattern', '.*'), ("metric", "perplexity"),
                                                  ('save_checkpoint_x_batch', 1000)])
 
+"""data parameter
+Parameter:
+    encoder_train_data_path: str
+        encoder corpus data path, only for file data stream
+    decoder_train_data_path: str
+        decoder corpus data path, only for file data stream
+    vocabulary_path: str
+        vocabulary path for corpus
+    top_words: int
+        the max words num for training
+    word2vec_path: str
+        path for word2vec model, which is used to initialize the embedding layer instead of random
+    ip_addr: str
+        ip address to receiver the train data
+    port: str
+        ip port to receiver the train data
+
+
+"""
 data_parameter = RecordType('data_parameter',
                             [('encoder_train_data_path', None), ('decoder_train_data_path', None),
                              ('vocabulary_path', ''), ('top_words', 40000),
@@ -124,7 +152,7 @@ class Query2vecTrainer(Trainer):
                  mxnet_para=mxnet_parameter, optimizer_para=optimizer_parameter,
                  model_para=model_parameter, data_para=data_parameter):
         """Trainer for query2vec model
-        Args:
+        Parameter:
             mxnet_para: RecordType
                 mxnet parameter
             optimizer_para: RecordType
@@ -140,7 +168,8 @@ class Query2vecTrainer(Trainer):
 
     def check_args(self):
         if (self.ip_addr or self.port) and (self.encoder_train_data_path or self.decoder_train_data_path):
-            print "ip_addr and port|encoder_train_data_path and decoder_train_data_path are mutually exclusive ..."
+            logging.error(
+                "ip_addr and port|encoder_train_data_path and decoder_train_data_path are mutually exclusive ...")
             sys.exit(2)
 
     @property
@@ -166,7 +195,7 @@ class Query2vecTrainer(Trainer):
     @property
     @memoized
     def model(self):
-
+        """create seq2seq model"""
         encoder_para = encoder_parameter(encoder_vocab_size=self.vocab_size, encoder_layer_num=self.encoder_layer_num,
                                          encoder_hidden_unit_num=self.encoder_hidden_unit_num,
                                          encoder_embed_size=self.encoder_embed_size,
@@ -182,6 +211,7 @@ class Query2vecTrainer(Trainer):
 
     @property
     def data_stream_from_file(self):
+        """file data stream which accept the encoder and decoder data path, this data stream is mainly used for test"""
         data_stream = Seq2seqDataStream(self.encoder_train_data_path, self.decoder_train_data_path, self.vocab,
                                         self.vocab, self.buckets, self.batch_size,
                                         max_sentence_num=self.train_max_samples)
@@ -189,11 +219,16 @@ class Query2vecTrainer(Trainer):
 
     @property
     def data_stream_from_zmq(self):
+        """listen zmq socket to receiver train data"""
         data_stream = AksisDataReceiver(self.ip_addr, self.port, self.save_checkpoint_x_batch)
         return data_stream
 
     @property
     def data_stream(self):
+        """return file data stream if encoder_train_data_path and decoder_train_data_path are defined.
+           return zmq data stream if ip_addr and port are defined.
+           else raise RuntimeError
+        """
         if self.encoder_train_data_path and self.decoder_train_data_path:
             data_stream = self.data_stream_from_file
         elif self.ip_addr and self.port:
@@ -205,6 +240,7 @@ class Query2vecTrainer(Trainer):
     @property
     @memoized
     def train_data_loader(self):
+        """Mxnet require an IO iter to load the train data, so feed the data from data stream into mxnet io iter"""
         # get states shapes
         encoder_init_states, decoder_init_states = self.model.get_init_state_shape(self.batch_size)
         # build data iterator
@@ -224,11 +260,12 @@ class Query2vecTrainer(Trainer):
         return None
 
     def _load_model_with_pretrain_word2vec(self, embed_weight_name):
+        """initialize the embedding layer parameter with the pretrain word2vec if word2vec exists"""
         rank = self.kv.rank
         sym, arg_params, aux_params = load_model(self.model_path_prefix, rank, self.load_epoch)
         # load the pretrain word2vec only for new model training and word2vec_path is defined
         if arg_params is not None or self.word2vec_path is None:
-            logging.info("Worker {} reuse existed model".format(rank))
+            logging.info("Worker {} create model without pretrain word2vec model".format(rank))
             return sym, arg_params, aux_params
         logging.info("Worker {} initialize embedding weight using pretrain word2vec model".format(rank))
         w2v = self.word2vec
@@ -243,8 +280,8 @@ class Query2vecTrainer(Trainer):
         return sym, arg_params, aux_params
 
     def train(self):
-        rank = self.kv.rank
         """Train the module parameters"""
+        rank = self.kv.rank
         # load model
         logging.info("Worker {} loading model".format(rank))
         sym, arg_params, aux_params = self._load_model_with_pretrain_word2vec('share_embed_weight')
@@ -271,7 +308,7 @@ class Query2vecTrainer(Trainer):
         metric_manager = MetricManage(self.ignore_label)
         metrics = [metric_manager.create_metric(self.metric)]
 
-        logging.info("Worker {} loading data".format(rank))
+        logging.info("Worker {} loading data and creating the network symbol".format(rank))
         train_data_loader = self.train_data_loader
         eval_data_loader = self.eval_data_loader
         network_symbol = self.model.network_symbol(train_data_loader.data_names, train_data_loader.label_names)

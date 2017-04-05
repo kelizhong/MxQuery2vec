@@ -7,8 +7,7 @@ import functools
 def with_meter(name, value=1, interval=-1):
     """
     Call-counting decorator: each time the wrapped function is called
-    the named meter is incremented by one.
-    metric_args and metric_kwargs are passed to new_meter()
+    the named meter is incremented by value.
     """
 
     try:
@@ -32,17 +31,29 @@ def with_meter(name, value=1, interval=-1):
 
 
 class AppMetric(object):
+    """ metric util for application
+    Parameters
+    ----------
+    metric: "meter" metric
+        custom metric
+    name: str
+        create a metric with name if metric is None
+    interval: int
+        report the metric for every interval seconds, if interval < 0, not report the metric
+    """
     def __init__(self, metric=None, name='metric', interval=-1):
         self.metric = metric or metrics.new_meter(name)
 
         self.interval = interval
         if interval > 0:
-            reporter.register(self.log_report, reporter.fixed_interval_scheduler(interval))
+            reporter.register(self.log_metrics, reporter.fixed_interval_scheduler(interval))
 
     @staticmethod
-    def log_report(metrics):
+    def log_metrics(metrics):
+        """log the metric"""
         logging.info(metrics)
 
     def notify(self, value):
+        """Add a new observation to the metric"""
         self.metric.notify(value)
 

@@ -11,24 +11,24 @@ def lstm(num_hidden, indata, prev_state, param, seqid, layerid, dropout=0.):
     """Long-Short Term Memory (LSTM) network cell
     Parameters
     ----------
-    num_hidden : int
-        number of units in output symbol
-    indata : sym.Variable
-        input symbol, 2D, batch * num_hidden
-    prev_state : sym.Variable
-        state from previous step
-    param: LSTMParam
-        namedtuple for weight sharing between cells.
-    seqid: int
-        sequence id
-    layerid:
-        layer id
-    dropout: float
-        the probability to ignore the neuron outputs
+        num_hidden : int
+            number of units in output symbol
+        indata : sym.Variable
+            input symbol, 2D, batch * num_hidden
+        prev_state : sym.Variable
+            state from previous step
+        param: LSTMParam
+            namedtuple for weight sharing between cells.
+        seqid: int
+            sequence id
+        layerid:
+            layer id
+        dropout: float
+            the probability to ignore the neuron outputs
 
     Returns
     -------
-    LSTMState
+        LSTMState
     """
     # TODO remove this cell, will use the mx build-in cell in next version
     if dropout > 0.:

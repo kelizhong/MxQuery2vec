@@ -14,24 +14,24 @@ class LstmDecoder(Decoder):
         y(0) = LSTM(s0, C); C is the context vector from the encoder
     Parameters
     ----------
-    seq_len: int
-        decoder sequence length
-    use_masking: bool
-        whether use masking
-    hidden_unit_num: int
-        number of hidden units in the neural network for decoder
-    vocab_size: int
-        vocabulary size
-    embed_size: int
-        word embedding size
-    dropout: float
-        the probability to ignore the neuron outputs
-    layer_num int
-        decoder layer num
-    embed_weight: sym.Variable
-        word embedding weight
-    name: str
-        decoder name
+        seq_len: int
+            decoder sequence length
+        use_masking: bool
+            whether use masking
+        hidden_unit_num: int
+            number of hidden units in the neural network for decoder
+        vocab_size: int
+            vocabulary size
+        embed_size: int
+            word embedding size
+        dropout: float
+            the probability to ignore the neuron outputs
+        layer_num int
+            decoder layer num
+        embed_weight: sym.Variable
+            word embedding weight
+        name: str
+            decoder name
     """
 
     def __init__(self, seq_len, use_masking,

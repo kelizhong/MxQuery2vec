@@ -18,7 +18,12 @@ def set_up_logger_handler_with_file(logger_conf_path, qualname=''):
 
 def set_up_logger_handler(logger=None):
     """Wraps the handlers in the given Logger with an MultiProcessingHandler.
-    :param logger: whose handlers to wrap. By default, the root logger.
+
+    Parameters
+    ----------
+    logger: logger instance
+        whose handlers to wrap. By default, the root logger.
+
     """
     if logger is None:
         logger = logging.getLogger()

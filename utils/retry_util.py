@@ -8,12 +8,25 @@ def retry(tries, delay=1, backoff=1, exception=Exception, name=None, report=lamb
     A retry decorator with exponential backoff,
     Retries a function or method if Exception occurred
 
-    Args:
-        tries: number of times to retry, set to 0 to disable retry
-        delay: initial delay in seconds(can be float, eg 0.01 as 10ms),
+    Parameters
+    ----------
+        tries: int or lambda type
+            number of times to retry, set to 0 to disable retry
+        delay: int or lambda type
+            initial delay in seconds(can be float, eg 0.01 as 10ms),
             if the first run failed, it would sleep 'delay' second and try again
-        backoff: must be greater than 1,
+        backoff: must be greater than 1 or equal,
             further failure would sleep delay *= backoff second
+        exception: Exception type
+            exception to catch
+        name: str
+            tag name for log information to distinguish what function is retrying
+            if name is None, assign function name to it
+        report: function
+            the function to report the metric. e.g. logging.info
+    Returns
+    -------
+        retrying: retry wrapper function
     """
 
     def retrying(func):

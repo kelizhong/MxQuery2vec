@@ -22,12 +22,12 @@ class Seq2seqModel(Model):
     In this class, the encoder is bi-Directional Lstm, the decoder is not attention base
     Parameters
     ----------
-    encoder_para: namedtuple
-        encoder parameter
-    decoder_para: namedtuple
-        decoder parameter
-    share_embed: bool
-        whether share embedding weight
+        encoder_para: namedtuple
+            encoder parameter
+        decoder_para: namedtuple
+            decoder parameter
+        share_embed: bool
+            whether share embedding weight
     """
 
     def __init__(self, encoder_para, decoder_para, share_embed=True):

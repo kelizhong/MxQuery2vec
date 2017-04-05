@@ -28,29 +28,29 @@ class Seq2seqMaskedBucketIoIter(mx.io.DataIter):
     """DataIter to given number of batches per epoch for seq2seq model.
        Every batch contains encoder, decoder data, mask data and bucket key.
 
-        Parameters
-        ----------
-       data_stream: object with iterator
-            data stream to generator which generate data(encoder_data, encoder_mask_data,
-            decoder_data, decoder_mask_data, label, bucket)
-       encoder_init_states: list
-            init state for encoder. e.g. ['forward_encoder_l0_init_c', (batch_size, encoder_hidden_unit_num)]
-       decoder_init_states: list
-            init state for decoder. e.g. ['decoder_l0_init_c', (batch_size, decoder_hidden_unit_num)]
-       default_bucket_key: tuple
-            The key for the default bucket. Usually, it should be the max bucket
-       batch_size: int
-            batch size for each databatch
-        encoder_data_name: str
-            data name for encoder which is in accordance with the data name in encoder
-        decoder_data_name: str
-            data name for decoder which is in accordance with the data name in decoder
-        encoder_mask_name: str
-            masked data name for encoder
-        decoder_mask_name: str
-            masked data name for decoder
-        label_name : str
-            name of label
+       Parameters
+       ----------
+            data_stream: object with iterator
+                 data stream to generator which generate data(encoder_data, encoder_mask_data,
+                 decoder_data, decoder_mask_data, label, bucket)
+            encoder_init_states: list
+                 init state for encoder. e.g. ['forward_encoder_l0_init_c', (batch_size, encoder_hidden_unit_num)]
+            decoder_init_states: list
+                 init state for decoder. e.g. ['decoder_l0_init_c', (batch_size, decoder_hidden_unit_num)]
+            default_bucket_key: tuple
+                 The key for the default bucket. Usually, it should be the max bucket
+            batch_size: int
+                 batch size for each databatch
+            encoder_data_name: str
+                data name for encoder which is in accordance with the data name in encoder
+            decoder_data_name: str
+                data name for decoder which is in accordance with the data name in decoder
+            encoder_mask_name: str
+                masked data name for encoder
+            decoder_mask_name: str
+                masked data name for decoder
+            label_name : str
+                name of label
         Notes
         -----
         More detail: http://mxnet.io/tutorials/python/data.html

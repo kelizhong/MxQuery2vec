@@ -9,13 +9,13 @@ class AksisDataReceiver(object):
 
     Parameters
     ----------
-    ip : str
-        The ip address string without the port to pass to ``Socket.bind()``.
-    port: int
-        Port to receive the data from collector
-    stop_freq: int
-        Frequency to raise the StopIteration error. If the trainer iter receive the StopIteration,
-        the trainer will save the checkpoint. If stop_freq < 0, will not raise the StopIteration error
+        ip : str
+            The ip address string without the port to pass to ``Socket.bind()``.
+        port: int
+            Port to receive the data from collector
+        stop_freq: int
+            Frequency to raise the StopIteration error. If the trainer iter receive the StopIteration,
+            the trainer will save the checkpoint. If stop_freq < 0, will not raise the StopIteration error
     """
     def __init__(self, ip, port=5556, stop_freq=-1):
         context = zmq.Context()

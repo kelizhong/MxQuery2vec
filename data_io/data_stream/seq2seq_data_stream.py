@@ -13,23 +13,23 @@ class Seq2seqDataStream(object):
 
     Parameters
     ----------
-    encoder_path : str
-        encoder corpus path
-    decoder_path: str
-        decoder corpus path
-    encoder_vocab: dict
-        vocabulary from encoder corpus.
-    decoder_vocab: dict
-        vocabulary from decoder corpus.
-    buckets : list of int
-        size of data buckets.
-    batch_size : int
-        batch_size of data
-    ignore_label : int
-        key for ignore label, the label value will be ignored during backward in softmax. Recommend to set 0
-    dtype : str, default 'float32'
-        data type
-    max_sentence_num: int
+        encoder_path : str
+            encoder corpus path
+        decoder_path: str
+            decoder corpus path
+        encoder_vocab: dict
+            vocabulary from encoder corpus.
+        decoder_vocab: dict
+            vocabulary from decoder corpus.
+        buckets : list of int
+            size of data buckets.
+        batch_size : int
+            batch_size of data
+        ignore_label : int
+            key for ignore label, the label value will be ignored during backward in softmax. Recommend to set 0
+        dtype : str, default 'float32'
+            data type
+        max_sentence_num: int
         the max size of sentence to read
     Notes
     -----

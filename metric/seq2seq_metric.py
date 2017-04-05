@@ -5,10 +5,10 @@ class MetricManage(object):
     """metric manage for seq2seq model
     Parameters
     ----------
-    ignore_label : int or None
-        index of invalid label to ignore when
-        counting. usually should be 0. Include
-        all entries if None.
+        ignore_label : int or None
+            index of invalid label to ignore when
+            counting. usually should be 0. Include
+            all entries if None.
     """
 
     def __init__(self, ignore_label):

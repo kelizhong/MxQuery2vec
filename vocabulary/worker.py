@@ -8,16 +8,30 @@ import logging
 
 
 class WorkerProcess(Process):
-    def __init__(self, ip, ventilator_port, port, waiting_time=0.1, threshold=10, name='WorkerProcess'):
+    """Worker process which receiver the sentence from ventilitor process and tokenize it
+    Parameters
+    ----------
+        ip : str
+            The ip address string without the port to pass to ``Socket.bind()``.
+        frontend_port: int
+            Port for the incoming traffic
+        backend_port: int
+            Port for the outbound traffic
+        tries: int
+            Number of times to retry, set to 0 to disable retry
+        name: str
+            Process name
+    """
+
+    def __init__(self, ip, frontend_port, backend_port, tries=10, name='WorkerProcess'):
         Process.__init__(self)
         self.ip = ip
-        self.ventilator_port = ventilator_port
-        self.port = port
-        self.waiting_time = waiting_time
-        self.threshold = threshold
+        self.frontend_port = frontend_port
+        self.backend_port = backend_port
+        self.tries = tries
         self.name = name
 
-    @retry(10, exception=zmq.ZMQError, name='worker_parser', report=logging.error)
+    @retry(lambda x: x.tries, exception=zmq.ZMQError, name='worker_parser', report=logging.error)
     @with_meter('worker_parser', interval=30)
     def _on_recv(self, receiver):
         sentence = receiver.recv_string(zmq.NOBLOCK)
@@ -26,8 +40,8 @@ class WorkerProcess(Process):
     @socket(zmq.PULL)
     @socket(zmq.PUSH)
     def run(self, receiver, sender):
-        receiver.connect("tcp://{}:{}".format(self.ip, self.ventilator_port))
-        sender.connect("tcp://{}:{}".format(self.ip, self.port))
+        receiver.connect("tcp://{}:{}".format(self.ip, self.frontend_port))
+        sender.connect("tcp://{}:{}".format(self.ip, self.backend_port))
         while True:
             try:
                 sentence = self._on_recv(receiver)
@@ -36,4 +50,3 @@ class WorkerProcess(Process):
                 break
             tokens = tokenize(sentence)
             sender.send_pyobj(tokens)
-

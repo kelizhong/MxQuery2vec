@@ -120,7 +120,7 @@ def parse_args():
     q2v_trainer_parser.add_argument('--ip-addr', type=str, help='ip address')
     q2v_trainer_parser.add_argument('--port', type=str, help='zmq port')
     q2v_trainer_parser.add_argument('--top-words', default=40000, type=int,
-                                    help='the max sample num for training')
+                                    help='the max words num for training')
 
     # vocabulary parameter
 

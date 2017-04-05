@@ -16,21 +16,20 @@ class AksisDataCollector(Process):
 
     Parameters
     ----------
-    ip : str
-        The ip address string without the port to pass to ``Socket.bind()``.
-    buckets: tuple list
-        The buckets for seq2seq model, a list with (encoder length, decoder length)
-    batch_size: int
-        Batch size for each databatch
-    frontend_port: int
-        Port for the incoming traffic
-    backend_port: int
-        Port for the outbound traffic
-    metric_interval: int
-        Report the metric for every metric_interval second
-    name: str
-        Collector process name
-
+        ip : str
+            The ip address string without the port to pass to ``Socket.bind()``.
+        buckets: tuple list
+            The buckets for seq2seq model, a list with (encoder length, decoder length)
+        batch_size: int
+            Batch size for each databatch
+        frontend_port: int
+            Port for the incoming traffic
+        backend_port: int
+            Port for the outbound traffic
+        metric_interval: int
+            Report the metric for every metric_interval second
+        name: str
+            Collector process name
     """
 
     def __init__(self, ip, buckets, batch_size, frontend_port=5557, backend_port=5558, metric_interval=30,

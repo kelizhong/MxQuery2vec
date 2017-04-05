@@ -8,24 +8,24 @@ class BiDirectionalLstmEncoder(Encoder):
     """ BiDirectional Encoder for seq2seq model
     Parameters
     ----------
-    seq_len: int
-        encoder sequence length
-    use_masking: bool
-        whether use masking
-    hidden_unit_num: int
-        number of hidden units in the neural network for encoder
-    vocab_size: int
-        vocabulary size
-    embed_size: int
-        word embedding size
-    dropout: float
-        the probability to ignore the neuron outputs
-    layer_num int
-        decoder layer num
-    embed_weight: sym.Variable
-        word embedding weight
-    name: str
-        decoder name
+        seq_len: int
+            encoder sequence length
+        use_masking: bool
+            whether use masking
+        hidden_unit_num: int
+            number of hidden units in the neural network for encoder
+        vocab_size: int
+            vocabulary size
+        embed_size: int
+            word embedding size
+        dropout: float
+            the probability to ignore the neuron outputs
+        layer_num int
+            decoder layer num
+        embed_weight: sym.Variable
+            word embedding weight
+        name: str
+            decoder name
     """
 
     def __init__(self, seq_len, use_masking,

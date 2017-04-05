@@ -13,20 +13,20 @@ class AksisDataVentilatorProcess(Process):
     """Process to read the corpus data
     Parameters
     ----------
-    data_dir : str
-        Data_dir for the aksis corpus data
-    file_pattern: tuple
-        File pattern use to distinguish different corpus, every file pattern will start a ventilitor process.
-        File pattern is tuple type(file pattern, dropout). Dropout is the probability to ignore the data.
-        If dropout < 0, all the data will be accepted to be trained
-    ip : str
-        The ip address string without the port to pass to ``Socket.bind()``.
-    port: int
-        Port to produce the raw data
-    num_epoch: int
-        end epoch of producing the data
-    name: str
-        process name
+        data_dir : str
+            Data_dir for the aksis corpus data
+        file_pattern: tuple
+            File pattern use to distinguish different corpus, every file pattern will start a ventilitor process.
+            File pattern is tuple type(file pattern, dropout). Dropout is the probability to ignore the data.
+            If dropout < 0, all the data will be accepted to be trained
+        ip : str
+            The ip address string without the port to pass to ``Socket.bind()``.
+        port: int
+            Port to produce the raw data
+        num_epoch: int
+            end epoch of producing the data
+        name: str
+            process name
     """
     def __init__(self, file_pattern, data_dir,
                  num_epoch=65535, dropout=-1, ip='127.0.0.1', port='5555', metric_interval=30, name='VentilatorProcess'):

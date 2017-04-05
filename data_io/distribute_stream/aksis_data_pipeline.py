@@ -11,36 +11,36 @@ class AksisDataPipeline(object):
 
     Parameters
     ----------
-    data_dir : str
-        Data_dir for the aksis corpus data
-    vocabulary_path: str
-        Path for vocabulary from aksis corpus data
-    top_words: int
-        Only use the top_words in vocabulary
-    file_patterns: list
-        file pattern use to distinguish different corpus, every file pattern will start a ventilitor process.
-        e.g. there are four action type(KeywordsByAdds, KeywordsBySearches, KeywordsByPurchases, KeywordsByClicks)
-        in aksis data, if split the aksis data to four files, like aksis.add, aksis.search, aksis.purchase and
-        aksis.click, each file store the corresponding data, than can use these four
-        patterns(*add, *search, *purchase, *click) to read the related file
-    buckets: tuple list
-        The buckets for seq2seq model, a list with (encoder length, decoder length)
-    batch_size: int
-        Batch size for each databatch
-    ip : str
-        The ip address string without the port to pass to ``Socket.bind()``.
-    worker_num: int
-        number of parser worker which tokenize the sentence and convert the sentence to id
-    raw_data_frontend_port: int
-        Port for the incoming traffic of ventilitor which produce the raw data
-    raw_data_backend_port: int
-        Port for the outbound traffic of ventilitor which produce the raw data
-    collector_fronted_port: int
-        Port for the incoming traffic of collector which collect the data from worker
-    collector_backend_port: int
-        Port for the outbound traffic of collector which collect the data from worker
-    num_epoch: int
-        end epoch of producing the data
+        data_dir : str
+            Data_dir for the aksis corpus data
+        vocabulary_path: str
+            Path for vocabulary from aksis corpus data
+        top_words: int
+            Only use the top_words in vocabulary
+        file_patterns: list
+            file pattern use to distinguish different corpus, every file pattern will start a ventilitor process.
+            e.g. there are four action type(KeywordsByAdds, KeywordsBySearches, KeywordsByPurchases, KeywordsByClicks)
+            in aksis data, if split the aksis data to four files, like aksis.add, aksis.search, aksis.purchase and
+            aksis.click, each file store the corresponding data, than can use these four
+            patterns(*add, *search, *purchase, *click) to read the related file
+        buckets: tuple list
+            The buckets for seq2seq model, a list with (encoder length, decoder length)
+        batch_size: int
+            Batch size for each databatch
+        ip : str
+            The ip address string without the port to pass to ``Socket.bind()``.
+        worker_num: int
+            number of parser worker which tokenize the sentence and convert the sentence to id
+        raw_data_frontend_port: int
+            Port for the incoming traffic of ventilitor which produce the raw data
+        raw_data_backend_port: int
+            Port for the outbound traffic of ventilitor which produce the raw data
+        collector_fronted_port: int
+            Port for the incoming traffic of collector which collect the data from worker
+        collector_backend_port: int
+            Port for the outbound traffic of collector which collect the data from worker
+        num_epoch: int
+            end epoch of producing the data
     Notes
     -----
         All the processes except the ventilitor process can not be terminated automatically since the trainer is

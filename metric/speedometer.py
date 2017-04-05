@@ -7,13 +7,13 @@ class Speedometer(object):
 
     Parameters
     ----------
-    batch_size: int
-        Batch_size of data
-    rank: int
-        The rank of worker node, which is in [0, kv.get_num_workers())
-    frequent: int
-        How many batches between calculations.
-        Defaults to calculating & logging every 50 batches.
+        batch_size: int
+            Batch_size of data
+        rank: int
+            The rank of worker node, which is in [0, kv.get_num_workers())
+        frequent: int
+            How many batches between calculations.
+            Defaults to calculating & logging every 50 batches.
     """
     def __init__(self, batch_size, rank=0, frequent=50):
         self.batch_size = batch_size

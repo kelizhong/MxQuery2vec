@@ -15,23 +15,26 @@ class Vocab(object):
     Each sentence will be tokenized.
     Vocabulary contains the most-frequent tokens up to top_words.
     We write it to vocab_file in pickle format.
-    special_words will be added into the vocabulary file
     Parameters
     ----------
-    corpus_files: list
-        corpus files list that will be used to create vocabulary
-    vocab_file: str
-        vocab file name where the vocabulary will be created
-    special_words: dict
-        special words, e.g.<s>, </s>, <unk>
-    top_words: int
-        limit on the size of the created vocabulary
-    log_level: level name, e.g.INFO, ERROR
-        log level
-    log_path: str
-        log path where the log will be saved
-    overwrite: bool
-        whether to overwrite the existed vocabulary
+        corpus_files: list
+            corpus files list that will be used to create vocabulary
+        vocab_save_path: str
+            vocab file name where the vocabulary will be created
+        sentence_gen: generator
+            generator which produce the sentence in corpus data
+        top_words: int
+            limit on the size of the created vocabulary
+        workers_num: int
+            numbers of workers to parse the sentence
+        ip: str
+            the ip address string without the port to pass to ``Socket.bind()``
+        ventilator_port: int
+            port for ventilator process socket
+        collector_port: int
+            port for collector process socket
+        overwrite: bool
+            whether to overwrite the existed vocabulary
     """
 
     def __init__(self, corpus_files, vocab_save_path, sentence_gen=sentence_gen, workers_num=1, top_words=100000,
