@@ -1,5 +1,8 @@
-import six
+# coding: utf-8
+# pylint: disable=too-many-instance-attributes, too-many-arguments, import-error
+"""encoder abstract interface object"""
 import abc
+import six
 from network.rnn.lstm import LSTMParam, LSTMState
 import mxnet as mx
 
@@ -44,12 +47,12 @@ class Encoder(object):
         self.layer_num = layer_num
         self.embed_weight = embed_weight
         self.name = name
-        #self.forward_param_cells = []
-        #self.forward_last_states = []
-        #self.backward_param_cells = []
-        #self.backward_last_states = []
+        # self.forward_param_cells = []
+        # self.forward_last_states = []
+        # self.backward_param_cells = []
+        # self.backward_last_states = []
         self._init_embedding_weight()
-        #self._init_cell_parameter()
+        # self._init_cell_parameter()
 
     def init_cell_parameter(self):
         """encoder bi-lstm parameters"""
@@ -59,14 +62,15 @@ class Encoder(object):
         backward_last_states = []
         # forward part
         for i in range(self.layer_num):
+            # pylint: disable=line-too-long
             forward_param_cells.append(LSTMParam(i2h_weight=mx.sym.Variable("forward_encoder_l%d_i2h_weight" % i),
-                                                      i2h_bias=mx.sym.Variable("forward_encoder_l%d_i2h_bias" % i),
-                                                      h2h_weight=mx.sym.Variable("forward_encoder_l%d_h2h_weight" % i),
-                                                      h2h_bias=mx.sym.Variable("forward_encoder_l%d_h2h_bias" % i)))
+                                                 i2h_bias=mx.sym.Variable("forward_encoder_l%d_i2h_bias" % i),
+                                                 h2h_weight=mx.sym.Variable("forward_encoder_l%d_h2h_weight" % i),
+                                                 h2h_bias=mx.sym.Variable("forward_encoder_l%d_h2h_bias" % i)))
             forward_state = LSTMState(c=mx.sym.Variable("forward_encoder_l%d_init_c" % i),
                                       h=mx.sym.Variable("forward_encoder_l%d_init_h" % i))
             forward_last_states.append(forward_state)
-        assert (len(forward_last_states) == self.layer_num)
+        assert len(forward_last_states) == self.layer_num
         # backward part
         for i in range(self.layer_num):
             backward_param_cells.append(
@@ -77,7 +81,7 @@ class Encoder(object):
             backward_state = LSTMState(c=mx.sym.Variable("backward_encoder_l%d_init_c" % i),
                                        h=mx.sym.Variable("backward_encoder_l%d_init_h" % i))
             backward_last_states.append(backward_state)
-        assert (len(backward_last_states) == self.layer_num)
+        assert len(backward_last_states) == self.layer_num
         return forward_param_cells, forward_last_states, backward_param_cells, backward_last_states
 
     def _init_embedding_weight(self):
@@ -97,22 +101,15 @@ class Encoder(object):
     def get_init_state_shape(batch_size, encoder_layer_num, encoder_hidden_unit_num):
         """return init-states for bi-LSTM"""
 
+        # pylint: disable=line-too-long
         forward_encoder_init_c = [('forward_encoder_l%d_init_c' % l, (batch_size, encoder_hidden_unit_num))
-                                  for l
-                                  in
-                                  range(encoder_layer_num)]
+                                  for l in range(encoder_layer_num)]
         forward_encoder_init_h = [('forward_encoder_l%d_init_h' % l, (batch_size, encoder_hidden_unit_num))
-                                  for l
-                                  in
-                                  range(encoder_layer_num)]
+                                  for l in range(encoder_layer_num)]
         backward_encoder_init_c = [('backward_encoder_l%d_init_c' % l, (batch_size, encoder_hidden_unit_num))
-                                   for
-                                   l in
-                                   range(encoder_layer_num)]
+                                   for l in range(encoder_layer_num)]
         backward_encoder_init_h = [('backward_encoder_l%d_init_h' % l, (batch_size, encoder_hidden_unit_num))
-                                   for
-                                   l in
-                                   range(encoder_layer_num)]
+                                   for l in range(encoder_layer_num)]
         encoder_init_states = forward_encoder_init_c + forward_encoder_init_h + backward_encoder_init_c + \
                               backward_encoder_init_h
 

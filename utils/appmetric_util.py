@@ -1,7 +1,9 @@
-from appmetrics import metrics
+# coding=utf-8
+"""metric util for application"""
 import logging
-from appmetrics import reporter
 import functools
+from appmetrics import metrics
+from appmetrics import reporter
 
 
 def with_meter(name, value=1, interval=-1):
@@ -56,4 +58,3 @@ class AppMetric(object):
     def notify(self, value):
         """Add a new observation to the metric"""
         self.metric.notify(value)
-

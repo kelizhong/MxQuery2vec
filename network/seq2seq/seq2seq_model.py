@@ -1,4 +1,6 @@
-# -*- coding: utf-8 -*-
+# coding=utf-8
+# pylint: disable=no-member, import-error, pointless-string-statement
+"""seq2seq model implementation"""
 import mxnet as mx
 
 from base.model import Model
@@ -8,7 +10,8 @@ from utils.decorator_util import memoized
 
 '''
 Papers:
-[1] Neural Machine Translation by Jointly Learning to Align and Translate(https://arxiv.org/pdf/1409.0473v6.pdf)
+[1] Neural Machine Translation by Jointly Learning to Align and
+    Translate(https://arxiv.org/pdf/1409.0473v6.pdf)
 [2] Grammar as a Foreign Language(https://arxiv.org/abs/1412.7449)
 '''
 
@@ -37,7 +40,7 @@ class Seq2seqModel(Model):
     @memoized
     def get_init_state_shape(self, batch_size):
         """ return init-states for LSTM encoder and decoder"""
-
+        # pylint: disable=line-too-long
         encoder_init_states = BiDirectionalLstmEncoder.get_init_state_shape(batch_size, self.encoder_layer_num,
                                                                             self.encoder_hidden_unit_num)
 

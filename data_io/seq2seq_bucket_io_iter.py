@@ -1,3 +1,6 @@
+# coding=utf-8
+# pylint: disable=import-error, too-many-arguments, too-many-instance-attributes
+"""Io iter for seq2seq model"""
 import mxnet as mx
 
 
@@ -34,9 +37,11 @@ class Seq2seqMaskedBucketIoIter(mx.io.DataIter):
                  data stream to generator which generate data(encoder_data, encoder_mask_data,
                  decoder_data, decoder_mask_data, label, bucket)
             encoder_init_states: list
-                 init state for encoder. e.g. ['forward_encoder_l0_init_c', (batch_size, encoder_hidden_unit_num)]
+                 init state for encoder. e.g. ['forward_encoder_l0_init_c',
+                                                (batch_size, encoder_hidden_unit_num)]
             decoder_init_states: list
-                 init state for decoder. e.g. ['decoder_l0_init_c', (batch_size, decoder_hidden_unit_num)]
+                 init state for decoder. e.g. ['decoder_l0_init_c',
+                                                (batch_size, decoder_hidden_unit_num)]
             default_bucket_key: tuple
                  The key for the default bucket. Usually, it should be the max bucket
             batch_size: int
@@ -56,7 +61,8 @@ class Seq2seqMaskedBucketIoIter(mx.io.DataIter):
         More detail: http://mxnet.io/tutorials/python/data.html
     """
 
-    def __init__(self, data_stream, encoder_init_states, decoder_init_states, default_bucket_key, batch_size,
+    def __init__(self, data_stream, encoder_init_states, decoder_init_states,
+                 default_bucket_key, batch_size,
                  encoder_data_name='encoder_data', encoder_mask_name='encoder_mask',
                  decoder_data_name='decoder_data', decoder_mask_name='decoder_mask',
                  label_name='decoder_softmax_label'):
@@ -87,8 +93,9 @@ class Seq2seqMaskedBucketIoIter(mx.io.DataIter):
     @property
     def data_names(self):
         """The name and shape of data provided by this iterator"""
-        return [self.encoder_data_name] + [self.encoder_mask_name] + [self.decoder_data_name] + [self.decoder_mask_name] \
-               + self.encoder_init_state_names + self.decoder_init_state_names
+        # pylint: disable=line-too-long
+        return [self.encoder_data_name] + [self.encoder_mask_name] + [self.decoder_data_name] + \
+               [self.decoder_mask_name] + self.encoder_init_state_names + self.decoder_init_state_names
 
     @property
     def label_names(self):
@@ -96,14 +103,15 @@ class Seq2seqMaskedBucketIoIter(mx.io.DataIter):
         return [self.label_name]
 
     def __iter__(self):
+        # pylint: disable=line-too-long
         for encoder_data, encoder_mask_data, decoder_data, decoder_mask_data, label, bucket in self.data_stream:
             data_all = [mx.nd.array(encoder_data), mx.nd.array(encoder_mask_data)] + \
                        [mx.nd.array(decoder_data), mx.nd.array(decoder_mask_data)] + \
                        self.encoder_init_state_arrays + self.decoder_init_state_arrays
             label_all = [mx.nd.array(label)]
             data_names = [self.encoder_data_name, self.encoder_mask_name] + [
-                self.decoder_data_name,
-                self.decoder_mask_name] + self.encoder_init_state_names + self.decoder_init_state_names
+                self.decoder_data_name, self.decoder_mask_name] + \
+                         self.encoder_init_state_names + self.decoder_init_state_names
             label_names = [self.label_name]
             data_batch = DataBatch(data_names, data_all, label_names, label_all,
                                    bucket)

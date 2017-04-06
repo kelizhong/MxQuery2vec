@@ -1,5 +1,8 @@
-import six
+# coding: utf-8
+# pylint: disable=too-many-instance-attributes, too-many-arguments, import-error
+"""A decoder abstract interface object"""
 import abc
+import six
 from network.rnn.lstm import LSTMParam, LSTMState
 import mxnet as mx
 
@@ -53,8 +56,9 @@ class Decoder(object):
         init_weight = mx.sym.Variable("decoder_init_weight")
         init_bias = mx.sym.Variable("decoder_init_bias")
         # decoder lstm parameters
-        init_h = mx.sym.FullyConnected(data=init_state, num_hidden=self.hidden_unit_num * self.layer_num,
-                                       weight=init_weight, bias=init_bias, name='init_fc')
+        init_h = mx.sym.FullyConnected(data=init_state, weight=init_weight, bias=init_bias,
+                                       num_hidden=self.hidden_unit_num * self.layer_num,
+                                       name='init_fc')
         init_h = mx.sym.Activation(data=init_h, act_type='tanh', name='init_act')
         init_hs = mx.sym.SliceChannel(data=init_h, num_outputs=self.layer_num)
         for i in range(self.layer_num):
@@ -65,7 +69,7 @@ class Decoder(object):
             state = LSTMState(c=mx.sym.Variable("decoder_l%d_init_c" % i),
                               h=init_hs[i])
             last_states.append(state)
-        assert (len(last_states) == self.layer_num)
+        assert len(last_states) == self.layer_num
         return param_cells, last_states
 
     def _init_embedding_weight(self):
@@ -84,6 +88,6 @@ class Decoder(object):
         return decoder_init_states
 
     @abc.abstractmethod
-    def decode(self):
+    def decode(self, init_state):
         """decode process"""
         raise NotImplementedError

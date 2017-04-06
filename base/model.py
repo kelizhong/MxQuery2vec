@@ -1,12 +1,17 @@
-import six
-import abc
+# coding: utf-8
+"""A seq2seq model abstract interface object."""
 from collections import namedtuple
 from itertools import chain
+import abc
+import six
+# pylint: disable=invalid-name
 encoder_parameter = namedtuple('encoder_parameter', 'encoder_layer_num encoder_vocab_size '
-                                                    'encoder_hidden_unit_num encoder_embed_size encoder_dropout')
+                                                    'encoder_hidden_unit_num encoder_embed_size '
+                                                    'encoder_dropout')
 
 decoder_parameter = namedtuple('decoder_parameter', 'decoder_layer_num decoder_vocab_size '
-                                                    'decoder_hidden_unit_num decoder_embed_size decoder_dropout')
+                                                    'decoder_hidden_unit_num decoder_embed_size '
+                                                    'decoder_dropout')
 
 
 @six.add_metaclass(abc.ABCMeta)

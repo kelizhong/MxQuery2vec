@@ -1,3 +1,6 @@
+# coding=utf-8
+"""This is file is for fetching the log from socket resources"""
+from __future__ import print_function
 import logging
 import logging.handlers
 import pickle
@@ -5,8 +8,6 @@ import struct
 import SocketServer
 import argparse
 import os
-
-"""This is file is for fetching the log from socket resources"""
 
 
 class LogRecordStreamHandler(SocketServer.StreamRequestHandler):

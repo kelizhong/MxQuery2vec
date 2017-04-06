@@ -1,4 +1,6 @@
+# coding=utf-8
 from collections import namedtuple
+import warnings
 
 
 class RecordType(object):
@@ -34,7 +36,7 @@ class RecordType(object):
                 raise TypeError("Argument: %s to %s" % (arg, fieldtype))
             else:
                 if warning:
-                    print ("Recasting %s to %s as %s" % (oldarg, fieldtype, arg))
+                    warnings.warn("Recasting %s to %s as %s" % (oldarg, fieldtype, arg))
         return arg
 
     def _dict_make(self, **kwargs):

@@ -1,18 +1,22 @@
+# coding=utf-8
+# pylint: disable=no-member, invalid-name, ungrouped-imports, too-many-arguments
+"""aksis data collector that collect the data from parser worker"""
 import logging
 import pickle
 from multiprocessing import Process
 
-import zmq
 from zmq.eventloop import ioloop
 from zmq.eventloop.zmqstream import ZMQStream
 
 from data_io.seq2seq_data_bucket_queue import Seq2seqDataBucketQueue
 from utils.appmetric_util import AppMetric
 from zmq.decorators import socket
+import zmq
 
 
 class AksisDataCollector(Process):
-    """Collector that collect the data from parser worker and add to the bucket queue and send the data to trainer
+    """Collector that collect the data from parser worker and add to the
+    bucket queue and send the data to trainer
 
     Parameters
     ----------
@@ -32,8 +36,8 @@ class AksisDataCollector(Process):
             Collector process name
     """
 
-    def __init__(self, ip, buckets, batch_size, frontend_port=5557, backend_port=5558, metric_interval=30,
-                 name="AksisDataCollectorProcess"):
+    def __init__(self, ip, buckets, batch_size, frontend_port=5557, backend_port=5558,
+                 metric_interval=30, name="AksisDataCollectorProcess"):
         Process.__init__(self)
         self.ip = ip
         self.buckets = buckets
@@ -43,6 +47,7 @@ class AksisDataCollector(Process):
         self.metric_interval = metric_interval
         self.name = name
 
+    # pylint: disable=arguments-differ
     @socket(zmq.PULL)
     @socket(zmq.PUSH)
     def run(self, receiver, sender):
@@ -51,10 +56,10 @@ class AksisDataCollector(Process):
         # set up bucket queue
         queue = Seq2seqDataBucketQueue(self.buckets, self.batch_size)
         metric = AppMetric(name=self.name, interval=self.metric_interval)
-        logging.info(
-            "start collector {}, ip:{}, frontend port:{}, backend port:{}".format(self.name, self.ip,
-                                                                                  self.frontend_port,
-                                                                                  self.backend_port))
+        # pylint: disable=line-too-long
+        logging.info("start collector %s, ip:%s, frontend port:%d, backend port:%d", self.name, self.ip,
+                     self.frontend_port,
+                     self.backend_port)
         ioloop.install()
         loop = ioloop.IOLoop.instance()
         pull_stream = ZMQStream(receiver, loop)

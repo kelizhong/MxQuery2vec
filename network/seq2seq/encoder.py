@@ -1,7 +1,9 @@
-# -*- coding: utf-8 -*-
+# coding=utf-8
+# pylint: disable=import-error, too-many-arguments, too-many-locals
+"""bi-encoder with lstm cell"""
 import mxnet as mx
-from ..rnn.lstm import lstm, LSTMState
 from base.encoder import Encoder
+from network.rnn.lstm import lstm, LSTMState
 
 
 class BiDirectionalLstmEncoder(Encoder):
@@ -35,12 +37,13 @@ class BiDirectionalLstmEncoder(Encoder):
         super(BiDirectionalLstmEncoder, self).__init__(seq_len, use_masking,
                                                        hidden_unit_num,
                                                        vocab_size, embed_size,
-                                                       dropout=dropout, layer_num=layer_num, embed_weight=embed_weight,
-                                                       name=name)
+                                                       dropout=dropout, layer_num=layer_num,
+                                                       embed_weight=embed_weight, name=name)
 
     def encode(self):
         """return last hidden state for decoder in seq2sseq model"""
-        forward_param_cells, forward_last_states, backward_param_cells, backward_last_states = self.init_cell_parameter()
+        forward_param_cells, forward_last_states, \
+        backward_param_cells, backward_last_states = self.init_cell_parameter()
 
         # declare variables
         data = mx.sym.Variable('encoder_data')  # input data, encoder for encoder
@@ -54,16 +57,17 @@ class BiDirectionalLstmEncoder(Encoder):
         # split mask
         if self.use_masking:
             input_mask = mx.sym.Variable('encoder_mask')
-            masks = mx.sym.SliceChannel(data=input_mask, num_outputs=self.seq_len, name='sliced_encoder_mask')
+            masks = mx.sym.SliceChannel(data=input_mask, num_outputs=self.seq_len,
+                                        name='sliced_encoder_mask')
 
         forward_hidden_all = []
         backward_hidden_all = []
-        for seq_idx in xrange(self.seq_len):
-            forward_hidden = wordvec[seq_idx]
-            backward_hidden = wordvec[self.seq_len - 1 - seq_idx]
+        for seq_id in xrange(self.seq_len):
+            forward_hidden = wordvec[seq_id]
+            backward_hidden = wordvec[self.seq_len - 1 - seq_id]
             if self.use_masking:
-                forward_mask = masks[seq_idx]
-                backward_mask = masks[self.seq_len - 1 - seq_idx]
+                forward_mask = masks[seq_id]
+                backward_mask = masks[self.seq_len - 1 - seq_id]
 
             for i in xrange(self.layer_num):
                 if i == 0:
@@ -73,11 +77,11 @@ class BiDirectionalLstmEncoder(Encoder):
                 forward_next_state = lstm(self.hidden_unit_num, indata=forward_hidden,
                                           prev_state=forward_last_states[i],
                                           param=forward_param_cells[i],
-                                          seqidx=seq_idx, layeridx=i, dropout=dropout)
+                                          seqid=seq_id, layerid=i, dropout=dropout)
                 backward_next_state = lstm(self.hidden_unit_num, indata=backward_hidden,
                                            prev_state=backward_last_states[i],
                                            param=backward_param_cells[i],
-                                           seqidx=seq_idx, layeridx=i, dropout=dropout)
+                                           seqid=seq_id, layerid=i, dropout=dropout)
 
                 # process masking https://github.com/dmlc/mxnet/issues/2401
                 if self.use_masking:
@@ -85,24 +89,20 @@ class BiDirectionalLstmEncoder(Encoder):
                     forward_prev_state_c = forward_last_states[i].c
                     forward_new_h = mx.sym.broadcast_mul(1.0 - forward_mask,
                                                          forward_prev_state_h) + mx.sym.broadcast_mul(
-                        forward_mask,
-                        forward_next_state.h)
+                        forward_mask, forward_next_state.h)
                     forward_new_c = mx.sym.broadcast_mul(1.0 - forward_mask,
                                                          forward_prev_state_c) + mx.sym.broadcast_mul(
-                        forward_mask,
-                        forward_next_state.c)
+                        forward_mask, forward_next_state.c)
                     forward_next_state = LSTMState(c=forward_new_c, h=forward_new_h)
 
                     backward_prev_state_h = backward_last_states[i].h
                     backward_prev_state_c = backward_last_states[i].c
                     backward_new_h = mx.sym.broadcast_mul(1.0 - backward_mask,
                                                           backward_prev_state_h) + mx.sym.broadcast_mul(
-                        backward_mask,
-                        backward_next_state.h)
+                        backward_mask, backward_next_state.h)
                     backward_new_c = mx.sym.broadcast_mul(1.0 - backward_mask,
                                                           backward_prev_state_c) + mx.sym.broadcast_mul(
-                        backward_mask,
-                        backward_next_state.c)
+                        backward_mask, backward_next_state.c)
                     backward_next_state = LSTMState(c=backward_new_c, h=backward_new_h)
 
                 forward_hidden = forward_next_state.h

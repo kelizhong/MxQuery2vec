@@ -1,3 +1,6 @@
+# coding: utf-8
+# pylint: disable=invalid-name
+"""custom argparse type"""
 import sys
 import logging
 import os
@@ -11,7 +14,8 @@ def IntegerType(value):
 
 def LoggerLevelType(value):
     """convert str to log level"""
-    choices = {'debug': logging.DEBUG, 'info': logging.INFO, 'warn': logging.WARN, 'error': logging.ERROR}
+    choices = {'debug': logging.DEBUG, 'info': logging.INFO,
+               'warn': logging.WARN, 'error': logging.ERROR}
     result = choices.get(value, logging.ERROR)
     return result
 

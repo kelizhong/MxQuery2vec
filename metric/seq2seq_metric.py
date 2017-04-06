@@ -1,3 +1,5 @@
+# coding=utf-8
+"""metric manage for seq2seq model"""
 import numpy as np
 
 
@@ -20,7 +22,8 @@ class MetricManage(object):
             metric = getattr(self, metric_name)
         except AttributeError:
             raise NotImplementedError(
-                "Class `{}` does not implement metric `{}`".format(self.__class__.__name__, metric_name))
+                "Class `{}` does not implement metric `{}`".format(self.__class__.__name__,
+                                                                   metric_name))
         return metric
 
     def perplexity(self, label, pred):
@@ -29,6 +32,7 @@ class MetricManage(object):
         loss = 0.
         num = 0.
         for i in range(pred.shape[0]):
+            # pylint: disable=no-member
             if int(label[i]) != self.ignore_label:
                 num += 1
                 loss += -np.log(max(1e-10, pred[i][int(label[i])]))
@@ -41,8 +45,9 @@ class MetricManage(object):
         num = 0
         for i in range(pred.shape[0]):
             if int(label[i]) != self.ignore_label:
-                l = sum(map(int, str(int(label[i] - 3)))) if label[i] >= 3 else 0
-                p = sum(map(int, str(int(pred_indices[i] - 3)))) if pred_indices[i] >= 3 else 0
-                if l == p:
+                label_sum = sum(map(int, str(int(label[i] - 3)))) if label[i] >= 3 else 0
+                # pylint: disable=line-too-long
+                pred_sum = sum(map(int, str(int(pred_indices[i] - 3)))) if pred_indices[i] >= 3 else 0
+                if label_sum == pred_sum:
                     num += 1
         return float(num) / pred.shape[0] * 100

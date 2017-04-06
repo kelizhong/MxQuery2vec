@@ -26,7 +26,8 @@ def parse_args():
                         help='metric reporting frequency is set by seconds param')
     subparsers = parser.add_subparsers(help='train vocabulary')
 
-    q2v_trainer_parser = subparsers.add_parser("train_query2vec", help='train query2vec', add_help=False)
+    q2v_trainer_parser = subparsers.add_parser("train_query2vec", help='train query2vec',
+                                               add_help=False)
     q2v_trainer_parser.set_defaults(action='train_query2vec')
     q2v_vocab_parser = subparsers.add_parser("query2vec_vocab")
     q2v_vocab_parser.set_defaults(action='query2vec_vocab')
@@ -152,7 +153,6 @@ def set_up_logger():
 if __name__ == "__main__":
     args = parse_args()
     set_up_logger()
-    print(args)
     signal.signal(signal.SIGINT, signal_handler)
     if args.action == 'train_query2vec':
         from query2vec.query2vec_trainer import Query2vecTrainer, mxnet_parameter, optimizer_parameter, model_parameter, \

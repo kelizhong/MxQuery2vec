@@ -1,7 +1,8 @@
-import subprocess
-import mxnet as mx
-import math
+# coding=utf-8
 import warnings
+import subprocess
+import math
+import mxnet as mx
 from utils.decorator_util import memoized
 
 

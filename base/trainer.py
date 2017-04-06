@@ -1,10 +1,13 @@
-import six
+# coding: utf-8
+# pylint: disable=import-error, no-member
+"""A trainer abstract interface object."""
+import logging
+from itertools import chain
 import abc
+import six
 from utils.device_util import get_devices
 from utils.decorator_util import memoized
-import logging
 from utils.record_util import RecordType
-from itertools import chain
 import mxnet as mx
 
 
@@ -31,7 +34,8 @@ class Trainer(object):
     @memoized
     def ctx_devices(self):
         """return devices"""
-        devs = get_devices(self.devices, self.device_mode, self.kv.rank, self.hosts_num, self.workers_num)
+        devs = get_devices(self.devices, self.device_mode, self.kv.rank,
+                           self.hosts_num, self.workers_num)
         return devs
 
     @property
@@ -52,7 +56,7 @@ class Trainer(object):
     def print_all_variable(self):
         """log training parameter to check before training"""
         for arg, value in self.__dict__.iteritems():
-            logging.info("%s: %s" % (arg, value))
+            logging.info("%s: %s", arg, value)
 
     def _init_parameter(self):
         """initialize mxnet, optimizer, model, data parameter and kv store for training"""
@@ -67,6 +71,7 @@ class Trainer(object):
             setattr(self, parameter, value)
 
         # create kvstore
+        # pylint: disable=invalid-name
         kv = mx.kvstore.create(self.kv_store)
         setattr(self, 'kv', kv)
 
@@ -85,4 +90,3 @@ class Trainer(object):
         if self.optimizer_params.get('rescale_grad') < 0:
             # if rescale_grad has not been set, reset rescale_grad
             self.optimizer_params['rescale_grad'] = 1.0 / (self.batch_size * kv.num_workers)
-

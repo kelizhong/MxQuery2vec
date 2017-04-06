@@ -1,10 +1,17 @@
+# coding=utf-8
+# pylint: disable=import-error, too-many-arguments
+"""decoder with lstm cell"""
 import mxnet as mx
 
 from network.rnn.lstm import lstm, LSTMState
+
 from base.decoder import Decoder
+
+# pylint: disable=pointless-string-statement
 '''
 Papers:
-[1] Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation (http://arxiv.org/abs/1406.1078)
+[1] Learning Phrase Representations using RNN Encoder-Decoder for Statistical
+    Machine Translation (http://arxiv.org/abs/1406.1078)
 '''
 
 
@@ -45,6 +52,7 @@ class LstmDecoder(Decoder):
                                           dropout=dropout, layer_num=layer_num,
                                           embed_weight=embed_weight, name=name)
 
+    # pylint: disable=too-many-locals
     def decode(self, init_state):
 
         param_cells, last_states = self.init_cell_state_parameter(init_state)
@@ -64,15 +72,16 @@ class LstmDecoder(Decoder):
         # split mask
         if self.use_masking:
             input_mask = mx.sym.Variable('decoder_mask')
-            masks = mx.sym.SliceChannel(data=input_mask, num_outputs=self.seq_len, name='sliced_decoder_mask')
+            masks = mx.sym.SliceChannel(data=input_mask, num_outputs=self.seq_len,
+                                        name='sliced_decoder_mask')
         hidden_all = []
-        for seq_idx in range(self.seq_len):
-            con = mx.sym.Concat(wordvec[seq_idx], init_state)
+        for seq_id in range(self.seq_len):
+            con = mx.sym.Concat(wordvec[seq_id], init_state)
             hidden = mx.sym.FullyConnected(data=con, num_hidden=self.embed_size,
                                            weight=input_weight, no_bias=True, name='input_fc')
 
             if self.use_masking:
-                mask = masks[seq_idx]
+                mask = masks[seq_id]
 
             for i in range(self.layer_num):
                 if i == 0:
@@ -82,12 +91,14 @@ class LstmDecoder(Decoder):
                 next_state = lstm(self.hidden_unit_num, indata=hidden,
                                   prev_state=last_states[i],
                                   param=param_cells[i],
-                                  seqidx=seq_idx, layeridx=i, dropout=dp_ratio)
+                                  seqid=seq_id, layerid=i, dropout=dp_ratio)
                 if self.use_masking:
                     prev_state_h = last_states[i].h
                     prev_state_c = last_states[i].c
-                    new_h = mx.sym.broadcast_mul(1.0 - mask, prev_state_h) + mx.sym.broadcast_mul(mask, next_state.h)
-                    new_c = mx.sym.broadcast_mul(1.0 - mask, prev_state_c) + mx.sym.broadcast_mul(mask, next_state.c)
+                    new_h = mx.sym.broadcast_mul(1.0 - mask, prev_state_h) + \
+                            mx.sym.broadcast_mul(mask, next_state.h)
+                    new_c = mx.sym.broadcast_mul(1.0 - mask, prev_state_c) + \
+                            mx.sym.broadcast_mul(mask, next_state.c)
                     next_state = LSTMState(c=new_c, h=new_h)
 
                 hidden = next_state.h
@@ -108,7 +119,8 @@ class LstmDecoder(Decoder):
             loss_mask = mx.sym.Reshape(data=loss_mask, shape=(-1, 1))
             pred = mx.sym.broadcast_mul(pred, loss_mask)
         # softmaxwithloss http://caffe.berkeleyvision.org/tutorial/layers/softmaxwithloss.html
-        sm = mx.sym.SoftmaxOutput(data=pred, label=label, name='decoder_softmax', ignore_label=0, use_ignore=True,
-                                  normalization='valid')
+        # pylint: disable=invalid-name
+        sm = mx.sym.SoftmaxOutput(data=pred, label=label, name='decoder_softmax', ignore_label=0,
+                                  use_ignore=True, normalization='valid')
 
         return sm

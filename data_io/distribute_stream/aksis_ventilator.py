@@ -1,12 +1,15 @@
-import zmq
+# coding=utf-8
+# pylint: disable=too-many-instance-attributes, too-many-arguments
+"""ventilitor that read/produce the corpus data"""
 import os
-import fnmatch
 from multiprocessing import Process
+import fnmatch
 import logging
-from utils.data_util import query_title_score_generator_from_aksis_data
 import random
+import zmq
 from zmq.decorators import socket
 from utils.appmetric_util import AppMetric
+from utils.data_util import query_title_score_generator_from_aksis_data
 
 
 class AksisDataVentilatorProcess(Process):
@@ -16,8 +19,10 @@ class AksisDataVentilatorProcess(Process):
         data_dir : str
             Data_dir for the aksis corpus data
         file_pattern: tuple
-            File pattern use to distinguish different corpus, every file pattern will start a ventilitor process.
-            File pattern is tuple type(file pattern, dropout). Dropout is the probability to ignore the data.
+            File pattern use to distinguish different corpus, every file pattern will start
+            a ventilitor process.
+            File pattern is tuple type(file pattern, dropout). Dropout is the probability
+            to ignore the data.
             If dropout < 0, all the data will be accepted to be trained
         ip : str
             The ip address string without the port to pass to ``Socket.bind()``.
@@ -29,21 +34,25 @@ class AksisDataVentilatorProcess(Process):
             process name
     """
     def __init__(self, file_pattern, data_dir,
-                 num_epoch=65535, dropout=-1, ip='127.0.0.1', port='5555', metric_interval=30, name='VentilatorProcess'):
+                 num_epoch=65535, dropout=-1, ip='127.0.0.1', port='5555',
+                 metric_interval=30, name='VentilatorProcess'):
         Process.__init__(self)
         self.file_pattern = file_pattern
         self.data_dir = data_dir
         self.num_epoch = num_epoch
         self.dropout = float(dropout)
+        # pylint: disable=invalid-name
         self.ip = ip
         self.port = port
         self.metric_interval = metric_interval
         self.name = name
 
+    # pylint: disable=arguments-differ, no-member
     @socket(zmq.PUSH)
     def run(self, sender):
         sender.connect("tcp://{}:{}".format(self.ip, self.port))
-        logging.info("process {} connect {}:{} and start produce data".format(self.name, self.ip, self.port))
+        logging.info("process %s connect %s:%d and start produce data",
+                     self.name, self.ip, self.port)
         metric = AppMetric(name=self.name, interval=self.metric_interval)
         data_stream = self.get_data_stream()
         for i in xrange(self.num_epoch):
@@ -51,9 +60,10 @@ class AksisDataVentilatorProcess(Process):
                 sender.send_pyobj(data)
                 metric.notify(1)
             data_stream = self.get_data_stream()
-            logging.info("process {} finish {} epoch".format(self.name, i))
+            logging.info("process %s finish %d epoch", self.name, i)
 
     def get_data_stream(self):
+        """data stream genertae the query, title data"""
         data_files = fnmatch.filter(os.listdir(self.data_dir), self.file_pattern)
         assert len(data_files) > 0, "no files are found for action pattern {} in {}".format(self.file_pattern,
                                                                                             self.data_dir)
@@ -64,6 +74,6 @@ class AksisDataVentilatorProcess(Process):
                 yield query, title
 
     def is_hit(self, score):
-        """sample function to decide whether the data should be trained, not sample if dropout less than 0"""
+        """sample function to decide whether the data should be trained,
+        not sample if dropout less than 0"""
         return self.dropout < 0 or float(score) > random.uniform(self.dropout, 1)
-

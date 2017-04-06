@@ -1,3 +1,6 @@
+# coding: utf-8
+#pylint: disable=invalid-name
+"""constant value"""
 bos_word = '<s>'  # begin of sentence
 eos_word = '</s>'  # end of sentence
 unk_word = '<unk>'  # unknown word

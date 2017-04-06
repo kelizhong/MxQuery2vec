@@ -1,5 +1,6 @@
-# -*- coding: utf-8 -*-
-
+# coding=utf-8
+# pylint: disable=no-member, invalid-name. import-error, pointless-string-statement
+"""query2vec trainer implementation"""
 import logging
 import sys
 
@@ -148,25 +149,27 @@ model_parameter = RecordType('model_parameter',
 
 
 class Query2vecTrainer(Trainer):
+    """Trainer for query2vec model
+    Parameter:
+        mxnet_para: RecordType
+            mxnet parameter
+        optimizer_para: RecordType
+            optimizer parameter
+        model_para: RecordType
+            model parameter
+        data_para: RecordType
+            data parameter
+    """
+
     def __init__(self,
                  mxnet_para=mxnet_parameter, optimizer_para=optimizer_parameter,
                  model_para=model_parameter, data_para=data_parameter):
-        """Trainer for query2vec model
-        Parameter:
-            mxnet_para: RecordType
-                mxnet parameter
-            optimizer_para: RecordType
-                optimizer parameter
-            model_para: RecordType
-                model parameter
-            data_para: RecordType
-                data parameter
-        """
         super(Query2vecTrainer, self).__init__(mxnet_para=mxnet_para, optimizer_para=optimizer_para,
                                                model_para=model_para, data_para=data_para)
         self.check_args()
 
     def check_args(self):
+        """validate argument"""
         if (self.ip_addr or self.port) and (self.encoder_train_data_path or self.decoder_train_data_path):
             logging.error(
                 "ip_addr and port|encoder_train_data_path and decoder_train_data_path are mutually exclusive ...")
@@ -265,16 +268,16 @@ class Query2vecTrainer(Trainer):
         sym, arg_params, aux_params = load_model(self.model_path_prefix, rank, self.load_epoch)
         # load the pretrain word2vec only for new model training and word2vec_path is defined
         if arg_params is not None or self.word2vec_path is None:
-            logging.info("Worker {} create model without pretrain word2vec model".format(rank))
+            logging.info("Worker %d create model without pretrain word2vec model", rank)
             return sym, arg_params, aux_params
-        logging.info("Worker {} initialize embedding weight using pretrain word2vec model".format(rank))
+        logging.info("Worker %d initialize embedding weight using pretrain word2vec model", rank)
         w2v = self.word2vec
         vocab = self.vocab
         embed_weight = np.random.rand(self.vocab_size, self.encoder_embed_size)
 
-        for word, id in vocab.iteritems():
+        for word, index in vocab.iteritems():
             if word in w2v:
-                embed_weight[id] = w2v[word]
+                embed_weight[index] = w2v[word]
         arg_params = dict()
         arg_params[embed_weight_name] = mx.nd.array(embed_weight)
         return sym, arg_params, aux_params
@@ -283,14 +286,14 @@ class Query2vecTrainer(Trainer):
         """Train the module parameters"""
         rank = self.kv.rank
         # load model
-        logging.info("Worker {} loading model".format(rank))
+        logging.info("Worker %d loading model", rank)
         sym, arg_params, aux_params = self._load_model_with_pretrain_word2vec('share_embed_weight')
 
         # save model callback
         checkpoint = save_model_callback(self.model_path_prefix, rank, self.save_checkpoint_freq)
 
         devices = self.ctx_devices
-        logging.info("Worker {} using devices {}".format(rank, devices))
+        logging.info("Worker %d using devices %s", rank, devices)
 
         # set monitor
         monitor = mx.mon.Monitor(self.monitor_interval,
@@ -304,11 +307,11 @@ class Query2vecTrainer(Trainer):
         # callbacks that run after each batch
         batch_end_callbacks = [Speedometer(self.batch_size, self.kv.rank, self.disp_batches)]
 
-        logging.info("Worker {} creating metric".format(rank))
+        logging.info("Worker %d creating metric", rank)
         metric_manager = MetricManage(self.ignore_label)
         metrics = [metric_manager.create_metric(self.metric)]
 
-        logging.info("Worker {} loading data and creating the network symbol".format(rank))
+        logging.info("Worker %d loading data and creating the network symbol", rank)
         train_data_loader = self.train_data_loader
         eval_data_loader = self.eval_data_loader
         network_symbol = self.model.network_symbol(train_data_loader.data_names, train_data_loader.label_names)
@@ -317,10 +320,10 @@ class Query2vecTrainer(Trainer):
             assert sym.tojson() == network_symbol.tojson()
 
         # create bucket model
-        logging.info("Worker {} creating bucket model".format(rank))
+        logging.info("Worker %d creating bucket model", rank)
         model = mx.mod.BucketingModule(network_symbol, default_bucket_key=train_data_loader.default_bucket_key,
                                        context=devices)
-        logging.info("Worker {} begin training".format(rank))
+        logging.info("Worker %d begin training", rank)
         # run
         model.fit(train_data_loader,
                   begin_epoch=self.load_epoch if self.load_epoch > 0 else 0,

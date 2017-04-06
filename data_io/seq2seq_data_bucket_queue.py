@@ -1,4 +1,6 @@
 # coding=utf-8
+# pylint: disable=too-few-public-methods
+"""seq2seq bucket queue that store train data and generate batch data"""
 from collections import deque
 import numpy as np
 
@@ -13,13 +15,15 @@ class Seq2seqDataBucketQueue(object):
         batch_size : int
             batch_size of data
         ignore_label : int
-            key for ignore label, the label value will be ignored during backward in softmax. Recommend to set 0
+            key for ignore label, the label value will be ignored during backward in
+            softmax. Recommend to set 0
         dtype : str, default 'float32'
             data type
     Notes
     -----
     - For query2vec, the vocabulary in encoder is the same with the vocabulary in decoder.
-        The vocabulary is from all the corpus including encoder corpus(search query) adn decoder corpus(asin information)
+        The vocabulary is from all the corpus including encoder corpus(search query) and
+        decoder corpus(asin information)
     """
 
     def __init__(self, buckets, batch_size, ignore_label=0, dtype='float32'):
@@ -31,13 +35,14 @@ class Seq2seqDataBucketQueue(object):
         self._init_queue()
 
     def _init_queue(self):
-        """initialize the queue for each bucket to store tuple(encoder_sentence_id, decoder_sentence_id, label_id)"""
+        """initialize the queue for each bucket to store tuple(encoder_sentence_id,
+        decoder_sentence_id, label_id)"""
         for bucket_key in self.buckets:
             self.bucket_queue.setdefault(bucket_key, deque())
 
     def put(self, encoder_sentence_id, decoder_sentence_id, label_id):
-        """add the data into the bucket queue, return the bucket and queue if the queue reach the batch size
-            else return None
+        """add the data into the bucket queue, return the bucket and queue if the
+        queue reach the batch size else return None
         """
         if len(encoder_sentence_id) == 0 or len(decoder_sentence_id) == 0 or len(label_id) == 0:
             return None

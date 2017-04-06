@@ -1,3 +1,6 @@
+# coding: utf-8
+# pylint: disable=invalid-name, protected-access, too-few-public-methods, attribute-defined-outside-init
+"""custom argparse action"""
 import argparse
 
 

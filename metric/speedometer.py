@@ -1,3 +1,6 @@
+# coding=utf-8
+# pylint: disable=too-few-public-methods
+"""Calculate and log training speed periodically"""
 import logging
 import time
 
@@ -37,6 +40,7 @@ class Speedometer(object):
                     name_value = param.eval_metric.get_name_value()
                     param.eval_metric.reset()
                     for name, value in name_value:
+                        # pylint: disable=line-too-long
                         logging.info('Worker[%d] Epoch[%d] Batch [%d]\tSpeed: %.2f samples/sec\tTrain-%s=%f',
                                      self.rank, param.epoch, count, speed, name, value)
                 else:
