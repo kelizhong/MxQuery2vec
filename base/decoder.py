@@ -69,7 +69,7 @@ class Decoder(object):
             state = LSTMState(c=mx.sym.Variable("decoder_l%d_init_c" % i),
                               h=init_hs[i])
             last_states.append(state)
-        assert len(last_states) == self.layer_num
+        assert len(last_states) == self.layer_num, "shape not match between last_states and layer_num for decoder"
         return param_cells, last_states
 
     def _init_embedding_weight(self):
@@ -89,5 +89,10 @@ class Decoder(object):
 
     @abc.abstractmethod
     def decode(self, init_state):
-        """decode process"""
+        """decode process
+            Parameters
+            ----------
+            init_state: sym.Variable
+                init_state is the encoder last state
+        """
         raise NotImplementedError

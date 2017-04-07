@@ -4,12 +4,13 @@
 import os
 from multiprocessing import Process
 import fnmatch
-import logging
+import logbook as logging
 import random
 import zmq
 from zmq.decorators import socket
 from utils.appmetric_util import AppMetric
 from utils.data_util import query_title_score_generator_from_aksis_data
+import logbook
 
 
 class AksisDataVentilatorProcess(Process):
@@ -33,6 +34,7 @@ class AksisDataVentilatorProcess(Process):
         name: str
             process name
     """
+
     def __init__(self, file_pattern, data_dir,
                  num_epoch=65535, dropout=-1, ip='127.0.0.1', port='5555',
                  metric_interval=30, name='VentilatorProcess'):
@@ -51,7 +53,7 @@ class AksisDataVentilatorProcess(Process):
     @socket(zmq.PUSH)
     def run(self, sender):
         sender.connect("tcp://{}:{}".format(self.ip, self.port))
-        logging.info("process %s connect %s:%d and start produce data",
+        logging.info("process {}s connect {}:{} and start produce data",
                      self.name, self.ip, self.port)
         metric = AppMetric(name=self.name, interval=self.metric_interval)
         data_stream = self.get_data_stream()
@@ -60,13 +62,15 @@ class AksisDataVentilatorProcess(Process):
                 sender.send_pyobj(data)
                 metric.notify(1)
             data_stream = self.get_data_stream()
-            logging.info("process %s finish %d epoch", self.name, i)
+            logging.info("process {} finish {} epoch", self.name, i)
 
     def get_data_stream(self):
         """data stream genertae the query, title data"""
         data_files = fnmatch.filter(os.listdir(self.data_dir), self.file_pattern)
-        assert len(data_files) > 0, "no files are found for action pattern {} in {}".format(self.file_pattern,
-                                                                                            self.data_dir)
+
+        if len(data_files) <= 0:
+            raise OSError.FileNotFoundError("no files are found for file pattern {} in {}".format(self.file_pattern,
+                                                                                                  self.data_dir))
         action_add_files = [os.path.join(self.data_dir, filename) for filename in data_files]
 
         for query, title, score in query_title_score_generator_from_aksis_data(action_add_files):

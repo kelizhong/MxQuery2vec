@@ -30,6 +30,7 @@ class BiDirectionalLstmEncoder(Encoder):
             decoder name
     """
 
+    # TODO remove this class, update mxnet to 0.9.4 and use build-in SequentialRNNCell in next version
     def __init__(self, seq_len, use_masking,
                  hidden_unit_num,
                  vocab_size, embed_size,
@@ -45,7 +46,6 @@ class BiDirectionalLstmEncoder(Encoder):
         forward_param_cells, forward_last_states, \
         backward_param_cells, backward_last_states = self.init_cell_parameter()
 
-        # declare variables
         data = mx.sym.Variable('encoder_data')  # input data, encoder for encoder
 
         # embedding layer
@@ -54,7 +54,6 @@ class BiDirectionalLstmEncoder(Encoder):
                                  name="{}_embed".format(self.name))
         wordvec = mx.sym.SliceChannel(data=embed, num_outputs=self.seq_len, squeeze_axis=1)
 
-        # split mask
         if self.use_masking:
             input_mask = mx.sym.Variable('encoder_mask')
             masks = mx.sym.SliceChannel(data=input_mask, num_outputs=self.seq_len,
@@ -74,11 +73,11 @@ class BiDirectionalLstmEncoder(Encoder):
                     dropout = 0.
                 else:
                     dropout = self.dropout
-                forward_next_state = lstm(self.hidden_unit_num, indata=forward_hidden,
+                forward_next_state = lstm(self.hidden_unit_num, inputs=forward_hidden,
                                           prev_state=forward_last_states[i],
                                           param=forward_param_cells[i],
                                           seqid=seq_id, layerid=i, dropout=dropout)
-                backward_next_state = lstm(self.hidden_unit_num, indata=backward_hidden,
+                backward_next_state = lstm(self.hidden_unit_num, inputs=backward_hidden,
                                            prev_state=backward_last_states[i],
                                            param=backward_param_cells[i],
                                            seqid=seq_id, layerid=i, dropout=dropout)

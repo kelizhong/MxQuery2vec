@@ -18,7 +18,7 @@ Papers:
 class LstmDecoder(Decoder):
     """Lstm decoder, accept the encoder to init the state. Implementation base on[1]
         y(t) = LSTM(s(t-1), y(t-1), C); Where s is the hidden state of the LSTM (h and c)
-        y(0) = LSTM(s0, C); C is the context vector from the encoder
+        y(0) = LSTM(s0, C); C is the context vector from the encoder.
     Parameters
     ----------
         seq_len: int
@@ -41,6 +41,7 @@ class LstmDecoder(Decoder):
             decoder name
     """
 
+    # TODO remove this class, update mxnet to 0.9.4 and use build-in SequentialRNNCell in next version
     def __init__(self, seq_len, use_masking,
                  hidden_unit_num,
                  vocab_size, embed_size,
@@ -69,7 +70,6 @@ class LstmDecoder(Decoder):
                                  weight=self.embed_weight, output_dim=self.embed_size,
                                  name="{}_embed".format(self.name))
         wordvec = mx.sym.SliceChannel(data=embed, num_outputs=self.seq_len, squeeze_axis=1)
-        # split mask
         if self.use_masking:
             input_mask = mx.sym.Variable('decoder_mask')
             masks = mx.sym.SliceChannel(data=input_mask, num_outputs=self.seq_len,
@@ -88,7 +88,7 @@ class LstmDecoder(Decoder):
                     dp_ratio = 0.
                 else:
                     dp_ratio = self.dropout
-                next_state = lstm(self.hidden_unit_num, indata=hidden,
+                next_state = lstm(self.hidden_unit_num, inputs=hidden,
                                   prev_state=last_states[i],
                                   param=param_cells[i],
                                   seqid=seq_id, layerid=i, dropout=dp_ratio)

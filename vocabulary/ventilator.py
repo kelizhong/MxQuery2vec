@@ -1,11 +1,14 @@
-import zmq
-import logging
+# coding=utf-8
+"""Ventilator process to read the data from sentence_gen generator"""
+from __future__ import print_function
+import logbook as logging
 from multiprocessing import Process
-from worker import WorkerProcess
-from collector import CollectorProcess
 from collections import Counter
-from utils.data_util import sentence_gen
+import zmq
 from zmq.decorators import socket
+from vocabulary.worker import WorkerProcess
+from vocabulary.collector import CollectorProcess
+from utils.data_util import sentence_gen
 
 
 class VentilatorProcess(Process):
@@ -37,9 +40,9 @@ class VentilatorProcess(Process):
         """read the sentence from sentence generator and send to the worker"""
         sender.bind("tcp://{}:{}".format(self.ip, self.port))
 
-        logging.info("start sentence producer {}".format(self.name))
+        logging.info("start sentence producer {}", self.name)
         for filename in self.corpus_files:
-            logging.info("Counting words in %s" % filename)
+            logging.info("Counting words in {}", filename)
             for sentence in self.sentence_gen(filename):
                 sender.send_string(sentence)
 

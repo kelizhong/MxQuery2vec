@@ -169,10 +169,10 @@ def lstm_decoder_symbol(decoder_layer_num, decoder_vocab_size, decoder_hidden_un
             dp = 0.
         else:
             dp = decoder_dropout
-        next_state = lstm(decoder_hidden_unit_num, indata=hidden,
+        next_state = lstm(decoder_hidden_unit_num, inputs=hidden,
                           prev_state=last_states[i],
                           param=param_cells[i],
-                          seqidx=seqidx, layeridx=i, dropout=dp)
+                          seqid=seqidx, layerid=i, dropout=dp)
         hidden = next_state.h
         last_states[i] = next_state
 

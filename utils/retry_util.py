@@ -1,4 +1,5 @@
 # coding=utf-8
+"""A retry decorator with exponential backoff"""
 import time
 from functools import wraps
 import types
@@ -42,14 +43,12 @@ def retry(tries, delay=1, backoff=1, exception=Exception, name=None, report=lamb
                     ret = func(self, *args, **kwargs)
                     return ret
                 except exception as e:
-                    # retried enough and still fail? raise orignal exception
                     if i == _tries - 1:
                         report("{} failed to retry definitely: {}".format(func_name, e))
                         raise
                     else:
                         report("{} retry {} time, Exception: {}".format(func_name, i, e))
                         time.sleep(_delay)
-                        # wait longer after each failure
                         _delay *= backoff
 
         return wrapper

@@ -8,7 +8,6 @@ from data_io.distribute_stream.aksis_parser_worker import AksisParserWorker
 from data_io.distribute_stream.aksis_ventilator import AksisDataVentilatorProcess
 from data_io.distribute_stream.aksis_data_collector import AksisDataCollector
 
-
 class AksisDataPipeline(object):
     """Start the raw_data_broker, data_ventilitor_process, parser_worker_process
     and collector_process. The data pipeline is data_ventilitor_process->raw_data_broker
@@ -57,7 +56,7 @@ class AksisDataPipeline(object):
     """
 
     def __init__(self, data_dir, vocabulary_path, top_words, file_patterns, batch_size, buckets,
-                 worker_num=10, ip=None, num_epoch=65535,
+                 worker_num=1, ip=None, num_epoch=65535,
                  raw_data_frontend_port='5555', raw_data_backend_port='5556',
                  collector_fronted_port='5557', collector_backend_port='5558'):
         self.data_dir = data_dir
@@ -83,7 +82,7 @@ class AksisDataPipeline(object):
         # all process will not be terminated util receive the CTRL+C signal
         # TODO add pub-sub pattern to send the command to stop the process
         if join:
-            c.join()
+            collector.join()
 
     def start_parser_worker_process(self):
         """start the parser worker process which tokenize the copus data and convert them to id"""

@@ -1,4 +1,5 @@
 # coding=utf-8
+"""util for decorator. e.g. memoized"""
 import collections
 import functools
 

@@ -1,4 +1,5 @@
 # coding=utf-8
+"""util for file processing"""
 import os
 import errno
 

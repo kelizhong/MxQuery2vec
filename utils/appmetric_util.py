@@ -1,6 +1,6 @@
 # coding=utf-8
 """metric util for application"""
-import logging
+import logbook as logging
 import functools
 from appmetrics import metrics
 from appmetrics import reporter

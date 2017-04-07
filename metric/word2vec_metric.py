@@ -1,3 +1,4 @@
+# coding=utf-8
 from operator import itemgetter
 import mxnet as mx
 
@@ -5,7 +6,11 @@ import mxnet as mx
 
 
 class NceAuc(mx.metric.EvalMetric):
-    """Calculate noise-contrastive estimation auc metric"""
+    """Calculate noise-contrastive estimation auc metric
+    This metric copied MXNET Package.
+    Currently have no time to dive deep nce loss, will add
+    more code annotation after the investigation
+    """
     def __init__(self):
         super(NceAuc, self).__init__('nce-auc')
 

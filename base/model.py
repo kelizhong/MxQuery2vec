@@ -25,8 +25,10 @@ class Model(object):
         self._initialize()
 
     def _initialize(self):
-        assert isinstance(self.encoder_para, encoder_parameter)
-        assert isinstance(self.decoder_para, decoder_parameter)
+        if not isinstance(self.encoder_para, encoder_parameter):
+            raise TypeError("encoder_para should match type encoder_parameter")
+        if not isinstance(self.decoder_para, decoder_parameter):
+            raise TypeError("decoder_para should match type decoder_parameter")
 
         for (parameter, value) in chain(self.encoder_para._asdict().iteritems(),
                                         self.decoder_para._asdict().iteritems()):

@@ -1,5 +1,8 @@
-import mxnet as mx
+# coding=utf-8
+"""lstm cell"""
+# pylint: disable=too-many-arguments, too-many-locals, no-member
 from collections import namedtuple
+import mxnet as mx
 
 
 LSTMState = namedtuple("LSTMState", ["c", "h"])
@@ -7,13 +10,13 @@ LSTMParam = namedtuple("LSTMParam", ["i2h_weight", "i2h_bias",
                                      "h2h_weight", "h2h_bias"])
 
 
-def lstm(num_hidden, indata, prev_state, param, seqid, layerid, dropout=0.):
+def lstm(num_hidden, inputs, prev_state, param, seqid, layerid, dropout=0.):
     """Long-Short Term Memory (LSTM) network cell
     Parameters
     ----------
         num_hidden : int
             number of units in output symbol
-        indata : sym.Variable
+        inputs : sym.Variable
             input symbol, 2D, batch * num_hidden
         prev_state : sym.Variable
             state from previous step
@@ -30,10 +33,10 @@ def lstm(num_hidden, indata, prev_state, param, seqid, layerid, dropout=0.):
     -------
         LSTMState
     """
-    # TODO remove this cell, will use the mx build-in cell in next version
+    # TODO remove this cell, will use the mx build-in LSTMCell in next version
     if dropout > 0.:
-        indata = mx.sym.Dropout(data=indata, p=dropout)
-    i2h = mx.sym.FullyConnected(data=indata,
+        inputs = mx.sym.Dropout(data=inputs, p=dropout)
+    i2h = mx.sym.FullyConnected(data=inputs,
                                 weight=param.i2h_weight,
                                 bias=param.i2h_bias,
                                 num_hidden=num_hidden * 4,

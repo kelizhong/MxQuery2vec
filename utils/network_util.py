@@ -1,4 +1,5 @@
 # coding=utf-8
+"""util for network operation. e.g. get ip"""
 import socket
 
 

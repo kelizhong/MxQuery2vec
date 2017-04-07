@@ -1,7 +1,7 @@
 # coding=utf-8
 # pylint: disable=too-few-public-methods
 """Calculate and log training speed periodically"""
-import logging
+import logbook as logging
 import time
 
 
@@ -18,6 +18,7 @@ class Speedometer(object):
             How many batches between calculations.
             Defaults to calculating & logging every 50 batches.
     """
+
     def __init__(self, batch_size, rank=0, frequent=50):
         self.batch_size = batch_size
         self.rank = rank
@@ -41,11 +42,11 @@ class Speedometer(object):
                     param.eval_metric.reset()
                     for name, value in name_value:
                         # pylint: disable=line-too-long
-                        logging.info('Worker[%d] Epoch[%d] Batch [%d]\tSpeed: %.2f samples/sec\tTrain-%s=%f',
-                                     self.rank, param.epoch, count, speed, name, value)
+                        logging.info('Worker[%d] Epoch[%d] Batch [%d]\tSpeed: %.2f samples/sec\tTrain-%s=%f' % (
+                            self.rank, param.epoch, count, speed, name, value))
                 else:
-                    logging.info("Worker[%d] Iter[%d] Batch [%d]\tSpeed: %.2f samples/sec",
-                                 self.rank, param.epoch, count, speed)
+                    logging.info("Worker[%d] Iter[%d] Batch [%d]\tSpeed: %.2f samples/sec" % (
+                        self.rank, param.epoch, count, speed))
                 self.tic = time.time()
         else:
             self.init = True

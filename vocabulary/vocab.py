@@ -1,5 +1,6 @@
 # coding=utf-8
-import logging
+"""Generate vocabulary"""
+import logbook as logging
 from collections import Counter
 from utils.pickle_util import save_obj_pickle
 from vocabulary.ventilator import VentilatorProcess
@@ -62,14 +63,14 @@ class Vocab(object):
         c = CollectorProcess(self.ip, self.collector_port)
         counter = Counter(c.collect())
         self._terminate_process(process_pool)
-        logging.info("Finish counting. %d unique words, a total of %d words in all files."
-                     % (len(counter), sum(counter.values())))
+        logging.info("Finish counting. {} unique words, a total of {} words in all files."
+                     , len(counter), sum(counter.values()))
 
         counter = counter.most_common(self.top_words)
-        logging.info("store vocabulary with most_common_words file, vocabulary size: " + str(len(counter)))
+        logging.info("store vocabulary with most_common_words file, vocabulary size: {}", len(counter))
         save_obj_pickle(counter, self.vocab_save_path, self.overwrite)
 
     def _terminate_process(self, pool):
         for p in pool:
             p.terminate()
-            logging.info('terminated process {}'.format(p.name))
+            logging.info('terminated process {}', p.name)

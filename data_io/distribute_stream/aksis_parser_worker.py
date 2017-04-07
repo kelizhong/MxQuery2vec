@@ -2,7 +2,7 @@
 # pylint: disable=too-many-arguments, arguments-differ
 """worker to parse the raw data from ventilitor"""
 from multiprocessing import Process
-import logging
+import logbook as logging
 import pickle
 # pylint: disable=ungrouped-imports
 import zmq
@@ -49,7 +49,7 @@ class AksisParserWorker(Process):
     def run(self, receiver, sender):
         receiver.connect("tcp://{}:{}".format(self.ip, self.frontend_port))
         sender.connect("tcp://{}:{}".format(self.ip, self.backend_port))
-        logging.info("process %s connect %s:%d and start parse data", self.name, self.ip,
+        logging.info("process {} connect {}:{} and start parse data", self.name, self.ip,
                      self.frontend_port)
         ioloop.install()
         loop = ioloop.IOLoop.instance()
@@ -70,7 +70,7 @@ class AksisParserWorker(Process):
     @memoized
     def vocabulary(self):
         """load vocabulary"""
-        logging.info("loading vocabulary for process %s", self.name)
+        logging.info("loading vocabulary for process {}", self.name)
         vocab = load_vocabulary_from_pickle(self.vocabulary_path, top_words=self.top_words,
                                             special_words=special_words)
         return vocab

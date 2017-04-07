@@ -1,6 +1,7 @@
 # coding=utf-8
+"""model util.e.g.load mode, save model"""
 import os
-import logging
+import logbook as logging
 import mxnet as mx
 from utils.file_util import ensure_dir_exists
 
@@ -37,7 +38,7 @@ def load_model(model_prefix, rank=0, load_epoch=None):
         model_prefix += "-%d" % (rank)
     sym, arg_params, aux_params = mx.model.load_checkpoint(
         model_prefix, load_epoch)
-    logging.info('Loaded query2vec %s_%04d.params', model_prefix, load_epoch)
+    logging.info('Loaded query2vec %s_%04d.params' % (model_prefix, load_epoch))
     return sym, arg_params, aux_params
 
 

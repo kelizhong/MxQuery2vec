@@ -1,4 +1,5 @@
 # coding=utf-8
+"""util for devices. e.g. allocate GPU resource"""
 import warnings
 import subprocess
 import math
@@ -19,7 +20,7 @@ def get_gpus_num():
 
 
 def get_devices(devices, device_mode='cpu', rank=0, hosts_num=1, workers_num=1):
-    """ devices for training
+    """ allocate GPU resource for training
     Parameters
     ----------
     devices: str
@@ -46,8 +47,11 @@ def get_devices(devices, device_mode='cpu', rank=0, hosts_num=1, workers_num=1):
         devs = mx.gpu() if devices is None or devices is '' else [
             mx.gpu(int(i)) for i in devices.split(',')]
     else:
-        assert workers_num > rank and workers_num > 1, "workers number must be larger than rank and 1"
-        assert hosts_num > 0, "hosts number must be larger than one"
+        if workers_num <= rank or workers_num < 1:
+            raise ValueError("workers number must be larger than rank and 1")
+
+        if hosts_num <= 0:
+            raise ValueError("hosts number must be larger than one")
 
         if workers_num % hosts_num != 0:
             warnings.warn('the workers number is not divided by hosts number. Is it intended?')

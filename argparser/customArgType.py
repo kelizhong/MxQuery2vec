@@ -2,7 +2,6 @@
 # pylint: disable=invalid-name
 """custom argparse type"""
 import sys
-import logging
 import os
 import errno
 
@@ -10,14 +9,6 @@ import errno
 def IntegerType(value):
     """convert str to int and convert 'inf' to sys.maxsize"""
     return sys.maxsize if value == 'inf' else int(value)
-
-
-def LoggerLevelType(value):
-    """convert str to log level"""
-    choices = {'debug': logging.DEBUG, 'info': logging.INFO,
-               'warn': logging.WARN, 'error': logging.ERROR}
-    result = choices.get(value, logging.ERROR)
-    return result
 
 
 def DirectoryType(value):

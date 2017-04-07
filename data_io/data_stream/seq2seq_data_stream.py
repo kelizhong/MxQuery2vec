@@ -4,7 +4,7 @@
 import codecs
 import itertools
 import sys
-import logging
+import logbook as logging
 from utils.data_util import tokenize, convert_data_to_id
 from data_io.seq2seq_data_bucket_queue import Seq2seqDataBucketQueue
 

@@ -1,7 +1,9 @@
+# coding=utf-8
+"""collect the tokenized sentence from worker"""
+import logbook as logging
 import zmq
 from utils.appmetric_util import with_meter
 from utils.retry_util import retry
-import logging
 
 
 class CollectorProcess(object):
@@ -21,7 +23,8 @@ class CollectorProcess(object):
         self.port = port
         self.tries = tries
 
-    @retry(lambda x: x.tries, exception=zmq.ZMQError, name="vocabulary_collector", report=logging.error)
+    @retry(lambda x: x.tries, exception=zmq.ZMQError,
+           name="vocabulary_collector", report=logging.error)
     @with_meter('vocabulary_collector', interval=30)
     def _on_recv(self, receiver):
         words = receiver.recv_pyobj(zmq.NOBLOCK)

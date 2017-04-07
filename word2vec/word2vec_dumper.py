@@ -1,7 +1,8 @@
-from utils.data_util import load_pickle_object
+# coding=utf-8
 from utils.decorator_util import memoized
 from utils.model_util import load_model
-from utils.pickle_util import save_obj_pickle
+from utils.pickle_util import save_obj_pickle, load_pickle_object
+from exception.resource_exception import ResourceNotFoundException
 
 
 class W2vDumper(object):
@@ -10,18 +11,18 @@ class W2vDumper(object):
     The object of the word2vec is a dict(key: word, value: vector)
     Parameters
     ----------
-    w2v_model_path: str
-        the model file path for pretrain word2vec model
-    vocab_path: str
-        vocabulary file related to the pretrain word2vec model
-    w2v_save_path: str
-        word2vec file path where the vocabulary will be created
-    rank: int
-        the rank of worker node
-    load_epoch: int
-        Epoch number of model we would like to load.
-    embedding_weight_name: str
-        the name of embedding weight, this name should be same with the embeding name in pretrain model
+        w2v_model_path: str
+            the model file path for pretrain word2vec model
+        vocab_path: str
+            vocabulary file related to the pretrain word2vec model
+        w2v_save_path: str
+            word2vec file path where the vocabulary will be created
+        rank: int
+            the rank of worker node
+        load_epoch: int
+            Epoch number of model we would like to load.
+        embedding_weight_name: str
+            the name of embedding weight, this name should be same with the embeding name in pretrain model
     """
 
     def __init__(self, w2v_model_path, vocab_path, w2v_save_path, rank=0, load_epoch=376,
@@ -44,18 +45,21 @@ class W2vDumper(object):
     def _embedding(self):
         """load model and extract the embedding weight"""
         _, arg_params, _ = load_model(self.w2v_model_path, self.rank, self.load_epoch)
-        assert self.embedding_weight_name in arg_params, "{} parameter not in the w2v query2vec, " \
-                                                         "please check the embedding weight name".format(
-            self.embedding_weight_name)
 
+        if self.embedding_weight_name not in arg_params:
+            raise KeyError("{} parameter not in the w2v query2vec, "
+                           "please check the embedding weight name".format(
+                            self.embedding_weight_name))
         return arg_params.get(self.embedding_weight_name)
 
     def dumper(self):
         """dump the embedding weight(word2vec) into pickle"""
         vocab = self._vocab
-        assert vocab is not None and len(vocab) > 0, "vocabulary can not be empty"
+        if vocab is None or len(vocab) <= 0:
+            raise ResourceNotFoundException("vocabulary resource can not be found")
         embed = self._embedding
-        assert embed is not None, "Failed to load the embedding"
+        if embed is None:
+            raise ResourceNotFoundException("failed to load the embedding")
         embed_np = embed.asnumpy()
         word_num, embed_size = embed_np.shape
         w2v = dict()

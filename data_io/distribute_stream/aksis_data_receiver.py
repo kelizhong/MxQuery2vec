@@ -4,7 +4,6 @@ from __future__ import print_function
 import zmq
 from utils.network_util import local_ip
 from utils.appmetric_util import with_meter
-from utils.log_util import set_up_logger_handler_with_file
 
 
 class AksisDataReceiver(object):
@@ -47,9 +46,9 @@ class AksisDataReceiver(object):
 
 if __name__ == '__main__':
     # just for test
-    set_up_logger_handler_with_file('../../configure/logger.conf', 'root')
     print(local_ip())
+    init_mp_logger_handler_with_file('../../configure/logger.conf', 'root')
     # pylint: disable=invalid-name
     receiver = AksisDataReceiver(local_ip(), port=5558)
     for x in receiver:
-        pass
+        print(x)

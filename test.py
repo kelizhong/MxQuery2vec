@@ -224,7 +224,7 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 26
+    args.load_epoch = 83
 
     # load vocabulary
     vocab = load_vocabulary_from_pickle(args.vocabulary_path, top_words=45000, special_words=special_words)

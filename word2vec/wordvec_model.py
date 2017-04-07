@@ -1,5 +1,5 @@
 import mxnet as mx
-import logging
+import logbook as logging
 
 head = head = '%(asctime)-15s %(message)s'
 logging.basicConfig(level=logging.INFO, format=head)

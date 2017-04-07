@@ -1,4 +1,7 @@
 # coding=utf-8
+"""The function of this class is similar to nametuple,
+RecordType can set default value while nametuple not
+"""
 from collections import namedtuple
 import warnings
 

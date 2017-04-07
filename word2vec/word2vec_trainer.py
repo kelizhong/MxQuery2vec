@@ -1,3 +1,4 @@
+# coding=utf-8
 from wordvec_model import Word2vec
 import mxnet as mx
 from utils.decorator_util import memoized
@@ -5,7 +6,6 @@ from metric.word2vec_metric import NceAuc
 from metric.speedometer import Speedometer
 from word2vec_io import Word2vecDataIter
 from utils.model_util import load_model, save_model_callback
-import logging
 from base.trainer import Trainer
 from utils.record_util import RecordType
 

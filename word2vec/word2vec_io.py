@@ -1,3 +1,4 @@
+# coding=utf-8
 import random
 import math
 import mxnet as mx
@@ -10,7 +11,8 @@ from utils.pickle_util import save_obj_pickle
 def build_word2vec_dataset(filename, vocabulary_save_path, vocabulary_size):
     freq = [[unk_word, -1], [bos_word, -1], [eos_word, -1]]
     counter = Counter(words_gen(filename))
-    assert vocabulary_size > len(freq), "vocabulary_size must be larger than {}".format(len(freq))
+    if vocabulary_size <= len(freq):
+        raise ValueError("vocabulary_size must be larger than {}".format(len(freq)))
     freq.extend(counter.most_common(vocabulary_size - len(freq)))
     vocabulary = dict()
     for word, _ in freq:

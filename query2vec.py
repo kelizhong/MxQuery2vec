@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding=utf-8
 """
 Runner for Query2Vec
 
@@ -6,13 +6,12 @@ Runner for Query2Vec
 
 import os
 import sys
+import argparse
+import logbook as logging
+import signal
 from argparser.customArgType import DirectoryType, FileType
 from argparser.customArgAction import AppendTupleWithoutDefault
-import argparse
 from utils.data_util import aksis_sentence_gen
-from utils.log_util import set_up_logger_handler_with_file
-import logging
-import signal
 
 
 def parse_args():
@@ -146,13 +145,16 @@ def signal_handler(signal, frame):
     sys.exit(0)
 
 
-def set_up_logger():
-    set_up_logger_handler_with_file(args.log_conf_path, args.log_qualname)
-
+def setup_logger():
+    from utils.log_util import Logger
+    log = Logger()
+    log.set_stream_handler()
+    log.set_time_rotating_file_handler('./data/logs/q2v.log')
+    log.set_logging_stream_hadnler()
 
 if __name__ == "__main__":
     args = parse_args()
-    set_up_logger()
+    setup_logger()
     signal.signal(signal.SIGINT, signal_handler)
     if args.action == 'train_query2vec':
         from query2vec.query2vec_trainer import Query2vecTrainer, mxnet_parameter, optimizer_parameter, model_parameter, \

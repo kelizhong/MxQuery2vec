@@ -1,7 +1,7 @@
 # coding=utf-8
 # pylint: disable=no-member, invalid-name. import-error, pointless-string-statement
 """query2vec trainer implementation"""
-import logging
+import logbook as logging
 import sys
 
 import mxnet as mx
@@ -15,7 +15,8 @@ from data_io.seq2seq_bucket_io_iter import Seq2seqMaskedBucketIoIter
 from metric.seq2seq_metric import MetricManage
 from metric.speedometer import Speedometer
 from network.seq2seq.seq2seq_model import Seq2seqModel
-from utils.data_util import load_pickle_object, load_vocabulary_from_pickle
+from utils.data_util import load_vocabulary_from_pickle
+from utils.pickle_util import load_pickle_object
 from utils.decorator_util import memoized
 from utils.model_util import load_model, save_model_callback
 from utils.record_util import RecordType
@@ -72,7 +73,7 @@ mxnet_parameter = RecordType('mxnet_parameter', [('kv_store', 'local'), ('hosts_
                                                  ('enable_evaluation', False),
                                                  ('ignore_label', 0),
                                                  ('load_epoch', -1), ('train_max_samples', sys.maxsize),
-                                                 ('monitor_pattern', '.*'), ("metric", "perplexity"),
+                                                 ('monitor_pattern', '.*'), ('metric', 'perplexity'),
                                                  ('save_checkpoint_x_batch', 1000)])
 
 """data parameter
@@ -268,9 +269,9 @@ class Query2vecTrainer(Trainer):
         sym, arg_params, aux_params = load_model(self.model_path_prefix, rank, self.load_epoch)
         # load the pretrain word2vec only for new model training and word2vec_path is defined
         if arg_params is not None or self.word2vec_path is None:
-            logging.info("Worker %d create model without pretrain word2vec model", rank)
+            logging.info("Worker {} create model without pretrain word2vec model", rank)
             return sym, arg_params, aux_params
-        logging.info("Worker %d initialize embedding weight using pretrain word2vec model", rank)
+        logging.info("Worker {} initialize embedding weight using pretrain word2vec model", rank)
         w2v = self.word2vec
         vocab = self.vocab
         embed_weight = np.random.rand(self.vocab_size, self.encoder_embed_size)
@@ -286,14 +287,14 @@ class Query2vecTrainer(Trainer):
         """Train the module parameters"""
         rank = self.kv.rank
         # load model
-        logging.info("Worker %d loading model", rank)
+        logging.info("Worker {} loading model", rank)
         sym, arg_params, aux_params = self._load_model_with_pretrain_word2vec('share_embed_weight')
 
         # save model callback
         checkpoint = save_model_callback(self.model_path_prefix, rank, self.save_checkpoint_freq)
 
         devices = self.ctx_devices
-        logging.info("Worker %d using devices %s", rank, devices)
+        logging.info("Worker {} using devices {}", rank, devices)
 
         # set monitor
         monitor = mx.mon.Monitor(self.monitor_interval,
@@ -301,29 +302,27 @@ class Query2vecTrainer(Trainer):
                                                                   self.monitor_pattern is not None else None
 
         # set initializer to initialize the module parameters
+        # np plan to tune this initializer parameter, just hard code here
         initializer = mx.init.Xavier(
             rnd_type='gaussian', factor_type="in", magnitude=2)
 
         # callbacks that run after each batch
         batch_end_callbacks = [Speedometer(self.batch_size, self.kv.rank, self.disp_batches)]
 
-        logging.info("Worker %d creating metric", rank)
+        logging.info("Worker {} creating metric", rank)
         metric_manager = MetricManage(self.ignore_label)
         metrics = [metric_manager.create_metric(self.metric)]
 
-        logging.info("Worker %d loading data and creating the network symbol", rank)
+        logging.info("Worker {} loading data and creating the network symbol", rank)
         train_data_loader = self.train_data_loader
         eval_data_loader = self.eval_data_loader
         network_symbol = self.model.network_symbol(train_data_loader.data_names, train_data_loader.label_names)
 
-        if sym is not None:
-            assert sym.tojson() == network_symbol.tojson()
-
         # create bucket model
-        logging.info("Worker %d creating bucket model", rank)
+        logging.info("Worker {} creating bucket model", rank)
         model = mx.mod.BucketingModule(network_symbol, default_bucket_key=train_data_loader.default_bucket_key,
                                        context=devices)
-        logging.info("Worker %d begin training", rank)
+        logging.info("Worker {} begin training", rank)
         # run
         model.fit(train_data_loader,
                   begin_epoch=self.load_epoch if self.load_epoch > 0 else 0,

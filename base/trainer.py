@@ -1,7 +1,7 @@
 # coding: utf-8
 # pylint: disable=import-error, no-member
 """A trainer abstract interface object."""
-import logging
+import logbook as logging
 from itertools import chain
 import abc
 import six
@@ -56,14 +56,18 @@ class Trainer(object):
     def print_all_variable(self):
         """log training parameter to check before training"""
         for arg, value in self.__dict__.iteritems():
-            logging.info("%s: %s", arg, value)
+            logging.info("{}: {}", arg, value)
 
     def _init_parameter(self):
         """initialize mxnet, optimizer, model, data parameter and kv store for training"""
-        assert isinstance(self._mxnet_para, RecordType)
-        assert isinstance(self._optimizer_para, RecordType)
-        assert isinstance(self._model_para, RecordType)
-        assert isinstance(self._data_para, RecordType)
+        if not isinstance(self._mxnet_para, RecordType):
+            raise TypeError("_mxnet_para should match type RecordType")
+        if not isinstance(self._optimizer_para, RecordType):
+            raise TypeError("_optimizer_para should match type RecordType")
+        if not isinstance(self._data_para, RecordType):
+            raise TypeError("_data_para should match type RecordType")
+        if not isinstance(self._model_para, RecordType):
+            raise TypeError("_model_para should match type RecordType")
 
         for (parameter, value) in chain(self._mxnet_para.iteritems(),
                                         self._model_para.iteritems(),

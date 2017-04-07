@@ -1,100 +1,35 @@
 # coding=utf-8
-
-from __future__ import absolute_import, division, unicode_literals
-
+"""log util"""
+import logbook
 import logging
-import logging.config
-import multiprocessing
-import sys
-import threading
-import traceback
+from utils.file_util import ensure_dir_exists
 
 
-def set_up_logger_handler_with_file(logger_conf_path, qualname=''):
-    logging.config.fileConfig(logger_conf_path)
-    logger = logging.getLogger(qualname)
-    set_up_logger_handler(logger)
+class Logger(object):
+    def __init__(self, date_format='%Y-%m-%d', level=logbook.DEBUG,
+                 format_string='{record.time:%Y-%m-%d %H:%M:%S}|{record.level_name}|{record.message}'):
+        self.format_string = format_string
+        self.date_format = date_format
+        self.level = level
 
+    @staticmethod
+    def set_logging_stream_hadnler(level=logging.DEBUG, format='%(asctime)-15s %(message)s'):
+        logging.basicConfig(level=level, format=format)
 
-def set_up_logger_handler(logger=None):
-    """Wraps the handlers in the given Logger with an MultiProcessingHandler.
+    def set_stream_handler(self, level=None, format_string=None, bubble=True):
+        level = level or self.level
+        format_string = format_string or self.format_string
+        handler = logbook.StderrHandler(level=level, bubble=bubble)
+        handler.formatter.format_string = format_string
+        handler.push_application()
 
-    Parameters
-    ----------
-    logger: logger instance
-        whose handlers to wrap. By default, the root logger.
-
-    """
-    if logger is None:
-        logger = logging.getLogger()
-
-    for i, orig_handler in enumerate(list(logger.handlers)):
-        handler = MultiProcessingHandler(
-            'mp-handler-{0}'.format(i), sub_handler=orig_handler)
-
-        logger.removeHandler(orig_handler)
-        logger.addHandler(handler)
-
-
-class MultiProcessingHandler(logging.Handler):
-
-    def __init__(self, name, sub_handler=None):
-        super(MultiProcessingHandler, self).__init__()
-
-        if sub_handler is None:
-            sub_handler = logging.StreamHandler()
-
-        self.sub_handler = sub_handler
-        self.queue = multiprocessing.Queue(-1)
-        self.setLevel(self.sub_handler.level)
-        self.setFormatter(self.sub_handler.formatter)
-        # The thread handles receiving records asynchronously.
-        t = threading.Thread(target=self.receive, name=name)
-        t.daemon = True
-        t.start()
-
-    def setFormatter(self, fmt):
-        logging.Handler.setFormatter(self, fmt)
-        self.sub_handler.setFormatter(fmt)
-
-    def receive(self):
-        while True:
-            try:
-                record = self.queue.get()
-                self.sub_handler.emit(record)
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            except EOFError:
-                break
-            except:
-                traceback.print_exc(file=sys.stderr)
-
-    def send(self, s):
-        self.queue.put_nowait(s)
-
-    def _format_record(self, record):
-        # ensure that exc_info and args
-        # have been stringified. Removes any chance of
-        # unpickleable things inside and possibly reduces
-        # message size sent over the pipe.
-        if record.args:
-            record.msg = record.msg % record.args
-            record.args = None
-        if record.exc_info:
-            self.format(record)
-            record.exc_info = None
-
-        return record
-
-    def emit(self, record):
-        try:
-            s = self._format_record(record)
-            self.send(s)
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except:
-            self.handleError(record)
-
-    def close(self):
-        self.sub_handler.close()
-        logging.Handler.close(self)
+    def set_time_rotating_file_handler(self, file_name, date_format=None, level=None, format_string=None, bubble=True,
+                                       backup_count=10):
+        ensure_dir_exists(file_name, is_dir=False)
+        level = level or self.level
+        date_format = date_format or self.date_format
+        format_string = format_string or self.format_string
+        handler = logbook.TimedRotatingFileHandler(file_name, level=level, bubble=bubble, date_format=date_format,
+                                                   backup_count=backup_count)
+        handler.formatter.format_string = format_string
+        handler.push_application()

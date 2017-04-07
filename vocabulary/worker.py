@@ -1,10 +1,12 @@
-import zmq
+# coding=utf-8
+"""Worker process which receiver the sentence from ventilitor process and tokenize it"""
+import logbook as logging
 from multiprocessing import Process
+import zmq
+from zmq.decorators import socket
 from utils.data_util import tokenize
 from utils.appmetric_util import with_meter
 from utils.retry_util import retry
-from zmq.decorators import socket
-import logging
 
 
 class WorkerProcess(Process):

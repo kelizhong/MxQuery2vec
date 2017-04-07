@@ -1,7 +1,7 @@
 # coding=utf-8
 # pylint: disable=no-member, invalid-name, ungrouped-imports, too-many-arguments
 """aksis data collector that collect the data from parser worker"""
-import logging
+import logbook as logging
 import pickle
 from multiprocessing import Process
 
@@ -12,7 +12,6 @@ from data_io.seq2seq_data_bucket_queue import Seq2seqDataBucketQueue
 from utils.appmetric_util import AppMetric
 from zmq.decorators import socket
 import zmq
-
 
 class AksisDataCollector(Process):
     """Collector that collect the data from parser worker and add to the
@@ -57,7 +56,7 @@ class AksisDataCollector(Process):
         queue = Seq2seqDataBucketQueue(self.buckets, self.batch_size)
         metric = AppMetric(name=self.name, interval=self.metric_interval)
         # pylint: disable=line-too-long
-        logging.info("start collector %s, ip:%s, frontend port:%d, backend port:%d", self.name, self.ip,
+        logging.info("start collector {}, ip:{}, frontend port:{}, backend port:{}", self.name, self.ip,
                      self.frontend_port,
                      self.backend_port)
         ioloop.install()

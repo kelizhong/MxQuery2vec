@@ -1,6 +1,6 @@
 # coding=utf-8
 """Broker between ventilitor process and worker process"""
-import logging
+import logbook as logging
 import zmq
 from zmq.devices import ProcessDevice
 
@@ -36,7 +36,7 @@ class AksisRawDataBroker(object):
         dev.setsockopt_out(zmq.IDENTITY, b'PUSH')
         dev.start()
         logging.info(
-            "start broker %s, ip:%s, frontend port:%d, backend port:%d",
+            "start broker {}, ip:{}, frontend port:{}, backend port:{}",
             self.name, self.ip, self.frontend_port, self.backend_port)
 
     def start(self):

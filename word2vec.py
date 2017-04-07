@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Sequence 2 sequence for Query2Vec
-
+Runner for word2vec
 """
 
 import os
