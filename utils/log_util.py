@@ -1,7 +1,7 @@
 # coding=utf-8
 """log util"""
 import logbook
-import logging
+from logbook.compat import redirect_logging
 from utils.file_util import ensure_dir_exists
 
 
@@ -11,10 +11,8 @@ class Logger(object):
         self.format_string = format_string
         self.date_format = date_format
         self.level = level
-
-    @staticmethod
-    def set_logging_stream_hadnler(level=logging.DEBUG, format='%(asctime)-15s %(message)s'):
-        logging.basicConfig(level=level, format=format)
+        # all logging calls that happen after this call will transparently be redirected to Logbook
+        redirect_logging()
 
     def set_stream_handler(self, level=None, format_string=None, bubble=True):
         level = level or self.level

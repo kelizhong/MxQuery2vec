@@ -41,6 +41,8 @@ def parse_args():
                                               default=[(3, 10), (3, 20), (5, 20), (7, 30)])
     q2v_aksis_ventiliator_parser.add_argument('--top-words', default=40000, type=int,
                                               help='the max sample num for training')
+    q2v_aksis_ventiliator_parser.add_argument('--worker-num', default=1, type=int,
+                                              help='number of parser worker')
     return parser.parse_args()
 
 
@@ -62,5 +64,5 @@ if __name__ == "__main__":
         from data_io.distribute_stream.aksis_data_pipeline import AksisDataPipeline
 
         p = AksisDataPipeline(args.data_dir, args.vocabulary_path, args.top_words, args.action_patterns,
-                              args.batch_size, args.buckets)
+                              args.batch_size, args.buckets, worker_num=args.worker_num)
         p.start_all()

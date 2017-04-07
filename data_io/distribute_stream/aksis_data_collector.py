@@ -36,7 +36,7 @@ class AksisDataCollector(Process):
     """
 
     def __init__(self, ip, buckets, batch_size, frontend_port=5557, backend_port=5558,
-                 metric_interval=30, name="AksisDataCollectorProcess"):
+                 metric_interval=10, name="AksisDataCollectorProcess"):
         Process.__init__(self)
         self.ip = ip
         self.buckets = buckets
