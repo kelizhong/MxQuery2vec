@@ -150,7 +150,6 @@ def setup_logger():
     log = Logger()
     log.set_stream_handler()
     log.set_time_rotating_file_handler('./data/logs/q2v.log')
-    log.set_logging_stream_hadnler()
 
 if __name__ == "__main__":
     args = parse_args()
