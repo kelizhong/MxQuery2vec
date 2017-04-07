@@ -53,7 +53,7 @@ class AksisDataVentilatorProcess(Process):
     @socket(zmq.PUSH)
     def run(self, sender):
         sender.connect("tcp://{}:{}".format(self.ip, self.port))
-        logging.info("process {}s connect {}:{} and start produce data",
+        logging.info("process {} connect {}:{} and start produce data",
                      self.name, self.ip, self.port)
         metric = AppMetric(name=self.name, interval=self.metric_interval)
         data_stream = self.get_data_stream()

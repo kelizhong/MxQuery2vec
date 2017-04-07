@@ -16,11 +16,8 @@ from utils.data_util import aksis_sentence_gen
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train Seq2seq query2vec for query2vec')
-    parser.add_argument('--log-conf-path', default=os.path.join(os.getcwd(), 'configure', 'logger.conf'),
-                        type=DirectoryType, help='Log directory (default: __DEFAULT__).')
-    parser.add_argument('--log-qualname', choices=['root', 'query2vec', 'seq2seq_data_zmq'],
-                        default='root',
-                        help='Log qualname on console (default: __DEFAULT__).')
+    parser.add_argument('--log-file-name', default=os.path.join(os.getcwd(), 'data/logs', 'q2v.log'),
+                        type=FileType, help='Log directory (default: __DEFAULT__).')
     parser.add_argument('--metric-interval', default=6, type=int,
                         help='metric reporting frequency is set by seconds param')
     subparsers = parser.add_subparsers(help='train vocabulary')
@@ -149,7 +146,7 @@ def setup_logger():
     from utils.log_util import Logger
     log = Logger()
     log.set_stream_handler()
-    log.set_time_rotating_file_handler('./data/logs/q2v.log')
+    log.set_time_rotating_file_handler(args.log_file_name)
 
 if __name__ == "__main__":
     args = parse_args()
