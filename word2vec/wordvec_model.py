@@ -1,8 +1,4 @@
 import mxnet as mx
-import logbook as logging
-
-head = head = '%(asctime)-15s %(message)s'
-logging.basicConfig(level=logging.INFO, format=head)
 
 
 class Word2vec(object):
