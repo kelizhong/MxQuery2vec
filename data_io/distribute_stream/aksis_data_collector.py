@@ -13,6 +13,7 @@ from utils.appmetric_util import AppMetric
 from zmq.decorators import socket
 import zmq
 
+
 class AksisDataCollector(Process):
     """Collector that collect the data from parser worker and add to the
     bucket queue and send the data to trainer

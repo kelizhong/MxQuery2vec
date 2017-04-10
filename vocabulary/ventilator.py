@@ -48,6 +48,7 @@ class VentilatorProcess(Process):
 
 
 if __name__ == '__main__':
+    """for test"""
     v = VentilatorProcess('../data/query2vec/train_corpus/search.keyword.enc', '127.0.0.1', '5555')
     for _ in xrange(8):
         w = WorkerProcess('127.0.0.1', '5555', '5556')

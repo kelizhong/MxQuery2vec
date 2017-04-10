@@ -46,8 +46,6 @@ class AksisDataReceiver(object):
 
 if __name__ == '__main__':
     # just for test
-    print(local_ip())
-    init_mp_logger_handler_with_file('../../configure/logger.conf', 'root')
     # pylint: disable=invalid-name
     receiver = AksisDataReceiver(local_ip(), port=5558)
     for x in receiver:

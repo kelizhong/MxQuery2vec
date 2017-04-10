@@ -8,6 +8,7 @@ from data_io.distribute_stream.aksis_parser_worker import AksisParserWorker
 from data_io.distribute_stream.aksis_ventilator import AksisDataVentilatorProcess
 from data_io.distribute_stream.aksis_data_collector import AksisDataCollector
 
+
 class AksisDataPipeline(object):
     """Start the raw_data_broker, data_ventilitor_process, parser_worker_process
     and collector_process. The data pipeline is data_ventilitor_process->raw_data_broker

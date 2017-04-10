@@ -1,6 +1,6 @@
 # coding=utf-8
 # pylint: disable=too-many-instance-attributes, too-many-arguments
-"""masked bucketing iterator for seq2seq model"""
+"""data stream to generate batch training data for seq2seq model"""
 import codecs
 import itertools
 import sys
@@ -10,7 +10,8 @@ from data_io.seq2seq_data_bucket_queue import Seq2seqDataBucketQueue
 
 
 class Seq2seqDataStream(object):
-    """masked bucketing iterator for seq2seq model. This class is only used for test
+    """data stream to generate batch training data for seq2seq model.
+    This class is only used for test
 
     Parameters
     ----------

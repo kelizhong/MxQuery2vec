@@ -7,7 +7,7 @@ import mxnet as mx
 
 class NceAuc(mx.metric.EvalMetric):
     """Calculate noise-contrastive estimation auc metric
-    This metric copied MXNET Package.
+    This metric copied from MXNET Package.
     Currently have no time to dive deep nce loss, will add
     more code annotation after the investigation
     """

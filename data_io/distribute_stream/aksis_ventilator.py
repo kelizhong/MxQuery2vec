@@ -10,7 +10,6 @@ import zmq
 from zmq.decorators import socket
 from utils.appmetric_util import AppMetric
 from utils.data_util import query_title_score_generator_from_aksis_data
-import logbook
 
 
 class AksisDataVentilatorProcess(Process):
