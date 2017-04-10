@@ -7,7 +7,7 @@ from inference.inference_model import BiSeq2seqInferenceModel
 import logging
 import os
 import time
-from argparser.customArgType import LoggerLevelType, DirectoryType
+from argparser.customArgType import DirectoryType
 from argparser.customArgAction import AppendTupleWithoutDefault
 #from nltk.tokenize import word_tokenize
 from common import constant
@@ -39,15 +39,13 @@ def parse_args():
 
     parser.add_argument('-lp', '--log-path', default=os.path.join(os.getcwd(), 'data', 'logs'),
                         type=DirectoryType, help='Log directory (default: __DEFAULT__).')
-    parser.add_argument('-ll', '--log-level', choices=['debug', 'info', 'warn', 'error'], default='info',
-                        type=LoggerLevelType,
-                        help='Log level on console (default: __DEFAULT__).')
+
     parser.add_argument('vocabulary_path', default=os.path.join(os.getcwd(), 'data', 'vocabulary', 'vocab.pkl'),
                         type=str,
                         help='vocabulary with he most common words')
     parser.add_argument('-le', '--load-epoch', dest='load_epoch', help='epoch of pretrained model',
                         type=int)
-    parser.add_argument('-mp', '--model-prefix', default='query2vec-7',
+    parser.add_argument('-mp', '--model-prefix', default='query2vec',
                         type=str,
                         help='the experiment name, this is also the prefix for the parameters file')
     parser.add_argument('-pd', '--model-path', default=os.path.join(os.getcwd(), 'data', 'query2vec/model'),
@@ -219,12 +217,12 @@ def generate_embeddings(model_buckets, vocab):
 
 if __name__ == "__main__":
     args = parse_args()
-    logging.basicConfig(format='%(asctime)s %(levelname)s:%(name)s:%(message)s', level=args.log_level,
+    logging.basicConfig(format='%(asctime)s %(levelname)s:%(name)s:%(message)s', level=logging.DEBUG,
                         datefmt='%H:%M:%S')
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 83
+    args.load_epoch = 168
 
     # load vocabulary
     vocab = load_vocabulary_from_pickle(args.vocabulary_path, top_words=45000, special_words=special_words)
