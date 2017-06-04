@@ -26,9 +26,10 @@ class Seq2seqDataBucketQueue(object):
         decoder corpus(asin information)
     """
 
-    def __init__(self, buckets, batch_size, ignore_label=0, dtype='float32'):
+    def __init__(self, buckets, batch_size, embedding_size=128, ignore_label=0, dtype='float32'):
         self.buckets = buckets
         self.batch_size = batch_size
+        self.embedding_size = embedding_size
         self.ignore_label = ignore_label
         self.dtype = dtype
         self.bucket_queue = dict()
@@ -57,10 +58,11 @@ class Seq2seqDataBucketQueue(object):
     def _get_batch_data_from_queue(self, bucket, queue):
         """get the batch data from bucket queue and convert the data into numpy format"""
         batch_size = self.batch_size
+        embedding_size = self.embedding_size
         ignore_label = self.ignore_label
         dtype = self.dtype
         assert len(queue) >= batch_size, "size of {} queue less than batch size {}".format(bucket, batch_size)
-        encoder_data = np.full((batch_size, bucket[0]), ignore_label, dtype=dtype)
+        encoder_data = np.full((batch_size, bucket[0], embedding_size), ignore_label, dtype=dtype)
         encoder_mask_data = np.full((batch_size, bucket[0]), ignore_label, dtype=dtype)
         decoder_data = np.full((batch_size, bucket[1]), ignore_label, dtype=dtype)
         decoder_mask_data = np.full((batch_size, bucket[1]), ignore_label, dtype=dtype)

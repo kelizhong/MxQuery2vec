@@ -2,6 +2,7 @@
 # pylint: disable=import-error, too-many-arguments, too-many-instance-attributes
 """Io iter for seq2seq model"""
 import mxnet as mx
+from numpy import ones
 
 
 class DataBatch(object):
@@ -62,7 +63,7 @@ class Seq2seqMaskedBucketIoIter(mx.io.DataIter):
     """
 
     def __init__(self, data_stream, encoder_init_states, decoder_init_states,
-                 default_bucket_key, batch_size,
+                 default_bucket_key, batch_size, embedding_size=128,
                  encoder_data_name='encoder_data', encoder_mask_name='encoder_mask',
                  decoder_data_name='decoder_data', decoder_mask_name='decoder_mask',
                  label_name='decoder_softmax_label'):
@@ -71,6 +72,8 @@ class Seq2seqMaskedBucketIoIter(mx.io.DataIter):
         self.encoder_data_name = encoder_data_name
         self.decoder_data_name = decoder_data_name
         self.label_name = label_name
+
+        self.embedding_size = embedding_size
 
         self.encoder_mask_name = encoder_mask_name
         self.decoder_mask_name = decoder_mask_name
@@ -83,7 +86,7 @@ class Seq2seqMaskedBucketIoIter(mx.io.DataIter):
         self.decoder_init_state_names = [x[0] for x in decoder_init_states]
 
         self.default_bucket_key = default_bucket_key
-        self.provide_data = [(encoder_data_name, (batch_size, self.default_bucket_key[0])),
+        self.provide_data = [(encoder_data_name, (batch_size, self.default_bucket_key[0], 128)),
                              (encoder_mask_name, (batch_size, self.default_bucket_key[0])),
                              (decoder_data_name, (batch_size, self.default_bucket_key[1])),
                              (decoder_mask_name, (batch_size, self.default_bucket_key[1]))] \
@@ -105,6 +108,9 @@ class Seq2seqMaskedBucketIoIter(mx.io.DataIter):
     def __iter__(self):
         # pylint: disable=line-too-long
         for encoder_data, encoder_mask_data, decoder_data, decoder_mask_data, label, bucket in self.data_stream:
+            #print(len(encoder_data[0]))
+            #print(self.batch_size)
+            #encoder_data = ones((len(encoder_data), len(encoder_data[0]), 5))
             data_all = [mx.nd.array(encoder_data), mx.nd.array(encoder_mask_data)] + \
                        [mx.nd.array(decoder_data), mx.nd.array(decoder_mask_data)] + \
                        self.encoder_init_state_arrays + self.decoder_init_state_arrays

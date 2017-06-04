@@ -8,8 +8,11 @@ from nltk import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from common.constant import bos_word, eos_word
 from utils.pickle_util import load_pickle_object
+import numpy as np
+from helper.redis_helper import RedisHelper
 
 wn_lemmatizer = WordNetLemmatizer()
+redis_helper = RedisHelper('w2v.aka.corp.amazon.com')
 
 
 def words_gen(filename, bos=None, eos=None):
@@ -172,7 +175,7 @@ def word2id(word, the_vocab):
     return the_vocab[word] if word in the_vocab else the_vocab[config.unk_word]
 
 
-def convert_data_to_id(encoder_words, decoder_words, encoder_vocab, decoder_vocab):
+def convert_data_to_id1(encoder_words, decoder_words, encoder_vocab, decoder_vocab):
     """convert the seq2seq data into id which represent the index for word in vocabulary"""
     encoder = encoder_words
     decoder = [bos_word] + decoder_words
@@ -181,6 +184,28 @@ def convert_data_to_id(encoder_words, decoder_words, encoder_vocab, decoder_voca
     decoder_sentence_id = sentence2id(decoder, decoder_vocab)
     label_id = sentence2id(label, decoder_vocab)
     return encoder_sentence_id, decoder_sentence_id, label_id
+
+
+def convert_data_to_id(encoder_words, decoder_words, encoder_vocab, decoder_vocab):
+    """convert the seq2seq data into id which represent the index for word in vocabulary"""
+    encoder = encoder_words
+    decoder = [bos_word] + decoder_words
+    label = decoder_words + [eos_word]
+    encoder_sentence_id = words2vectors(encoder)
+    decoder_sentence_id = sentence2id(decoder, decoder_vocab)
+    label_id = sentence2id(label, decoder_vocab)
+    return encoder_sentence_id, decoder_sentence_id, label_id
+
+
+def words2vectors(sentence):
+    return np.array([word2vec(word) for word in sentence])
+
+
+def word2vec(word, word2vec_dim=128):
+    """Convert word to vector"""
+    vec = redis_helper.get_data(word).get('result')
+    vec = np.fromstring(vec, sep=',') if vec else np.zeros(word2vec_dim)
+    return vec
 
 
 def clean_html(html):

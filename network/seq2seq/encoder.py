@@ -52,8 +52,8 @@ class BiDirectionalLstmEncoder(Encoder):
         embed = mx.sym.Embedding(data=data, input_dim=self.vocab_size,
                                  weight=self.embed_weight, output_dim=self.embed_size,
                                  name="{}_embed".format(self.name))
-        wordvec = mx.sym.SliceChannel(data=embed, num_outputs=self.seq_len, squeeze_axis=1)
-
+        wordvec = mx.sym.SliceChannel(data=data, num_outputs=self.seq_len, squeeze_axis=1)
+        #wordvec = data
         if self.use_masking:
             input_mask = mx.sym.Variable('encoder_mask')
             masks = mx.sym.SliceChannel(data=input_mask, num_outputs=self.seq_len,
