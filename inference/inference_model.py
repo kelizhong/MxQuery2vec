@@ -50,7 +50,7 @@ class BiSeq2seqInferenceModel(object):
                           xrange(decoder_layer_num)]
         decoder_init_states = decoder_init_c + decoder_init_h
 
-        encoder_data_shape = [("encoder_data", (batch_size, encoder_seq_len))]
+        encoder_data_shape = [("encoder_data", (batch_size, encoder_seq_len, 128))]
         encoder_mask_data_shape = [("encoder_mask", (batch_size, encoder_seq_len))]
         decoder_data_shape = [("decoder_data", (batch_size,))]
 

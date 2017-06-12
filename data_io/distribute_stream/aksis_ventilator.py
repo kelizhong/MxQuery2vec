@@ -64,7 +64,7 @@ class AksisDataVentilatorProcess(Process):
             logging.info("process {} finish {} epoch", self.name, i)
 
     def get_data_stream(self):
-        """data stream genertae the query, title data"""
+        """data stream generate the query, title data"""
         data_files = fnmatch.filter(os.listdir(self.data_dir), self.file_pattern)
 
         if len(data_files) <= 0:

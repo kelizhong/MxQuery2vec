@@ -108,19 +108,22 @@ class LstmDecoder(Decoder):
                 hidden = mx.sym.Dropout(data=hidden, p=self.dropout)
             hidden_all.append(hidden)
 
+        cls_weight_1 = mx.sym.Variable("decoder_cls_1_weight")
+        cls_bias_1 = mx.sym.Variable("decoder_cls_1_bias")
         hidden_concat = mx.sym.Concat(*hidden_all, dim=0)
-        pred = mx.sym.FullyConnected(data=hidden_concat, num_hidden=self.vocab_size,
+        pred = mx.sym.FullyConnected(data=hidden_concat, num_hidden=32,
                                      weight=cls_weight, bias=cls_bias, name='decoder_pred')
-
+        pred_1 = mx.sym.FullyConnected(data=pred, num_hidden=self.vocab_size,
+                                     weight=cls_weight_1, bias=cls_bias_1, name='decoder_pred')
         label = mx.sym.transpose(data=label)
         label = mx.sym.Reshape(data=label, shape=(-1,))
         if self.use_masking:
             loss_mask = mx.sym.transpose(data=input_mask)
             loss_mask = mx.sym.Reshape(data=loss_mask, shape=(-1, 1))
-            pred = mx.sym.broadcast_mul(pred, loss_mask)
+            pred_1 = mx.sym.broadcast_mul(pred_1, loss_mask)
         # softmaxwithloss http://caffe.berkeleyvision.org/tutorial/layers/softmaxwithloss.html
         # pylint: disable=invalid-name
-        sm = mx.sym.SoftmaxOutput(data=pred, label=label, name='decoder_softmax', ignore_label=0,
+        sm = mx.sym.SoftmaxOutput(data=pred_1, label=label, name='decoder_softmax', ignore_label=0,
                                   use_ignore=True, normalization='valid')
 
         return sm

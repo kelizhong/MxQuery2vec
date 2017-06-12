@@ -136,6 +136,7 @@ def reponse(max_decode_len, sentence, model_buckets, source_vocab, target_vocab,
     mask_ndarray = mx.nd.zeros((1, unroll_len))
     output = [constant.bos_word]
     MakeInput(sentence, source_vocab, unroll_len, input_ndarray, mask_ndarray)
+    input_ndarray = mx.nd.zeros((1, unroll_len, 128))
     last_encoded = cur_model.encode(input_ndarray,
                                        mask_ndarray)  # last_encoded means the last time step hidden
     for i in range(max_decode_len):
@@ -152,9 +153,12 @@ def reponse(max_decode_len, sentence, model_buckets, source_vocab, target_vocab,
 def encode(sentence, model_buckets, source_vocab):
     input_length = len(sentence)
     unroll_len, cur_model = get_bucket_model(model_buckets, input_length)
-    input_ndarray = mx.nd.zeros((1, unroll_len))
+    input_ndarray = mx.nd.zeros((1, unroll_len, 128))
     mask_ndarray = mx.nd.zeros((1, unroll_len))
     MakeInput(sentence, source_vocab, unroll_len, input_ndarray, mask_ndarray)
+    input_ndarray = mx.nd.zeros((1, unroll_len, 128))
+    print(input_ndarray)
+    print("--------------------------------------------")
     last_encoded = cur_model.encode(input_ndarray,
                                        mask_ndarray)  # last_encoded means the last time step hidden
 
@@ -222,7 +226,7 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(os.path.join(args.log_path, time.strftime("%Y%m%d-%H%M%S") + '.logs'))
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
     logging.root.addHandler(file_handler)
-    args.load_epoch = 168
+    args.load_epoch = 51
 
     # load vocabulary
     vocab = load_vocabulary_from_pickle(args.vocabulary_path, top_words=45000, special_words=special_words)
